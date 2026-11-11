@@ -51,4 +51,6 @@ Thứ tự đáp án trắc nghiệm được xáo trộn tự động mỗi l�
 3. Web sẽ có ở `https://<tên-tài-khoản>.github.io/<tên-repo>/`.
 
 ---
+**Made by FPT University.** © 2026 FlashAptis. Bảo lưu mọi quyền.
+
 Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Toàn bộ câu hỏi do FlashAptis tự biên soạn; điểm số chỉ mang tính ước lượng.

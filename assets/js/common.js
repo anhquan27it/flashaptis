@@ -39,6 +39,10 @@
         <div>
           <a href="exam.html">Thi thử</a><a href="flashcards.html">Flashcard</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
         </div>
+      </div>
+      <div class="container made-by">
+        <span>© ${new Date().getFullYear()} FlashAptis · Bảo lưu mọi quyền.</span>
+        <span class="made-badge">Made by <b>FPT University</b></span>
       </div>`;
     document.body.append(footer);
   };
