@@ -8,12 +8,12 @@ Web tĩnh thuần HTML/CSS/JS, không cần build, chạy được trên GitHub 
 | Trang | Nội dung |
 |---|---|
 | `index.html` | Trang chủ, giới thiệu, chọn nhanh kỹ năng |
-| `exam.html` | Thi thử 5 kỹ năng có đồng hồ, chấm điểm 0–50, quy đổi CEFR ước lượng, xem lại + giải thích |
-| `exam.html#/gym` | Phòng gym: luyện 10 câu không bấm giờ + **Sổ câu sai** |
-| `flashcards.html` | 8 bộ flashcard theo chủ đề (120 thẻ), lật thẻ, nghe phát âm, kiểm tra nhanh |
-| `tips.html` | Lộ trình 20 mẹo có nhiệm vụ, mở khóa lần lượt |
-| `guide.html` | Cấu trúc bài thi Aptis |
-| `calculator.html` | Tính điểm Aptis → CEFR |
+| `pages/exam.html` | Thi thử 5 kỹ năng có đồng hồ, chấm điểm 0–50, quy đổi CEFR ước lượng, xem lại + giải thích |
+| `pages/exam.html#/gym` | Phòng gym: luyện 10 câu không bấm giờ + **Sổ câu sai** |
+| `pages/flashcards.html` | 8 bộ flashcard theo chủ đề (120 thẻ), lật thẻ, nghe phát âm, kiểm tra nhanh |
+| `pages/tips.html` | Lộ trình 20 mẹo có nhiệm vụ, mở khóa lần lượt |
+| `pages/guide.html` | Cấu trúc bài thi Aptis |
+| `pages/calculator.html` | Tính điểm Aptis → CEFR |
 
 - **Grammar & Vocabulary**: 2 đề × 50 câu, có giải thích tiếng Việt.
 - **Reading**: 2 đề đủ 5 part (điền từ, sắp xếp câu ×2, ghép ý kiến, chọn tiêu đề).

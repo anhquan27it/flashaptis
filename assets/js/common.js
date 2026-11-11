@@ -3,13 +3,16 @@
   const FA = (window.FA = window.FA || {});
 
   /* ---------- Header & footer ---------- */
+  // thư mục gốc của site, suy ra từ vị trí common.js (assets/js/) nên dùng được ở mọi trang
+  const ROOT = new URL("../../", document.currentScript.src).href;
+  const P = (f) => ROOT + "pages/" + f;
   const NAV = [
-    { href: "exam.html", label: "Thi thử", key: "exam" },
-    { href: "flashcards.html", label: "Flashcard", key: "flashcards" },
-    { href: "exam.html#/gym", label: "Phòng gym", key: "gym" },
-    { href: "tips.html", label: "Lộ trình mẹo", key: "tips" },
-    { href: "guide.html", label: "Cấu trúc đề", key: "guide" },
-    { href: "calculator.html", label: "Tính điểm", key: "calculator" },
+    { href: P("exam.html"), label: "Thi thử", key: "exam" },
+    { href: P("flashcards.html"), label: "Flashcard", key: "flashcards" },
+    { href: P("exam.html#/gym"), label: "Phòng gym", key: "gym" },
+    { href: P("tips.html"), label: "Lộ trình mẹo", key: "tips" },
+    { href: P("guide.html"), label: "Cấu trúc đề", key: "guide" },
+    { href: P("calculator.html"), label: "Tính điểm", key: "calculator" },
   ];
 
   FA.renderShell = function (active) {
@@ -17,11 +20,11 @@
     header.className = "site-header";
     header.innerHTML = `
       <div class="container">
-        <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
+        <a class="logo" href="${ROOT}index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
         <button class="menu-btn" aria-label="Mở menu">☰</button>
         <nav class="nav">
           ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}">${n.label}</a>`).join("")}
-          <a class="btn btn-primary btn-sm" href="exam.html">Làm đề ngay</a>
+          <a class="btn btn-primary btn-sm" href="${P("exam.html")}">Làm đề ngay</a>
         </nav>
       </div>`;
     document.body.prepend(header);
@@ -32,12 +35,12 @@
     footer.innerHTML = `
       <div class="container">
         <div>
-          <a class="logo" href="index.html" style="font-size:1.1rem"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
+          <a class="logo" href="${ROOT}index.html" style="font-size:1.1rem"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
           <div class="mt-1">Luyện thi Aptis ESOL miễn phí · Học nhanh như tia chớp.</div>
           <div class="mt-1" style="font-size:.8rem">Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Điểm trên web chỉ mang tính ước lượng.</div>
         </div>
         <div>
-          <a href="exam.html">Thi thử</a><a href="flashcards.html">Flashcard</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
+          <a href="${P("exam.html")}">Thi thử</a><a href="${P("flashcards.html")}">Flashcard</a><a href="${P("tips.html")}">Mẹo</a><a href="${P("guide.html")}">Cấu trúc đề</a><a href="${P("calculator.html")}">Tính điểm</a>
         </div>
       </div>
       <div class="container made-by">
