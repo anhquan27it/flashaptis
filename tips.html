@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lộ trình mẹo thi Aptis — FlashAptis</title>
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23f97316'/><text x='50' y='70' font-size='62' text-anchor='middle'>⚡</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="page"><div class="container narrow">
+    <span class="eyebrow">Lộ trình mẹo</span>
+    <h1 class="page-title">💡 20 mẹo, từ Speaking tới Writing</h1>
+    <p class="page-sub">Đọc một mẹo, làm nhiệm vụ nhỏ để áp dụng, bấm “Đã làm xong” là mở mẹo tiếp theo. Tiến độ lưu trên máy bạn.</p>
+    <div class="card mb-2 row"><div class="ring" id="tipRing" style="--p:0" data-label="0"></div><div><b id="tipDone" style="font-family:var(--font-head)">0/20 mẹo</b><div class="muted" style="font-size:.9rem">Hoàn thành hết để sẵn sàng vào phòng thi!</div></div><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="tipReset">Làm lại từ đầu</button></div>
+    <div class="road" id="road"></div>
+  </div></main>
+
+  <script src="assets/js/common.js"></script>
+  <script>
+    FA.renderShell("tips");
+    const TIPS = [
+      ["Speaking", "Trả lời Part 1 theo công thức 3 câu", "Mỗi câu Part 1 chỉ có 30 giây. Dùng khung: <b>Trả lời trực tiếp → Lý do → Ví dụ/chi tiết</b>. Ví dụ: “I live in Hanoi. I like it because the food is amazing. For example, I often eat phở near my house.”", "Tự trả lời câu “Tell me about your hometown” theo đúng 3 bước và bấm giờ 30 giây.", "exam.html#/speaking"],
+      ["Speaking", "Mô tả tranh theo thứ tự “to → nhỏ”", "Part 2: bắt đầu bằng tổng quan (<i>In this picture I can see…</i>), rồi người/vật chính, hành động (<i>is/are + V-ing</i>), bối cảnh, cuối cùng là đoán cảm xúc (<i>They look…, maybe…</i>).", "Nhìn một bức ảnh bất kỳ trên điện thoại, mô tả trong 45 giây theo thứ tự trên.", ""],
+      ["Speaking", "So sánh 2 tranh bằng từ nối đối lập", "Part 3 dùng <i>while, whereas, on the other hand, both… but…</i>. Nói điểm giống trước, điểm khác sau, rồi trả lời câu hỏi kèm lý do.", "Học thuộc 4 cụm: <i>Both pictures show…, The first one…, while the second…, In contrast…</i>", ""],
+      ["Speaking", "Part 4: ghi chú từ khóa, không viết câu", "1 phút chuẩn bị chỉ đủ ghi 3–4 từ khóa cho mỗi câu hỏi. Nói đủ 2 phút: kể chuyện (quá khứ) → cảm xúc → quan điểm chung.", "Làm Part 4 của một đề Speaking, chỉ ghi tối đa 10 từ khóa khi chuẩn bị.", "exam.html#/speaking"],
+      ["Speaking", "Câu “câu giờ” khi bí ý", "Đừng im lặng! Dùng: <i>That's an interesting question…, Let me think…, Well, to be honest…</i> để có thêm 2–3 giây suy nghĩ mà vẫn tự nhiên.", "Thuộc lòng 3 câu câu giờ và dùng chúng trong lần luyện tiếp theo.", "flashcards.html#linking"],
+      ["Listening", "Đọc câu hỏi trước khi nghe", "Mỗi câu Part 1 đọc câu hỏi + 3 đáp án trước khi bấm nghe. Gạch chân từ khóa (giờ, giá, địa điểm) để biết cần bắt thông tin gì.", "Làm 5 câu Listening ở phòng gym, mỗi câu đọc đáp án trước khi bấm play.", "exam.html#/gym"],
+      ["Listening", "Cẩn thận bẫy “đổi ý”", "Đề Aptis rất hay nói một đáp án rồi sửa lại: <i>“I wanted fish… but… so I'll make pasta.”</i> Đáp án thường nằm sau <b>but, actually, instead, so</b>.", "Nghe lại một đoạn Part 1 và tìm từ “đổi ý” trong transcript.", "exam.html#/listening"],
+      ["Listening", "Part 2–3: đáp án là từ đồng nghĩa", "Câu trả lời hiếm khi lặp lại đúng từ trong đáp án. “Half my salary goes to my landlord” = <i>rent is too expensive</i>.", "Làm Part 2 một đề Listening, sau đó đối chiếu từ đồng nghĩa trong transcript.", "exam.html#/listening"],
+      ["Listening", "Dùng lần nghe thứ 2 để kiểm tra", "Lần 1: chọn đáp án. Lần 2: chỉ nghe để xác nhận hoặc sửa. Đừng phí lần 2 nếu đã chắc chắn — tiết kiệm thời gian cho câu khó.", "Làm trọn 1 đề Listening tính giờ.", "exam.html#/listening"],
+      ["Grammar", "Nhận diện thì qua dấu hiệu", "<i>since/for → hiện tại hoàn thành; yesterday/last → quá khứ đơn; by the time + hiện tại → tương lai hoàn thành; when + quá khứ → quá khứ tiếp diễn/hoàn thành.</i>", "Làm 10 câu Grammar ở phòng gym, gạch dấu hiệu trước khi chọn.", "exam.html#/gym"],
+      ["Grammar", "Thuộc nhóm động từ + V-ing / to V", "<b>+ V-ing:</b> enjoy, mind, suggest, avoid, look forward to, be used to. <b>+ to V:</b> want, decide, plan, hope, afford, refuse.", "Viết 5 câu với 5 động từ trong danh sách trên.", ""],
+      ["Grammar", "Câu điều kiện 3 loại", "Loại 1: If + HTĐ, will V. Loại 2: If + QKĐ (were), would V. Loại 3: If + had V3, would have V3. Gặp “If I were you” → loại 2.", "Làm một đề Grammar đầy đủ 25 phút.", "exam.html#/grammar"],
+      ["Grammar", "Vocabulary: học theo cụm, không học từ đơn", "Phần từ vựng hay hỏi collocation: <i>make a decision, do homework, pay attention, take a risk</i>. Học cả cụm sẽ nhớ lâu và chọn nhanh hơn.", "Học hết bộ flashcard Collocation.", "flashcards.html#colloc"],
+      ["Reading", "Part 1: đọc cả câu, không chỉ chỗ trống", "Đáp án thường phụ thuộc vào câu sau: “bring an umbrella” → trời mưa. Đọc trọn câu trước khi chọn.", "Làm Reading Part 1 trong phòng gym.", "exam.html#/gym"],
+      ["Reading", "Part 2–3: săn đại từ và từ nối", "<i>It, this, they, the + danh từ đã nhắc</i> luôn trỏ ngược về câu trước. Từ chỉ trình tự (<i>First, Then, After that, Finally</i>) là “xương sống” của bài.", "Làm Part 2–3 của một đề Reading, gạch chân mọi đại từ.", "exam.html#/reading"],
+      ["Reading", "Part 4: đọc câu hỏi trước, quét tên sau", "Đọc 7 câu hỏi, gạch từ khóa, rồi quét đoạn của từng người tìm ý tương đương (thường là từ đồng nghĩa).", "Làm Part 4 dưới 8 phút.", "exam.html#/reading"],
+      ["Reading", "Part 5: câu đầu đoạn là chìa khóa", "Đọc câu đầu và câu cuối mỗi đoạn để nắm ý chính. Loại tiêu đề chỉ khớp một chi tiết nhỏ — tiêu đề phải bao trùm cả đoạn.", "Làm trọn một đề Reading tính giờ 35 phút.", "exam.html#/reading"],
+      ["Writing", "Part 1–2: ngắn gọn, đúng yêu cầu số từ", "Part 1 chỉ 1–5 từ, không cần câu đầy đủ. Part 2 viết 20–30 từ, câu hoàn chỉnh, có 1 lý do.", "Làm Part 1–2 của một đề Writing trong 7 phút.", "exam.html#/writing"],
+      ["Writing", "Part 3: trả lời + lý do + ví dụ", "Mỗi câu chat 30–40 từ: trả lời thẳng → 1 lý do (because) → ví dụ hoặc ý bổ sung (For example / Also).", "Viết 3 câu Part 3 và tự đếm từ.", "exam.html#/writing"],
+      ["Writing", "Part 4: hai giọng văn khác nhau", "Informal: <i>Hi + tên, contractions (I'm), câu hỏi lại bạn, See you</i>. Formal: <i>Dear Sir/Madam, I am writing to…, không viết tắt, đề xuất cụ thể, Yours faithfully</i>.", "Viết trọn Part 4 một đề, sau đó soát bằng checklist ở trang kết quả.", "exam.html#/writing"],
+    ];
+    const done = () => FA.store.get("tips-done", []);
+    function draw() {
+      const d = done();
+      const next = TIPS.findIndex((_, i) => !d.includes(i));
+      document.getElementById("tipDone").textContent = `${d.length}/${TIPS.length} mẹo`;
+      const ring = document.getElementById("tipRing");
+      ring.style.setProperty("--p", Math.round((d.length / TIPS.length) * 100));
+      ring.dataset.label = d.length;
+      document.getElementById("road").innerHTML = TIPS.map(([skill, title, body, mission, link], i) => {
+        const isDone = d.includes(i), locked = !isDone && i !== next;
+        return `<div class="road-item ${isDone ? "done" : ""} ${locked ? "locked" : ""}">
+          <div class="dot">${isDone ? "✓" : i + 1}</div>
+          <div class="card">
+            <div class="row"><span class="pill ${isDone ? "green" : ""}">${skill}</span>${locked ? '<span class="muted" style="font-size:.85rem">🔒 Hoàn thành mẹo trước để mở</span>' : ""}</div>
+            <h3 class="mt-1 mb-0">${title}</h3>
+            ${locked ? "" : `<p class="mt-1" style="color:var(--ink-2)">${body}</p>
+              <div class="mission">🎯 <b>Nhiệm vụ:</b> ${mission}</div>
+              <div class="row">${link ? `<a class="btn btn-outline btn-sm" href="${link}">Làm nhiệm vụ →</a>` : ""}
+              ${isDone ? `<button class="btn btn-ghost btn-sm" data-undo="${i}">Bỏ đánh dấu</button>` : `<button class="btn btn-primary btn-sm" data-done="${i}">✓ Đã làm xong</button>`}</div>`}
+          </div></div>`;
+      }).join("");
+      document.querySelectorAll("[data-done]").forEach((b) => (b.onclick = () => { FA.store.set("tips-done", [...done(), +b.dataset.done]); FA.toast("Tuyệt! Đã mở mẹo tiếp theo ⚡"); draw(); }));
+      document.querySelectorAll("[data-undo]").forEach((b) => (b.onclick = () => { FA.store.set("tips-done", done().filter((x) => x !== +b.dataset.undo)); draw(); }));
+    }
+    document.getElementById("tipReset").onclick = () => { if (confirm("Xóa tiến độ lộ trình mẹo?")) { FA.store.set("tips-done", []); draw(); } };
+    draw();
+  </script>
+</body>
+</html>

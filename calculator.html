@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tính điểm Aptis → CEFR — FlashAptis</title>
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23f97316'/><text x='50' y='70' font-size='62' text-anchor='middle'>⚡</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="page"><div class="container narrow">
+    <span class="eyebrow">Công cụ miễn phí</span>
+    <h1 class="page-title">🧮 Tính điểm Aptis → CEFR</h1>
+    <p class="page-sub">Nhập điểm 4 kỹ năng (0–50). Công cụ cho biết bậc từng kỹ năng, tổng điểm Overall và cần thêm bao nhiêu điểm để lên bậc tiếp theo.</p>
+
+    <div class="card" id="calc"></div>
+
+    <div class="card mt-2">
+      <div class="result-hero">
+        <div class="ring-lg" id="ovRing" style="--p:0"><div><b id="ovScore">0</b><span>/200</span></div></div>
+        <div>
+          <span class="eyebrow">Overall (ước lượng)</span>
+          <div class="row"><span class="cefr-badge" id="ovLv">A0</span><span class="muted" id="ovNext"></span></div>
+          <p class="muted mt-1 mb-0" style="font-size:.88rem">Bậc Overall chính thức còn phụ thuộc vào điểm từng kỹ năng và Grammar & Vocabulary. Kết quả ở đây chỉ mang tính tham khảo.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="mt-4">Ngưỡng điểm tham khảo</h2>
+    <div class="tbl-wrap"><table class="tbl" id="thTable"></table></div>
+    <p class="muted mt-1" style="font-size:.86rem">Ngưỡng được tổng hợp từ các nguồn tham khảo phổ biến, có thể khác với bảng quy đổi chính thức của British Council ở từng kỳ thi.</p>
+  </div></main>
+
+  <script src="assets/js/common.js"></script>
+  <script>
+    FA.renderShell("calculator");
+    const SK = [["listening", "🎧 Listening"], ["reading", "📖 Reading"], ["speaking", "🎙️ Speaking"], ["writing", "✍️ Writing"]];
+    const saved = FA.store.get("calc", { listening: 30, reading: 34, speaking: 28, writing: 30 });
+    const calc = document.getElementById("calc");
+    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" value="${saved[k]}" data-k="${k}"><input class="inp" type="number" min="0" max="50" value="${saved[k]}" data-n="${k}"><span class="lv" data-lv="${k}"></span></div>`).join("");
+    function nextGap(skill, score) {
+      const t = FA.CEFR[skill].slice().reverse(); // tăng dần
+      const nx = t.find(([min]) => score < min);
+      return nx ? `còn ${nx[0] - score} điểm lên ${nx[1]}` : "đã đạt bậc cao nhất";
+    }
+    function update() {
+      let total = 0;
+      SK.forEach(([k]) => {
+        const v = Math.max(0, Math.min(50, +calc.querySelector(`[data-k="${k}"]`).value || 0));
+        saved[k] = v; total += v;
+        const lv = FA.toCEFR(k, v);
+        const el = calc.querySelector(`[data-lv="${k}"]`);
+        el.textContent = lv;
+        el.title = nextGap(k, v);
+      });
+      FA.store.set("calc", saved);
+      document.getElementById("ovScore").textContent = total;
+      document.getElementById("ovRing").style.setProperty("--p", Math.round((total / 200) * 100));
+      document.getElementById("ovLv").textContent = FA.toCEFR("overall", total);
+      document.getElementById("ovNext").textContent = "· " + nextGap("overall", total) + " · " + SK.map(([k, n]) => `${n.split(" ")[1]}: ${nextGap(k, saved[k])}`).join(" · ");
+    }
+    calc.querySelectorAll("[data-k]").forEach((r) => (r.oninput = () => { calc.querySelector(`[data-n="${r.dataset.k}"]`).value = r.value; update(); }));
+    calc.querySelectorAll("[data-n]").forEach((n) => (n.oninput = () => { calc.querySelector(`[data-k="${n.dataset.n}"]`).value = n.value; update(); }));
+    update();
+    // bảng ngưỡng
+    const levels = ["A1", "A2", "B1", "B2", "C"];
+    const row = (k, n) => `<tr><td><b>${n}</b></td>${levels.map((lv) => { const f = FA.CEFR[k].find((x) => x[1] === lv || (lv === "C" && x[1] === "C1")); return `<td>${f ? "≥ " + f[0] : "—"}</td>`; }).join("")}</tr>`;
+    document.getElementById("thTable").innerHTML = `<tr><th>Kỹ năng</th>${levels.map((l) => `<th>${l}</th>`).join("")}</tr>` + SK.map(([k, n]) => row(k, n)).join("") + row("overall", "Overall /200");
+  </script>
+</body>
+</html>
