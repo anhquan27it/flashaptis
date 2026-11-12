@@ -468,3 +468,20 @@ table.tbl th { background: var(--orange-50); color: var(--orange-800); font-weig
 .mt-0 { margin-top: 0; } .mt-1 { margin-top: 8px; } .mt-2 { margin-top: 16px; } .mt-3 { margin-top: 24px; } .mt-4 { margin-top: 36px; }
 .mb-0 { margin-bottom: 0; } .mb-2 { margin-bottom: 16px; }
 kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; font-size: .8rem; }
+
+/* kiểm tra chính tả Writing (Harper) */
+.spell-box:empty { display: none; }
+.spell-box { margin-top: 8px; }
+.spell-note { font-size: .9rem; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 8px 12px; }
+.spell-note.ok { background: var(--green-bg); color: #166534; }
+.spell-note.bad { background: var(--red-bg); color: #991b1b; }
+.spell-note code { background: #fff; padding: 0 5px; border-radius: 4px; }
+.spell-text { white-space: pre-line; line-height: 1.9; margin: 8px 0 0; }
+.spell-mark { background: var(--red-bg); color: inherit; border-bottom: 2px solid var(--red); border-radius: 3px; padding: 0 2px; cursor: help; }
+.spell-mark sup { font-size: .65rem; font-weight: 700; color: var(--red); margin-left: 1px; }
+.spell-list { margin: 8px 0 0; padding-left: 22px; font-size: .92rem; color: var(--ink-2); }
+.spell-list li { margin-bottom: 4px; }
+.spell-list.quiet { list-style: none; padding: 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.spell-chip { background: var(--red-bg); color: #991b1b; border-radius: 8px; padding: 2px 10px; font-size: .86rem; }
+.spell-ignore { border: 0; background: rgba(255,255,255,.75); color: #991b1b; border-radius: 6px; padding: 1px 7px; margin-left: 4px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+.spell-ignore:hover { background: #fff; text-decoration: underline; }

@@ -21,6 +21,8 @@ Web tĩnh thuần HTML/CSS/JS, không cần build, chạy được trên GitHub 
 - **Writing**: 3 đề đủ 4 part, đếm từ, điểm ước lượng tự động, bài mẫu + checklist.
 - **Speaking**: 2 đề đủ 4 part, máy đọc câu hỏi, đếm ngược, ghi âm bằng micro, nghe lại, bài mẫu, tự chấm theo 5 tiêu chí.
 
+- **Kiểm tra chính tả & ngữ pháp (Writing)**: ở màn hình xem lại, bài viết được kiểm tra bằng [Harper](https://github.com/Automattic/harper) (Apache-2.0, chạy bằng WebAssembly ngay trên máy, chính tả Anh-Anh). **Lỗi chính tả bị trừ điểm**: Part 1 câu sai chính tả không được điểm, Part 2–4 bị nhân hệ số theo tỉ lệ lỗi/số từ (tối thiểu 30%). Tên riêng bị báo nhầm thì bấm “✕ bỏ qua”, điểm tính lại ngay. Lỗi ngữ pháp/dấu câu chỉ để tham khảo. Nếu không tải được Harper thì chấm như cũ, không trừ điểm chính tả. Mã nằm ở `assets/js/spellcheck.js`; thư viện `harper.js@3.0.0` được nạp từ jsDelivr khi cần (~8 MB lần đầu), nên tính năng này cần **có mạng và chạy qua http** (`npm start`) — mở thẳng file `index.html` thì bỏ qua bước này, phần còn lại vẫn dùng bình thường.
+
 Lịch sử làm bài, sổ câu sai, tiến độ flashcard & mẹo được lưu trong `localStorage` của trình duyệt.
 
 ## Chạy trên máy

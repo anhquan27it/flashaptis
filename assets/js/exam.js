@@ -174,7 +174,7 @@
     grammar: ["50 câu trắc nghiệm, mỗi lần một câu — giống format thi trên máy.", "Đồng hồ 25 phút. Hết giờ bài tự nộp.", "Bấm phím 1–4 hoặc A–D để chọn nhanh, ← → để chuyển câu.", "Nộp bài xong có điểm thang 0–50 và giải thích từng câu."],
     reading: ["5 part: điền từ, 2 bài sắp xếp câu, ghép ý kiến, chọn tiêu đề.", "Đồng hồ 35 phút. Chuyển part bằng thanh số ở dưới.", "Part 2–3: dùng nút ▲ ▼ để đổi vị trí câu.", "Nộp bài xong có điểm thang 0–50 và đáp án từng ý."],
     listening: ["17 câu hỏi chia 4 part như đề thật.", "Mỗi đoạn nghe được phát tối đa 2 lần (giọng đọc máy của trình duyệt).", "Đồng hồ 40 phút. Nên dùng tai nghe và Chrome/Edge để giọng đọc rõ nhất.", "Nộp xong xem transcript với câu chốt đáp án được tô sáng."],
-    writing: ["4 part: trả lời ngắn, điền form, chat 3 câu, viết 2 email.", "Đồng hồ 50 phút, đếm từ tự động cho từng câu.", "Nộp xong có điểm ước lượng tự động + bài mẫu đặt cạnh bài của bạn.", "Điểm ước lượng dựa trên độ dài, cấu trúc, từ nối — chỉ để tham khảo."],
+    writing: ["4 part: trả lời ngắn, điền form, chat 3 câu, viết 2 email.", "Đồng hồ 50 phút, đếm từ tự động cho từng câu.", "Nộp xong có điểm ước lượng tự động + bài mẫu đặt cạnh bài của bạn.", "Điểm ước lượng dựa trên độ dài, cấu trúc, từ nối — chỉ để tham khảo.", "Xem lại bài có thêm kiểm tra chính tả & ngữ pháp bằng Harper (cần mạng, tải ~8 MB lần đầu, chạy trên máy bạn)."],
     speaking: ["4 part, khoảng 12 phút. Máy đọc câu hỏi, sau đó đồng hồ đếm ngược thời gian nói.", "Trình duyệt sẽ xin quyền micro để thu âm. Bản ghi chỉ nằm trên máy bạn, không gửi đi đâu.", "Part 1: 30 giây/câu · Part 2–3: 45 giây/câu · Part 4: 1 phút chuẩn bị + 2 phút nói.", "Xong bài, nghe lại từng câu, so với bài mẫu và tự chấm theo tiêu chí."],
   };
   function viewIntro(skill, test) {
@@ -201,20 +201,22 @@
     running = false;
     FA.stopSpeak();
     FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr });
-    const pct = Math.round((o.score / 50) * 100);
+    const titleOf = (s) => (s >= 40 ? "Xuất sắc! 🎉" : s >= 26 ? "Làm tốt lắm! 💪" : "Cố lên, luyện thêm nhé! 🔥");
+    const cefrHTML = (c) => (c ? `<span class="cefr-badge">${c}</span><span class="muted">bậc CEFR ước lượng</span>` : `<span class="muted">Grammar & Vocabulary không quy đổi CEFR riêng</span>`);
+    const breakHTML = (bd) => (bd || []).map((b) => `
+                <div class="bar-row"><span>${esc(b.label)}</span><div class="progress"><i style="width:${b.total ? Math.round((b.got / b.total) * 100) : 0}%"></i></div><b>${b.got}/${b.total}</b></div>`).join("");
     app.innerHTML = `
       <div class="page"><div class="container narrow">
         <div class="crumbs"><a href="#/${o.skill}">← Chọn đề</a> / ${esc(o.test.title)} / Kết quả</div>
         <div class="card">
           <div class="result-hero">
-            <div class="ring-lg" style="--p:${pct}"><div><b>${o.score}</b><span>/50</span></div></div>
+            <div class="ring-lg" id="rRing" style="--p:${Math.round((o.score / 50) * 100)}"><div><b id="rScore">${o.score}</b><span>/50</span></div></div>
             <div>
               <span class="eyebrow">Kết quả của bạn · ${esc(SKILLS[o.skill].name)}</span>
-              <h2 class="mb-0">${o.score >= 40 ? "Xuất sắc! 🎉" : o.score >= 26 ? "Làm tốt lắm! 💪" : "Cố lên, luyện thêm nhé! 🔥"}</h2>
-              <div class="row mt-1">${o.cefr ? `<span class="cefr-badge">${o.cefr}</span><span class="muted">bậc CEFR ước lượng</span>` : `<span class="muted">Grammar & Vocabulary không quy đổi CEFR riêng</span>`}</div>
-              ${o.note ? `<p class="muted mt-1 mb-0" style="font-size:.88rem">${o.note}</p>` : ""}
-              <div class="breakdown">${(o.breakdown || []).map((b) => `
-                <div class="bar-row"><span>${esc(b.label)}</span><div class="progress"><i style="width:${b.total ? Math.round((b.got / b.total) * 100) : 0}%"></i></div><b>${b.got}/${b.total}</b></div>`).join("")}</div>
+              <h2 class="mb-0" id="rTitle">${titleOf(o.score)}</h2>
+              <div class="row mt-1" id="rCefr">${cefrHTML(o.cefr)}</div>
+              <p class="muted mt-1 mb-0" id="rNote" style="font-size:.88rem">${o.note || ""}</p>
+              <div class="breakdown" id="rBreak">${breakHTML(o.breakdown)}</div>
             </div>
           </div>
           <div class="row mt-3">
@@ -228,7 +230,22 @@
       </div></div>`;
     window.scrollTo(0, 0);
     app.querySelector("#retryBtn").onclick = () => RUNNERS[o.skill](o.test);
-    o.review(app.querySelector("#review"));
+    // cập nhật điểm sau khi đã hiển thị (vd: Writing bị trừ điểm chính tả, hoặc người dùng bỏ qua một tên riêng)
+    const update = (n) => {
+      Object.assign(o, n);
+      const all = FA.store.get("attempts", {});
+      const k = o.skill + ":" + o.test.id;
+      if (all[k] && all[k][0]) { all[k][0].score = o.score; all[k][0].cefr = o.cefr; FA.store.set("attempts", all); }
+      const q = (s) => app.querySelector(s);
+      if (!q("#rRing")) return; // đã chuyển sang trang khác
+      q("#rRing").style.setProperty("--p", Math.round((o.score / 50) * 100));
+      q("#rScore").textContent = o.score;
+      q("#rTitle").textContent = titleOf(o.score);
+      q("#rCefr").innerHTML = cefrHTML(o.cefr);
+      q("#rNote").innerHTML = o.note || "";
+      q("#rBreak").innerHTML = breakHTML(o.breakdown);
+    };
+    o.review(app.querySelector("#review"), update);
   }
 
   /* ======================================================
@@ -642,6 +659,7 @@
     clearRun();
     const st = { i: 0, p1: Array(5).fill(""), p2: "", p3: Array(3).fill(""), p4a: "", p4b: "" };
     const sh = examShell(`${test.title} — Writing`, 50);
+    if (FA.spell) FA.spell.warm(); // tải sẵn bộ kiểm tra chính tả (Harper) để lúc xem lại có ngay
     startTimer(50 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
     sh.submit.onclick = () => { if (confirm("Nộp bài Writing?")) finish(); };
     const titles = ["Part 1 · Word-level writing", "Part 2 · Short text", "Part 3 · Three written responses", "Part 4 · Formal & informal emails"];
@@ -689,32 +707,86 @@
     }
     render();
 
-    function finish() {
+    async function finish() {
       clearRun();
       const T = test;
-      const q1 = st.p1.map((x) => { const n = FA.wordCount(x); return n >= 1 && n <= 5 ? 1 : n > 5 ? 0.6 : 0; }).reduce((a, b) => a + b, 0) / 5;
-      const q2 = textQuality(st.p2, T.p2.min, T.p2.max);
-      const q3 = st.p3.map((x) => textQuality(x, T.p3.min, T.p3.max, { mid: true })).reduce((a, b) => a + b, 0) / 3;
-      const q4 = 0.35 * textQuality(st.p4a, T.p4.informal.min, T.p4.informal.max, { email: true, mid: true }) + 0.65 * textQuality(st.p4b, T.p4.formal.min, T.p4.formal.max, { email: true, long: true });
-      const score = Math.round(50 * (0.1 * q1 + 0.2 * q2 + 0.3 * q3 + 0.4 * q4));
-      const pt = (q, w) => Math.round(q * w * 50);
+      const hash0 = location.hash;
+
+      /* các bài viết cần kiểm tra chính tả, theo khóa: p1-0…p1-4, p2, p3-0…p3-2, p4a, p4b */
+      const J = {};
+      T.p1.questions.forEach((q, k) => (J["p1-" + k] = { t: st.p1[k], opts: { spellingOnly: true, quiet: true, skip: /\bname\b/i.test(q.q) } }));
+      J.p2 = { t: st.p2, opts: {} };
+      st.p3.forEach((t, k) => (J["p3-" + k] = { t, opts: {} }));
+      J.p4a = { t: st.p4a, opts: {} };
+      J.p4b = { t: st.p4b, opts: {} };
+      const keys = Object.keys(J);
+
+      // quét chính tả bằng Harper trước khi chấm (bộ kiểm tra đã được tải sẵn từ lúc bắt đầu làm bài)
+      app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm bài và kiểm tra chính tả…</p></div></div></div>`;
+      let spellOk = false;
+      if (FA.spell) {
+        try {
+          const res = await Promise.all(keys.map((k) => (J[k].opts.skip || !J[k].t.trim() ? [] : FA.spell.check(J[k].t, Object.assign({ timeoutMs: 15000 }, J[k].opts)))));
+          keys.forEach((k, i) => (J[k].issues = res[i]));
+          spellOk = true;
+        } catch (e) { /* không tải được → chấm không trừ điểm chính tả */ }
+      }
+      if (location.hash !== hash0) return; // người dùng đã rời trang trong lúc chờ
+
+      // lỗi chính tả → trừ điểm. Part 1: câu sai chính tả không được điểm. Part 2–4: nhân hệ số chính xác theo tỉ lệ lỗi/số từ.
+      const nErr = (k) => (spellOk ? J[k].issues.filter(FA.spell.isSpelling).length : 0);
+      const acc = (k) => { const n = nErr(k); return n ? Math.max(0.3, 1 - (4 * n) / Math.max(1, FA.wordCount(J[k].t))) : 1; };
+      const calc = () => {
+        const q1 = st.p1.map((x, k) => { const n = FA.wordCount(x); return nErr("p1-" + k) ? 0 : n >= 1 && n <= 5 ? 1 : n > 5 ? 0.6 : 0; }).reduce((a, b) => a + b, 0) / 5;
+        const q2 = textQuality(st.p2, T.p2.min, T.p2.max) * acc("p2");
+        const q3 = st.p3.map((x, k) => textQuality(x, T.p3.min, T.p3.max, { mid: true }) * acc("p3-" + k)).reduce((a, b) => a + b, 0) / 3;
+        const q4 = 0.35 * textQuality(st.p4a, T.p4.informal.min, T.p4.informal.max, { email: true, mid: true }) * acc("p4a") + 0.65 * textQuality(st.p4b, T.p4.formal.min, T.p4.formal.max, { email: true, long: true }) * acc("p4b");
+        const score = Math.round(50 * (0.1 * q1 + 0.2 * q2 + 0.3 * q3 + 0.4 * q4));
+        const pt = (q, w) => Math.round(q * w * 50);
+        const errs = keys.reduce((n, k) => n + nErr(k), 0);
+        const note = "Điểm ước lượng tự động dựa trên độ dài, dấu câu, từ nối, độ đa dạng từ vựng, bố cục email và số lỗi chính tả — KHÔNG chấm ngữ pháp/nội dung như giám khảo. " +
+          (!spellOk ? "⚠️ Chưa trừ điểm chính tả vì không tải được bộ kiểm tra Harper (cần mạng và mở web qua npm start). "
+            : errs ? `Đã trừ điểm vì <b>${errs}</b> lỗi chính tả (Part 1: câu sai chính tả không được điểm). Tên riêng bị báo nhầm? Bấm “✕ bỏ qua” ở phần xem lại, điểm sẽ tính lại. `
+            : "Không có lỗi chính tả nào bị trừ điểm. ") +
+          "Lỗi ngữ pháp/dấu câu Harper phát hiện chỉ để tham khảo. Hãy so với bài mẫu và tự soát theo checklist.";
+        return {
+          score, cefr: FA.toCEFR("writing", score), note,
+          breakdown: [{ label: "Part 1", got: pt(q1, 0.1), total: 5 }, { label: "Part 2", got: pt(q2, 0.2), total: 10 }, { label: "Part 3", got: pt(q3, 0.3), total: 15 }, { label: "Part 4", got: pt(q4, 0.4), total: 20 }],
+        };
+      };
+
       renderResult({
-        skill: "writing", test, score, cefr: FA.toCEFR("writing", score),
-        note: "Điểm ước lượng tự động dựa trên độ dài, dấu câu, từ nối, độ đa dạng từ vựng và bố cục email — KHÔNG chấm ngữ pháp/nội dung như giám khảo. Hãy so với bài mẫu và tự soát theo checklist bên dưới.",
-        breakdown: [{ label: "Part 1", got: pt(q1, 0.1), total: 5 }, { label: "Part 2", got: pt(q2, 0.2), total: 10 }, { label: "Part 3", got: pt(q3, 0.3), total: 15 }, { label: "Part 4", got: pt(q4, 0.4), total: 20 }],
-        review(el) {
-          const yours = (t, min, max) => `<div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>`;
+        skill: "writing", test, ...calc(),
+        review(el, update) {
+          const spellBox = (k) => `<div class="spell-box" data-spell="${k}"></div>`;
+          const yours = (t, min, max, k) => `<div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox(k)}`;
           const sample = (s) => `<div class="sample"><div class="sample-label">Bài mẫu tham khảo</div>${esc(s)}</div>`;
           el.innerHTML = `
-            <div class="q-card mb-2"><div class="q-part">Part 1</div>${T.p1.questions.map((q, k) => `<div class="mb-2"><b>${k + 1}. ${esc(q.q)}</b><div>Bạn: ${esc(st.p1[k]) || '<span class="muted">(bỏ trống)</span>'}</div><div style="color:#166534">Mẫu: ${esc(q.s)}</div></div>`).join("")}</div>
-            <div class="q-card mb-2"><div class="q-part">Part 2</div><div class="q-text">${esc(T.p2.q)}</div>${yours(st.p2, T.p2.min, T.p2.max)}${sample(T.p2.s)}</div>
-            <div class="q-card mb-2"><div class="q-part">Part 3</div>${T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div>${yours(st.p3[k], T.p3.min, T.p3.max)}${sample(q.s)}</div>`).join("")}</div>
+            <div class="q-card mb-2"><div class="q-part">Part 1</div>${T.p1.questions.map((q, k) => `<div class="mb-2"><b>${k + 1}. ${esc(q.q)}</b><div>Bạn: ${esc(st.p1[k]) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox("p1-" + k)}<div style="color:#166534">Mẫu: ${esc(q.s)}</div></div>`).join("")}</div>
+            <div class="q-card mb-2"><div class="q-part">Part 2</div><div class="q-text">${esc(T.p2.q)}</div>${yours(st.p2, T.p2.min, T.p2.max, "p2")}${sample(T.p2.s)}</div>
+            <div class="q-card mb-2"><div class="q-part">Part 3</div>${T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div>${yours(st.p3[k], T.p3.min, T.p3.max, "p3-" + k)}${sample(q.s)}</div>`).join("")}</div>
             <div class="q-card mb-2"><div class="q-part">Part 4</div><div class="passage" style="white-space:pre-line">${esc(T.p4.notice)}</div>
-              <h3>Email informal</h3>${yours(st.p4a, T.p4.informal.min, T.p4.informal.max)}${sample(T.p4.informal.s)}
-              <h3 class="mt-3">Email formal</h3>${yours(st.p4b, T.p4.formal.min, T.p4.formal.max)}${sample(T.p4.formal.s)}</div>
+              <h3>Email informal</h3>${yours(st.p4a, T.p4.informal.min, T.p4.informal.max, "p4a")}${sample(T.p4.informal.s)}
+              <h3 class="mt-3">Email formal</h3>${yours(st.p4b, T.p4.formal.min, T.p4.formal.max, "p4b")}${sample(T.p4.formal.s)}</div>
             <div class="q-card checklist"><div class="q-part">Checklist tự soát</div>
               ${["Trả lời đúng và đủ ý tất cả câu hỏi", "Đủ số từ yêu cầu ở mọi part", "Email formal có Dear… / Yours faithfully, không viết tắt (I'm → I am)", "Email informal thân mật, có hỏi lại bạn", "Dùng từ nối: Firstly, However, In addition, Therefore…", "Có ít nhất 1 câu phức (because, although, if, which…)", "Viết hoa đầu câu, chấm câu đầy đủ, không sai chính tả cơ bản", "Đưa ra đề xuất/giải pháp cụ thể ở email formal"].map((x) => `<label><input type="checkbox"> ${x}</label>`).join("")}
-            </div>`;
+            </div>
+            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0), chạy ngay trên máy bạn — bài viết không bị gửi đi đâu.</p>`;
+          const boxes = {};
+          el.querySelectorAll("[data-spell]").forEach((b) => (boxes[b.dataset.spell] = b));
+          const mountAll = () => keys.forEach((k) => {
+            if (!FA.spell) return;
+            const o = Object.assign({}, J[k].opts);
+            if (spellOk) { o.issues = J[k].issues; o.onIgnore = refresh; }
+            FA.spell.mount(boxes[k], J[k].t, o);
+          });
+          // người dùng bấm "bỏ qua" một từ → bỏ lỗi đó ở mọi ô, tính lại điểm
+          function refresh() {
+            keys.forEach((k) => (J[k].issues = FA.spell.filterIgnored(J[k].issues)));
+            update(calc());
+            mountAll();
+          }
+          mountAll();
         },
       });
     }
