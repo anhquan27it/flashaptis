@@ -31,17 +31,46 @@ Web tĩnh thuần HTML/CSS/JS, không cần build, chạy được trên GitHub 
 
 **Thang điểm** (theo bảng tham khảo của [prepedu.com](https://prepedu.com/vi/blog/thang-diem-aptis), không phải bảng chính thức của British Council): Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200; Grammar & Vocabulary (50 câu) **không cộng vào tổng**. Listening/Reading: B1/B2/C từ 12/17/21 và 13/19/23 câu đúng trên 25 câu. Speaking tự chấm 4 part × 0–5 = 20, quy ra thang 50. Overall: <40 A1 · 40–79 A2 · 80–119 B1 · 120–159 B2 · 160–180 C1 · >180 C2. Bảng ở `FA.CEFR` trong `assets/js/common.js`.
 
-Lịch sử làm bài, sổ câu sai, tiến độ flashcard & mẹo được lưu trong `localStorage` của trình duyệt.
+Lịch sử làm bài, sổ câu sai, tiến độ flashcard & mẹo được lưu trong `localStorage` của trình duyệt. Nếu **đăng nhập Google** (nút ở góc phải header) thì dữ liệu này còn được đồng bộ lên Firebase Firestore để dùng chung giữa các thiết bị; không đăng nhập vẫn dùng bình thường.
 
-## Chạy trên máy
+## Chạy trên máy (dành cho người cùng phát triển)
 
-Mở thẳng `index.html` bằng trình duyệt là dùng được. Hoặc chạy server tĩnh:
+Cần Node.js. **Không cần cài hay cấu hình gì về Firebase** — `assets/js/firebase-config.js` đã nằm trong repo (config web là công khai, không phải bí mật), nên chạy local là tự kết nối vào project Firebase `flashaptis`.
 
 ```bash
-python -m http.server 5500
+git clone <repo> && cd flashaptis
+git checkout <branch>      # vd. firebase
+npm start                  # http-server cổng 5501, tự mở trình duyệt
 ```
 
-rồi vào http://localhost:5500. Nên dùng Chrome/Edge để có giọng đọc tiếng Anh tốt nhất.
+- Phải mở qua **`http://localhost:5501`** (đừng dùng `127.0.0.1`, IP LAN hay mở thẳng file `index.html`): Firebase đăng nhập chỉ cho phép `localhost` và `flashaptis.web.app`; Harper và `fetch` AI không chạy ở `file://`. Cần có mạng (Firebase SDK và Harper nạp từ CDN).
+- Cách khác nếu không dùng npm: `python -m http.server 5500` rồi vào http://localhost:5500 (đăng nhập vẫn chạy vì là `localhost`).
+- Đăng nhập thử bằng **tài khoản Google của chính bạn**; dữ liệu thử nằm riêng theo tài khoản, không lẫn của người khác. Nên dùng Chrome/Edge để có giọng đọc tiếng Anh tốt nhất.
+- AI chấm Writing: `assets/js/ai-config.js` **không có trong repo** (chứa API key). Muốn thử thì sao chép từ `ai-config.example.js` và điền key của bạn; không có thì web chấm nội dung bằng từ khóa offline.
+
+### Quy trình làm việc chung
+1. Mỗi người làm trên **branch riêng**, commit và push lên GitHub.
+2. Trước khi commit chạy `git status`, đảm bảo **không** có `assets/js/ai-config.js`.
+3. Người quản trị project (chủ Firebase) pull branch về, thử ở `localhost:5501`, merge rồi mới **deploy** (xem dưới). Người cùng phát triển **không cần quyền Firebase** nếu không tự deploy.
+
+## Triển khai lên Firebase (chỉ người quản trị)
+
+Project Firebase: `flashaptis` · Hosting: https://flashaptis.web.app
+
+Thiết lập một lần:
+1. Trên [Firebase Console](https://console.firebase.google.com): **Authentication → Sign-in method → bật Google**; **Firestore Database → Create** (production mode, `asia-southeast1`).
+2. `npm i -g firebase-tools` rồi `firebase login` (đúng tài khoản chủ project). Muốn thêm người deploy: Console → Project settings → Users and permissions → Add member (Editor).
+
+Mỗi lần cập nhật web (chạy trên code đã pull/merge, đúng branch):
+
+```bash
+firebase deploy --only hosting            # chỉ đưa web lên
+firebase deploy --only hosting,firestore  # kèm Firestore Rules khi sửa firestore.rules
+```
+
+- `firebase.json` đã loại `ai-config.js`, `functions/`, file `.md` khỏi bản deploy; không bị lộ API key.
+- **AI qua Cloud Function** (tùy chọn, cần gói Blaze): `functions/index.js` giữ API key phía server. Deploy: `firebase functions:secrets:set AI_API_KEY` rồi `firebase deploy --only functions` (nhập `AI_ENDPOINT` — phải là URL public, `AI_MODEL`); sau đó đặt `useCloudAI: true` trong `assets/js/firebase-config.js` và deploy lại hosting. Mỗi người dùng tối đa 30 lượt/ngày.
+- Domain khác (domain riêng, GitHub Pages…) muốn đăng nhập được phải thêm ở Authentication → Settings → **Authorized domains**.
 
 ## Thêm/sửa đề
 

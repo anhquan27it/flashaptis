@@ -1,0 +1,27 @@
+{
+  "hosting": {
+    "public": ".",
+    "cleanUrls": false,
+    "ignore": [
+      "firebase.json",
+      "firestore.rules",
+      "**/.*",
+      ".git/**",
+      ".vscode/**",
+      ".firebase/**",
+      ".claude/**",
+      "**/node_modules/**",
+      "functions/**",
+      "package.json",
+      "package-lock.json",
+      "*.md",
+      "assets/js/ai-config.js",
+      "assets/js/ai-config.example.js"
+    ],
+    "headers": [
+      { "source": "**/*.@(js|css|html)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "firestore": { "rules": "firestore.rules" },
+  "functions": [{ "source": "functions", "codebase": "default", "runtime": "nodejs20" }]
+}

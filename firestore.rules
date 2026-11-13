@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Mỗi người chỉ đọc/ghi dữ liệu của chính mình (attempts, kv). Mọi thứ khác (vd. usage do Cloud Function ghi) bị chặn từ client.
+    match /users/{uid}/{col}/{doc} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid && col in ['attempts', 'kv'];
+      allow create, update: if request.auth != null && request.auth.uid == uid && col in ['attempts', 'kv']
+                            && request.resource.data.keys().hasOnly(['key', 'v', 'updatedAt'])
+                            && request.resource.data.v is string
+                            && request.resource.data.v.size() < 900000;
+    }
+  }
+}

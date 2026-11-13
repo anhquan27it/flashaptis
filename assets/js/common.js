@@ -22,6 +22,8 @@
         <nav class="nav">
           ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}">${n.label}</a>`).join("")}
           <a class="btn btn-primary btn-sm" href="exam.html">Làm đề ngay</a>
+          <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / Đăng xuất -->
+
         </nav>
       </div>`;
     document.body.prepend(header);

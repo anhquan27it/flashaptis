@@ -7,7 +7,10 @@
   const FA = (window.FA = window.FA || {});
 
   const cfg = () => window.FA_AI || null;
-  const enabled = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey && c.model); };
+  const localEnabled = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey && c.model); };
+  /* có ai-config.js (dev, gọi thẳng) → dùng nó; không có thì dùng Cloud Function nếu đã bật + đã đăng nhập (FA.cloud, cloud.js) */
+  const cloudEnabled = () => !localEnabled() && !!(FA.cloud && FA.cloud.aiReady());
+  const enabled = () => localEnabled() || cloudEnabled();
 
   const SYSTEM = `You are an examiner assistant for the Aptis ESOL Writing test (British Council). You judge ONLY content relevance: does each answer respond to what the task asks?
 Do NOT judge spelling, grammar, punctuation, style, vocabulary or length — other tools handle those. Never lower a score for such mistakes.
@@ -72,22 +75,33 @@ Include exactly the ids you were given.`;
     const items = buildItems(T, texts);
     if (!items.length) return {};
     const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), c.timeoutMs || 120000);
+    const timeoutMs = (c && c.timeoutMs) || 120000;
+    const timer = setTimeout(() => ctl.abort(), timeoutMs);
     let res;
     try {
-      res = await fetch(String(c.endpoint).replace(/\/+$/, "") + "/chat/completions", {
-        method: "POST", signal: ctl.signal,
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + c.apiKey },
-        body: JSON.stringify({
-          model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: SYSTEM },
-            { role: "user", content: "Grade these items. Context: the student is joining the \"" + T.club + "\".\n" + JSON.stringify({ items }) },
-          ],
-        }),
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const results = (parseJSON(extractContent(await res.text())).results) || {};
+      let content;
+      if (localEnabled()) {
+        res = await fetch(String(c.endpoint).replace(/\/+$/, "") + "/chat/completions", {
+          method: "POST", signal: ctl.signal,
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + c.apiKey },
+          body: JSON.stringify({
+            model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: SYSTEM },
+              { role: "user", content: "Grade these items. Context: the student is joining the \"" + T.club + "\".\n" + JSON.stringify({ items }) },
+            ],
+          }),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        content = extractContent(await res.text());
+      } else {
+        // Cloud Function giữ prompt + API key phía server; client chỉ gửi các mục cần chấm. Hàm tự ép quá giờ bằng ctl.
+        content = await Promise.race([
+          FA.cloud.callAI({ items, club: T.club }),
+          new Promise((_, rej) => ctl.signal.addEventListener("abort", () => rej(new Error("timeout")))),
+        ]);
+      }
+      const results = (parseJSON(content).results) || {};
       const out = {};
       items.forEach((it) => {
         const r = results[it.id];
@@ -104,5 +118,5 @@ Include exactly the ids you were given.`;
     }
   }
 
-  FA.ai = { enabled, grade, model: () => (cfg() && cfg().model) || "" };
+  FA.ai = { enabled, grade, model: () => (localEnabled() ? cfg().model : FA.cloud ? FA.cloud.aiLabel() : "") };
 })();

@@ -11,7 +11,9 @@ npm start                      # http-server cổng 5501 (npx), tắt cache, t�
 python -m http.server 5500     # cách khác
 ```
 
-Phải mở qua **server http(s)**, không mở thẳng file `index.html`: Harper (WASM, kiểm tra chính tả/ngữ pháp Writing) và `fetch` tới AI không chạy ở `file://`. Harper (`harper.js@3.0.0`) nạp từ jsDelivr nên cần mạng.
+Phải mở qua **server http(s)**, không mở thẳng file `index.html`: Harper (WASM, kiểm tra chính tả/ngữ pháp Writing) và `fetch` tới AI không chạy ở `file://`. Harper (`harper.js@3.0.0`) nạp từ jsDelivr nên cần mạng. Dùng đúng **`localhost`** (không `127.0.0.1`/IP LAN) vì Firebase Auth chỉ cho phép `localhost` và `flashaptis.web.app` làm domain đăng nhập.
+
+**Người cùng phát triển không cần setup Firebase**: `assets/js/firebase-config.js` đã được commit, chỉ cần `git checkout <branch>` + `npm start`, đăng nhập bằng tài khoản Google của mình (dữ liệu tách theo uid). Mỗi người làm branch riêng; không commit `assets/js/ai-config.js`. Chỉ chủ project (hoặc thành viên Editor) mới deploy: `firebase deploy --only hosting[,firestore]` chạy trên code đã merge — chi tiết trong README mục "Triển khai lên Firebase". Đừng tự ý tạo project Firebase khác hay đổi `firebase-config.js` / `firestore.rules` mà chưa hỏi.
 
 Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node + `jsdom` (`JSDOM.fromURL` trỏ vào một static server cục bộ, `runScripts: "dangerously"`, `resources: "usable"`), đặt **ngoài repo** (thư mục scratchpad), mô phỏng làm bài rồi đọc DOM / `localStorage`.
 
@@ -36,6 +38,12 @@ Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node 
 
 ### AI chấm (tùy chọn)
 `assets/js/ai-config.js` (đặt `window.FA_AI = {endpoint, apiKey, model, timeoutMs}`, API kiểu OpenAI, `stream:false`) **nằm trong `.gitignore` vì chứa API key** — không commit, không đưa lên GitHub Pages. Mẫu: `ai-config.example.js`. Không có file này thì `FA.ai.enabled()` là false và mọi thứ chạy offline. Prompt của AI chỉ chấm nội dung (không chấm chính tả/ngữ pháp để khỏi trừ hai lần) và có chống prompt-injection từ bài viết.
+
+### Firebase (project `flashaptis`)
+- [assets/js/firebase-config.js](assets/js/firebase-config.js) (`window.FA_FIREBASE`, **được commit**: config web không phải bí mật, bảo mật nằm ở `firestore.rules`) → [assets/js/cloud.js](assets/js/cloud.js) (`FA.cloud`), nạp ngay sau `common.js` ở cả 6 trang. SDK là bản **compat** 10.14.1 nạp từ gstatic (không build).
+- Đăng nhập Google (nút ở `.auth-slot` trong header). `FA.store` vẫn là nguồn chính; cloud.js bọc `FA.store.set` để đẩy lên Firestore (`users/{uid}/attempts|kv/{khóa}`, giá trị là chuỗi JSON vì Firestore cấm mảng lồng mảng). Đăng nhập → gộp (không mất bên nào); đăng xuất → xóa bản sao cục bộ. Khóa được đồng bộ: `attempts`, `wrongbook`, `fc-known`, `tips-done`, `calc`, `speakRate:*` — thêm khóa mới cần sửa `KV_KEYS` ở cloud.js.
+- Hosting: `firebase.json` (public = thư mục gốc, **ignore `ai-config.js`**), deploy `firebase deploy --only hosting,firestore`.
+- AI qua Cloud Function `gradeWriting` ([functions/index.js](functions/index.js), cần gói Blaze, secret `AI_API_KEY`, endpoint AI phải public): bật bằng `useCloudAI: true`. Có `ai-config.js` thì vẫn ưu tiên gọi thẳng (dev). Prompt nằm ở cả `ai-grader.js` và `functions/index.js` — sửa phải sửa cả hai.
 
 ## Thang điểm
 
