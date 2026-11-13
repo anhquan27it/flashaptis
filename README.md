@@ -21,7 +21,15 @@ Web tĩnh thuần HTML/CSS/JS, không cần build, chạy được trên GitHub 
 - **Writing**: 3 đề đủ 4 part, đếm từ, điểm ước lượng tự động, bài mẫu + checklist.
 - **Speaking**: 2 đề đủ 4 part, máy đọc câu hỏi, đếm ngược, ghi âm bằng micro, nghe lại, bài mẫu, tự chấm theo 5 tiêu chí.
 
-- **Kiểm tra chính tả & ngữ pháp (Writing)**: ở màn hình xem lại, bài viết được kiểm tra bằng [Harper](https://github.com/Automattic/harper) (Apache-2.0, chạy bằng WebAssembly ngay trên máy, chính tả Anh-Anh). **Lỗi chính tả bị trừ điểm**: Part 1 câu sai chính tả không được điểm, Part 2–4 bị nhân hệ số theo tỉ lệ lỗi/số từ (tối thiểu 30%). Tên riêng bị báo nhầm thì bấm “✕ bỏ qua”, điểm tính lại ngay. Lỗi ngữ pháp/dấu câu chỉ để tham khảo. Nếu không tải được Harper thì chấm như cũ, không trừ điểm chính tả. Mã nằm ở `assets/js/spellcheck.js`; thư viện `harper.js@3.0.0` được nạp từ jsDelivr khi cần (~8 MB lần đầu), nên tính năng này cần **có mạng và chạy qua http** (`npm start`) — mở thẳng file `index.html` thì bỏ qua bước này, phần còn lại vẫn dùng bình thường.
+- **Chấm điểm Writing theo 3 tiêu chí** (ngoài độ dài, dấu câu, từ nối, từ vựng):
+  - **Chính tả** — kiểm tra bằng [Harper](https://github.com/Automattic/harper) (Apache-2.0, chạy bằng WebAssembly ngay trên máy, chính tả Anh-Anh). Part 1: câu sai chính tả không được điểm; Part 2–4: nhân hệ số theo tỉ lệ lỗi/số từ (tối thiểu 30%).
+  - **Ngữ pháp** — cũng do Harper (các loại lỗi Agreement, Grammar, Miscellaneous, Repetition, WordChoice, BoundaryError), trừ nhẹ hơn chính tả (hệ số tối thiểu 60%), chỉ áp dụng Part 2–4. Lỗi viết hoa/dấu câu/gợi ý văn phong chỉ hiển thị tham khảo.
+  - **Nội dung bám sát câu hỏi** — Harper *không* làm việc này (nó chỉ kiểm tra ngôn ngữ). FlashAptis tự kiểm tra bằng từ khóa, chạy offline (`assets/js/relevance.js` + tiêu chí từng đề ở `data/writing-rel.js`): Part 1 xét kiểu câu trả lời (hỏi tuổi → phải có số, hỏi thời tiết → từ chỉ thời tiết, “yes/no” → không điểm…); Part 2–4 xét các “ý” bắt buộc của từng đề và phạt chép lại câu hỏi/thông báo. Đây chỉ là kiểm tra từ khóa, không hiểu nghĩa như giám khảo hay AI.
+  - **AI chấm nội dung (tùy chọn):** nếu có file `assets/js/ai-config.js` (sao chép từ `ai-config.example.js`, điền `endpoint`, `apiKey`, `model` của một API tương thích OpenAI) thì phần “bám sát câu hỏi” do model AI chấm thay cho từ khóa — một request cho cả bài, AI chỉ xét nội dung (không xét chính tả/ngữ pháp để khỏi trừ điểm hai lần) và được dặn bỏ qua mọi lệnh chèn trong bài viết. Lỗi mạng/quá giờ thì tự quay về kiểm tra từ khóa. ⚠️ Khi bật, **nội dung bài viết được gửi tới máy chủ AI đó**. `ai-config.js` chứa API key và đã nằm trong `.gitignore` — đừng commit hay đưa lên GitHub Pages (key trong file JS tĩnh ai cũng đọc được; muốn công khai thì phải qua một server trung gian giữ key).
+  - Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở màn hình xem lại, điểm tính lại ngay (từ chính tả được nhớ lâu dài, lỗi ngữ pháp chỉ trong phiên này). Mỗi mục có ghi rõ lý do bị trừ điểm nội dung.
+  - Nếu không tải được Harper thì không trừ điểm chính tả/ngữ pháp (phần nội dung vẫn chấm). Harper cần **có mạng và chạy qua server http** (xem mục “Chạy trên máy”, ví dụ `python -m http.server 5500`); thư viện `harper.js@3.0.0` nạp từ jsDelivr (~8 MB lần đầu). Mở thẳng file `index.html` thì bỏ qua bước này.
+
+**Thang điểm** (theo bảng tham khảo của [prepedu.com](https://prepedu.com/vi/blog/thang-diem-aptis), không phải bảng chính thức của British Council): Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200; Grammar & Vocabulary (50 câu) **không cộng vào tổng**. Listening/Reading: B1/B2/C từ 12/17/21 và 13/19/23 câu đúng trên 25 câu. Speaking tự chấm 4 part × 0–5 = 20, quy ra thang 50. Overall: <40 A1 · 40–79 A2 · 80–119 B1 · 120–159 B2 · 160–180 C1 · >180 C2. Bảng ở `FA.CEFR` trong `assets/js/common.js`.
 
 Lịch sử làm bài, sổ câu sai, tiến độ flashcard & mẹo được lưu trong `localStorage` của trình duyệt.
 
@@ -42,7 +50,7 @@ Toàn bộ ngân hàng đề nằm trong thư mục `data/`:
 - `data/grammar.js` — `{ sec, q, o: [...], a: chỉ số đáp án đúng, e: giải thích }`
 - `data/reading.js` — các part `gap`, `order`, `opinion`, `heading`
 - `data/listening.js` — các part `mcq`, `speakers`, `conv`, `mono` (lời thoại `s: 'm'|'f'`)
-- `data/writing.js`, `data/speaking.js`, `data/vocab.js`
+- `data/writing.js` (+ `data/writing-rel.js`: tiêu chí “bám sát câu hỏi” cho từng đề — đề mới nên khai báo thêm để được chấm nội dung), `data/speaking.js`, `data/vocab.js`
 
 Thứ tự đáp án trắc nghiệm được xáo trộn tự động mỗi lần tải trang, nên cứ nhập đáp án theo thứ tự bất kỳ.
 

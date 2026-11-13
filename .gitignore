@@ -2,3 +2,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# API key của AI chấm Writing — không commit
+assets/js/ai-config.js

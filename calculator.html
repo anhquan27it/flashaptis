@@ -27,14 +27,18 @@
         <div>
           <span class="eyebrow">Overall (ước lượng)</span>
           <div class="row"><span class="cefr-badge" id="ovLv">A0</span><span class="muted" id="ovNext"></span></div>
-          <p class="muted mt-1 mb-0" style="font-size:.88rem">Bậc Overall chính thức còn phụ thuộc vào điểm từng kỹ năng và Grammar & Vocabulary. Kết quả ở đây chỉ mang tính tham khảo.</p>
+          <p class="muted mt-1 mb-0" style="font-size:.88rem">Overall = Listening + Reading + Speaking + Writing (tối đa 200). Điểm Grammar & Vocabulary <b>không cộng vào tổng</b>, chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc. Kết quả ở đây chỉ mang tính tham khảo.</p>
         </div>
       </div>
     </div>
 
     <h2 class="mt-4">Ngưỡng điểm tham khảo</h2>
     <div class="tbl-wrap"><table class="tbl" id="thTable"></table></div>
-    <p class="muted mt-1" style="font-size:.86rem">Ngưỡng được tổng hợp từ các nguồn tham khảo phổ biến, có thể khác với bảng quy đổi chính thức của British Council ở từng kỳ thi.</p>
+    <p class="muted mt-1" style="font-size:.86rem">Listening và Reading: ngưỡng B1/B2/C tương ứng 12/17/21 và 13/19/23 câu đúng trên 25 câu (nhân đôi để ra thang 50). Speaking: 4 part × 0–5 điểm = 20, quy ra thang 50. Ngưỡng A1/A2 và Writing là ước lượng tham khảo.</p>
+
+    <h2 class="mt-4">Bậc Overall theo tổng điểm (/200)</h2>
+    <div class="tbl-wrap"><table class="tbl" id="ovTable"></table></div>
+    <p class="muted mt-1" style="font-size:.86rem">Các mốc 80, 120, 160 thuộc về bậc cao hơn (80 → B1, 120 → B2, 160 → C1); C2 từ 181 điểm. Ngưỡng tổng hợp từ nguồn tham khảo (prepedu.com), có thể khác bảng quy đổi chính thức của British Council ở từng kỳ thi.</p>
   </div></main>
 
   <script src="assets/js/common.js"></script>
@@ -70,8 +74,11 @@
     update();
     // bảng ngưỡng
     const levels = ["A1", "A2", "B1", "B2", "C"];
-    const row = (k, n) => `<tr><td><b>${n}</b></td>${levels.map((lv) => { const f = FA.CEFR[k].find((x) => x[1] === lv || (lv === "C" && x[1] === "C1")); return `<td>${f ? "≥ " + f[0] : "—"}</td>`; }).join("")}</tr>`;
-    document.getElementById("thTable").innerHTML = `<tr><th>Kỹ năng</th>${levels.map((l) => `<th>${l}</th>`).join("")}</tr>` + SK.map(([k, n]) => row(k, n)).join("") + row("overall", "Overall /200");
+    const row = (k, n) => `<tr><td><b>${n}</b></td>${levels.map((lv) => { const f = FA.CEFR[k].find((x) => x[1] === lv); return `<td>${f ? "≥ " + f[0] : "—"}</td>`; }).join("")}</tr>`;
+    document.getElementById("thTable").innerHTML = `<tr><th>Kỹ năng (/50)</th>${levels.map((l) => `<th>${l}</th>`).join("")}</tr>` + SK.map(([k, n]) => row(k, n)).join("");
+    // Overall: A1 → C2, hiện khoảng điểm của từng bậc
+    const ov = FA.CEFR.overall.slice().reverse(); // tăng dần
+    document.getElementById("ovTable").innerHTML = `<tr>${ov.map(([, lv]) => `<th>${lv}</th>`).join("")}</tr><tr>${ov.map(([min], i) => `<td>${i === 0 ? "dưới " + ov[1][0] : i === ov.length - 1 ? "từ " + min : min + " – " + (ov[i + 1][0] - 1)}</td>`).join("")}</tr>`;
   </script>
 </body>
 </html>

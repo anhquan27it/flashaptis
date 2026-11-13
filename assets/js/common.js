@@ -70,9 +70,17 @@
     const all = FA.store.get("attempts", {});
     const k = skill + ":" + testId;
     all[k] = all[k] || [];
-    all[k].unshift(Object.assign({ score, at: Date.now() }, extra || {}));
+    // `at` vừa là thời điểm vừa là mã lượt làm bài → luôn lớn hơn lượt trước để không trùng nhau
+    const rec = Object.assign({ score, at: Math.max(Date.now(), ((all[k][0] && all[k][0].at) || 0) + 1) }, extra || {}); // extra.ans = đáp án đã làm, dùng cho nút "Xem lại"
+    all[k].unshift(rec);
     all[k] = all[k].slice(0, 10);
     FA.store.set("attempts", all);
+    return rec.at; // mã định danh lượt làm bài
+  };
+  FA.updateAttempt = function (skill, testId, at, patch) {
+    const all = FA.store.get("attempts", {});
+    const rec = (all[skill + ":" + testId] || []).find((x) => x.at === at);
+    if (rec) { Object.assign(rec, patch); FA.store.set("attempts", all); }
   };
   FA.getAttempts = function (skill, testId) {
     return FA.store.get("attempts", {})[skill + ":" + testId] || [];
@@ -176,18 +184,30 @@
   };
   FA.stopSpeak = () => { speakGen++; if (FA.ttsSupported()) speechSynthesis.cancel(); };
 
-  /* ---------- Quy đổi điểm Aptis → CEFR (ước lượng) ---------- */
+  /* ---------- Quy đổi điểm Aptis → CEFR (ước lượng) ----------
+     Cấu trúc điểm (theo bảng tham khảo của prepedu.com/vi/blog/thang-diem-aptis — không phải bảng chính thức của British Council):
+       • Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200. Grammar & Vocabulary (50 câu × 1 điểm) KHÔNG cộng vào tổng,
+         chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc.
+       • Listening: 25 câu, B1 12–16 · B2 17–20 · C 21–25 câu đúng.  Reading: 25 câu, B1 13–18 · B2 19–22 · C 23–25.
+         Quy ra thang 50 (×2): Listening 24/34/42, Reading 26/38/46 — bên dưới. Nguồn không nêu ngưỡng A1/A2 nên giữ ngưỡng tham khảo cũ.
+       • Speaking: 4 part, mỗi part 0–5 → tối đa 20, web quy ra thang 50 (×2,5). Writing do giám khảo chấm, nguồn không có thang → giữ ngưỡng ước lượng cũ.
+       • Overall: dưới 40 A1 · 40–80 A2 · 80–120 B1 · 120–160 B2 · 160–180 C1 · trên 180 C2. Các mốc 80/120/160 xuất hiện ở hai dòng liền nhau nên web tính “từ mốc trở lên”
+         (80 → B1, 120 → B2, 160 → C1); C2 bắt đầu từ 181 vì nguồn ghi “trên 180”. */
   FA.CEFR = {
     listening: [[42, "C"], [34, "B2"], [24, "B1"], [16, "A2"], [8, "A1"]],
     reading: [[46, "C"], [38, "B2"], [26, "B1"], [16, "A2"], [8, "A1"]],
     speaking: [[48, "C"], [41, "B2"], [26, "B1"], [16, "A2"], [4, "A1"]],
     writing: [[48, "C"], [40, "B2"], [26, "B1"], [18, "A2"], [6, "A1"]],
-    overall: [[166, "C1"], [136, "B2"], [102, "B1"], [66, "A2"], [32, "A1"]],
+    overall: [[181, "C2"], [160, "C1"], [120, "B2"], [80, "B1"], [40, "A2"], [0, "A1"]],
   };
+  // điểm kỹ năng không làm tròn trước khi xét bậc (vd: 25,86 chưa đạt ngưỡng 26)
   FA.toCEFR = function (skill, score) {
     const t = FA.CEFR[skill];
     if (!t) return "";
     for (const [min, lv] of t) if (score >= min) return lv;
     return "A0";
   };
+  // Speaking: 4 part × 0–5 = tối đa 20 → thang 50
+  FA.SPEAKING_MAX_RAW = 20;
+  FA.speakingTo50 = (raw) => Math.round((raw / FA.SPEAKING_MAX_RAW) * 50);
 })();

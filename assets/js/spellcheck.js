@@ -1,7 +1,9 @@
 /* FlashAptis — kiểm tra chính tả & ngữ pháp bài Writing bằng Harper (https://github.com/Automattic/harper)
    Harper chạy hoàn toàn trên máy người dùng (WebAssembly), giấy phép Apache-2.0.
    - Nạp lười từ jsDelivr, ghim đúng phiên bản (API của harper.js còn "early access").
-   - Chỉ dùng ở màn hình xem lại bài Writing; KHÔNG ảnh hưởng điểm số.
+   - Kết quả được dùng để TRỪ ĐIỂM (exam.js): lỗi chính tả (Spelling/Typo) và lỗi ngữ pháp (GRAMMAR_KINDS).
+     Các loại Capitalization/Punctuation/Enhancement… chỉ hiển thị tham khảo (đã có điểm dấu câu riêng / chỉ là gợi ý văn phong).
+   - Harper KHÔNG hiểu nghĩa: mức bám sát câu hỏi do assets/js/relevance.js chấm, không phải Harper.
    - Dùng bản `binary` (wasm tải riêng ~7,5 MB nén) thay vì `binaryInlined` (JS 27 MB). */
 (function () {
   const FA = (window.FA = window.FA || {});
@@ -46,11 +48,17 @@
     if (!list.includes(w)) FA.store.set(IGNORE_KEY, list.concat(w).slice(-500));
   }
 
+  /* Loại lỗi ngữ pháp bị trừ điểm — chọn theo kết quả chạy thật trên toàn bộ bài mẫu (không có lỗi nào bị báo nhầm):
+     Agreement (he don't), Grammar (their/there), Miscellaneous (a/an, then/than, since…), Repetition (the the),
+     WordChoice (should of), BoundaryError (alot). KHÔNG tính: Capitalization/Punctuation (đã có điểm riêng), Enhancement/Style (gợi ý văn phong). */
+  const GRAMMAR_KINDS = new Set(["Agreement", "Grammar", "Miscellaneous", "Repetition", "WordChoice", "BoundaryError"]);
+
   const isSpelling = (it) => SPELLING_KINDS.has(it.kind);
-  /* loại khỏi danh sách các từ người dùng vừa bấm "bỏ qua" */
+  const isGrammar = (it) => GRAMMAR_KINDS.has(it.kind);
+  /* loại khỏi danh sách: từ chính tả người dùng đã "bỏ qua" (lưu lâu dài) và lỗi ngữ pháp đã bỏ qua (chỉ trong phiên này) */
   function filterIgnored(issues) {
     const ig = getIgnored();
-    return issues.filter((it) => !(isSpelling(it) && ig.has(it.problem.toLowerCase())));
+    return issues.filter((it) => !it.dismissed && !(isSpelling(it) && ig.has(it.problem.toLowerCase())));
   }
 
   async function check(text, opts) {
@@ -71,6 +79,17 @@
       if (SPELLING_KINDS.has(item.kind) && ignored.has(item.problem.toLowerCase())) continue; // người dùng đã bỏ qua từ này
       // tên riêng giữa câu (Minh, Hanoi…) hay bị báo sai chính tả
       if (item.kind === "Spelling" && /^[A-Z][A-Za-z'’-]*$/.test(item.problem) && !/(^|[.!?]\s*|\n\s*)$/.test(text.slice(0, item.start))) continue;
+      // tên trong lời chào ("Hi Lan,") hoặc dòng chữ ký ("Nguyen Van Minh") của email
+      if (item.kind === "Spelling" && /^[A-Z][A-Za-z'’-]*$/.test(item.problem)) {
+        const lineStart = text.lastIndexOf("\n", item.start - 1) + 1;
+        const lineEnd = text.indexOf("\n", item.end) < 0 ? text.length : text.indexOf("\n", item.end);
+        const lineToks = text.slice(lineStart, lineEnd).trim().split(/\s+/);
+        const signature = lineStart > 0 && lineToks.length <= 4 && lineToks.every((w) => /^[A-Z][A-Za-z'’-]*[,.!]?$/.test(w));
+        const greeted = /\b(?:[Hh]i|[Hh]ello|[Hh]ey|[Dd]ear)\s+(?:[A-Z][A-Za-z'’-]*\s+)*$/.test(text.slice(lineStart, item.start));
+        if (signature || greeted) continue;
+      }
+      // từ nằm ngay sau dấu nháy mở (vd: 'xin chào', "pho") là từ nước ngoài được trích dẫn
+      if (item.kind === "Spelling" && /['"‘“]$/.test(text.slice(Math.max(0, item.start - 1), item.start))) continue;
       out.push(item);
     }
     return out.sort((a, b) => a.start - b.start);
@@ -81,7 +100,7 @@
     let html = "", pos = 0;
     issues.forEach((it, n) => {
       if (it.start < pos) return; // bỏ lỗi chồng lấn
-      html += esc(text.slice(pos, it.start)) + `<mark class="spell-mark" title="${esc(it.message)}">${esc(text.slice(it.start, it.end))}<sup>${n + 1}</sup></mark>`;
+      html += esc(text.slice(pos, it.start)) + `<mark class="spell-mark${isSpelling(it) ? "" : " gram"}" title="${esc(it.message)}">${esc(text.slice(it.start, it.end))}<sup>${n + 1}</sup></mark>`;
       pos = it.end;
     });
     return html + esc(text.slice(pos));
@@ -92,7 +111,12 @@
     return s.length ? `Gợi ý: ${s.join(" · ")}` : "";
   }
 
-  const ignoreBtn = (it) => (SPELLING_KINDS.has(it.kind) ? ` <button type="button" class="spell-ignore" data-ignore="${esc(it.problem)}" title="Đây là tên riêng / từ đúng — không báo lại">✕ bỏ qua</button>` : "");
+  const kindLabel = (it) => (isSpelling(it) ? "Chính tả" : isGrammar(it) ? "Ngữ pháp" : it.kind === "Punctuation" ? "Dấu câu" : it.kind === "Capitalization" ? "Viết hoa" : "Gợi ý");
+  /* chính tả: "bỏ qua" nhớ lâu dài (tên riêng…); ngữ pháp: chỉ trong phiên này vì phụ thuộc ngữ cảnh. n = vị trí trong danh sách đang hiển thị */
+  const ignoreBtn = (it, n) =>
+    isSpelling(it) ? ` <button type="button" class="spell-ignore" data-ignore="${esc(it.problem)}" title="Đây là tên riêng / từ đúng — không báo lại">✕ bỏ qua</button>`
+    : isGrammar(it) ? ` <button type="button" class="spell-ignore" data-gi="${n}" title="Câu này đúng ngữ pháp — không tính lỗi này">✕ bỏ qua</button>` : "";
+  const penalized = (it) => isSpelling(it) || isGrammar(it);
 
   /* Gắn kết quả kiểm tra vào phần tử `el`.
      opts: { spellingOnly, quiet, skip, issues, onIgnore }
@@ -106,13 +130,14 @@
     if (!el.dataset.spellBound) {
       el.dataset.spellBound = "1";
       el.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-ignore]");
+        const b = e.target.closest("[data-ignore],[data-gi]");
         if (!b) return;
-        addIgnored(b.dataset.ignore);
+        if (b.dataset.gi != null) { const it = (el.__issues || [])[+b.dataset.gi]; if (it) it.dismissed = true; }
+        else addIgnored(b.dataset.ignore);
         const prev = el.previousElementSibling;
         if (prev && prev.classList.contains("passage")) prev.style.display = "";
         if (opts.onIgnore) opts.onIgnore();
-        else mount(el, text, Object.assign({}, opts, { issues: opts.issues && filterIgnored(opts.issues) })); // vẽ lại, từ vừa bỏ qua sẽ biến mất
+        else mount(el, text, Object.assign({}, opts, { issues: el.__issues ? filterIgnored(el.__issues) : opts.issues && filterIgnored(opts.issues) })); // vẽ lại, từ vừa bỏ qua sẽ biến mất
       });
     }
     if (!opts.quiet && !opts.issues) el.innerHTML = `<div class="spell-note">⏳ Đang kiểm tra chính tả & ngữ pháp… (lần đầu cần tải bộ kiểm tra ~8 MB)</div>`;
@@ -121,10 +146,11 @@
       issues = opts.issues || (await check(text, opts));
     } catch (e) {
       if (!el.isConnected) return;
-      el.innerHTML = opts.quiet ? "" : `<div class="spell-note">⚠️ Không tải được bộ kiểm tra chính tả. Cần có mạng và mở web qua <code>npm start</code> (không mở thẳng file).</div>`;
+      el.innerHTML = opts.quiet ? "" : `<div class="spell-note">⚠️ Không tải được bộ kiểm tra chính tả. Cần có mạng và mở web qua server http (không mở thẳng file) — xem mục “Chạy trên máy” trong README.</div>`;
       return;
     }
     if (!el.isConnected) return; // người dùng đã chuyển trang / làm lại
+    el.__issues = issues;
     if (!issues.length) {
       el.innerHTML = opts.quiet ? "" : `<div class="spell-note ok">✅ Harper không phát hiện lỗi chính tả hay ngữ pháp rõ ràng.</div>`;
       return;
@@ -134,14 +160,14 @@
       if (prev && prev.classList.contains("passage")) prev.style.display = "none";
     }
     el.innerHTML = opts.quiet
-      ?`<div class="spell-list quiet">${issues.map((it) => `<span class="spell-chip"><s>${esc(it.problem)}</s> ${suggestText(it).replace("Gợi ý: ", "→ ")}${ignoreBtn(it)}</span>`).join("")}</div>`
+      ?`<div class="spell-list quiet">${issues.map((it, n) => `<span class="spell-chip"><s>${esc(it.problem)}</s> ${suggestText(it).replace("Gợi ý: ", "→ ")}${ignoreBtn(it, n)}</span>`).join("")}</div>`
       : `<div class="spell-note bad">🔍 Harper phát hiện <b>${issues.length}</b> chỗ cần xem lại:</div>
          <div class="passage spell-text">${highlight(text, issues)}</div>
-         <ol class="spell-list">${issues.map((it) => `<li><b>${esc(it.problem)}</b> <span class="muted">(${esc(it.kind)})</span> — ${esc(it.message)} ${suggestText(it)}${ignoreBtn(it)}</li>`).join("")}</ol>`;
+         <ol class="spell-list">${issues.map((it, n) => `<li><b>${esc(it.problem)}</b> <span class="muted">(${kindLabel(it)}${penalized(it) ? " · bị trừ điểm" : ""})</span> — ${esc(it.message)} ${suggestText(it)}${ignoreBtn(it, n)}</li>`).join("")}</ol>`;
   }
 
   /* Tải trước bộ kiểm tra trong lúc người dùng đang làm bài (im lặng nếu lỗi) */
   function warm() { getLinter().catch(() => {}); }
 
-  FA.spell = { check, mount, warm, isSpelling, filterIgnored };
+  FA.spell = { check, mount, warm, isSpelling, isGrammar, filterIgnored };
 })();
