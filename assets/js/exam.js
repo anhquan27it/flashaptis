@@ -751,7 +751,9 @@
       const keys = Object.keys(J);
 
       // AI chấm nội dung (tùy chọn, chạy song song với Harper). Lỗi/quá giờ → dùng kiểm tra từ khóa offline.
-      const useAI = !!(FA.ai && FA.ai.enabled());
+      // Xem lại bài cũ: KHÔNG gọi AI nữa — dùng đúng kết quả AI đã lưu lúc nộp (ans.ai); lượt cũ chưa lưu thì dùng từ khóa.
+      const useAI = !replay && !!(FA.ai && FA.ai.enabled());
+      const savedAI = replay && replay.ans && replay.ans.ai && typeof replay.ans.ai === "object" ? replay.ans.ai : null;
       let aiErr = "";
       const aiP = useAI ? FA.ai.grade(T, { p1: st.p1, p2: st.p2, p3: st.p3, p4a: st.p4a, p4b: st.p4b }).catch((e) => { aiErr = (e && e.message) || "lỗi"; return null; }) : null;
 
@@ -765,7 +767,7 @@
           spellOk = true;
         } catch (e) { /* không tải được → chấm không trừ điểm chính tả */ }
       }
-      const ai = aiP ? await aiP : null;
+      const ai = savedAI || (aiP ? await aiP : null);
       if (location.hash !== hash0) return; // người dùng đã rời trang trong lúc chờ
 
       /* 1) NỘI DUNG — bám sát câu hỏi. Có AI thì AI chấm (mục nào AI không trả về thì dùng từ khóa);
@@ -812,7 +814,7 @@
           (!spellOk ? "⚠️ Chưa trừ điểm chính tả/ngữ pháp vì không tải được bộ kiểm tra Harper (cần có mạng và mở web qua server http — xem mục “Chạy trên máy” trong README). "
             : (errs || gerrs) ? `Đã trừ điểm vì <b>${errs}</b> lỗi chính tả và <b>${gerrs}</b> lỗi ngữ pháp (Part 1: câu sai chính tả không được điểm). Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở phần xem lại, điểm sẽ tính lại. `
             : "Không có lỗi chính tả/ngữ pháp nào bị trừ điểm. ") +
-          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế. ` : ai ? `Nội dung do AI (${esc(FA.ai.model())}) chấm. ` : "") +
+          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế. ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : "") +
           (offTopic ? `<b>${offTopic}</b> câu/bài chưa bám sát câu hỏi nên bị trừ điểm nội dung (xem lý do ở từng mục bên dưới). ` : "Nội dung các câu đều bám sát câu hỏi. ") +
           "Hãy so với bài mẫu và tự soát theo checklist.";
         return {
@@ -836,7 +838,7 @@
 
       renderResult({
         skill: "writing", test, ...calc(), replay: !!replay, attemptAt: replay && replay.at,
-        ans: { p1: st.p1.slice(), p2: st.p2, p3: st.p3.slice(), p4a: st.p4a, p4b: st.p4b },
+        ans: { p1: st.p1.slice(), p2: st.p2, p3: st.p3.slice(), p4a: st.p4a, p4b: st.p4b, ai: ai || undefined }, // lưu kết quả AI để xem lại không phải chấm lại
         review(el, update) {
           const spellBox = (k) => `<div class="spell-box" data-spell="${k}"></div>`;
           const yours = (t, min, max, k) => `<div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox(k)}${relBox(k)}`;
@@ -851,7 +853,7 @@
             <div class="q-card checklist"><div class="q-part">Checklist tự soát</div>
               ${["Trả lời đúng và đủ ý tất cả câu hỏi", "Đủ số từ yêu cầu ở mọi part", "Email formal có Dear… / Yours faithfully, không viết tắt (I'm → I am)", "Email informal thân mật, có hỏi lại bạn", "Dùng từ nối: Firstly, However, In addition, Therefore…", "Có ít nhất 1 câu phức (because, although, if, which…)", "Viết hoa đầu câu, chấm câu đầy đủ, không sai chính tả cơ bản", "Đưa ra đề xuất/giải pháp cụ thể ở email formal"].map((x) => `<label><input type="checkbox"> ${x}</label>`).join("")}
             </div>
-            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI (${esc(FA.ai.model())}) chấm: nội dung bài viết được gửi tới máy chủ AI đã cấu hình trong <code>ai-config.js</code>; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
+            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI chấm${savedAI ? " lúc nộp bài (xem lại không gửi bài đi nữa)" : ` (${esc(FA.ai.model())}): nội dung bài viết được gửi tới máy chủ AI đã cấu hình trong <code>ai-config.js</code>`}; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
           const boxes = {};
           el.querySelectorAll("[data-spell]").forEach((b) => (boxes[b.dataset.spell] = b));
           const mountAll = () => keys.forEach((k) => {
