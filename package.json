@@ -4,6 +4,6 @@
   "description": "FlashAptis - web luyện thi Aptis ESOL (web tĩnh)",
   "private": true,
   "scripts": {
-    "start": "npx --yes http-server . -p 5501 -c-1 -o"
+    "start": "npx --yes http-server . -p 5501 -c-1 -o http://localhost:5501"
   }
 }
