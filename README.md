@@ -93,7 +93,7 @@ firebase deploy --only hosting            # chỉ đưa web lên
 firebase deploy --only hosting,firestore  # kèm Firestore Rules khi sửa firestore.rules
 ```
 
-- Hosting chỉ đưa lên thư mục `public/` (`firebase.json` → `"public": "public"`), nên `functions/`, tài liệu, `.git` không bao giờ bị lộ; `ai-config.js` cũng bị loại khỏi bản deploy. Lệnh tắt: `npm run deploy` (= `firebase deploy --only hosting,firestore`).
+- Hosting chỉ đưa lên thư mục `public/` (`firebase.json` → `"public": "public"`), nên `functions/`, tài liệu, `.git` không bao giờ bị lộ. ⚠️ Tạm thời `ai-config.js` (chứa API key) **được deploy** để test nội bộ — key lộ công khai trên web; trước khi công khai phải thêm `"assets/js/grading/ai-config.js"` lại vào `ignore` của `firebase.json` và dùng Cloud Function. Lệnh tắt: `npm run deploy` (= `firebase deploy --only hosting,firestore`).
 - **AI qua Cloud Function** (tùy chọn, cần gói Blaze): `functions/index.js` giữ API key phía server. Deploy: `firebase functions:secrets:set AI_API_KEY` rồi `firebase deploy --only functions` (nhập `AI_ENDPOINT` — phải là URL public, `AI_MODEL`); sau đó đặt `useCloudAI: true` trong `public/assets/js/firebase/firebase-config.js` và deploy lại hosting. Số lượt/ngày theo gói (Free 3, Pro 6), đếm ở server.
 - **Gói Pro:** điền tài khoản nhận tiền vào `FA.PLAN.bank` (`public/assets/js/firebase/plan.js`: mã ngân hàng, số tài khoản, tên chủ tài khoản không dấu). Cấp quyền admin: mở `admin.html` khi đã đăng nhập để lấy UID → Firestore → collection `admins` → document ID = UID (thêm field bất kỳ). Deploy `hosting,firestore` để rules mới có hiệu lực.
 - Domain khác (domain riêng, GitHub Pages…) muốn đăng nhập được phải thêm ở Authentication → Settings → **Authorized domains**.

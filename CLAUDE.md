@@ -69,7 +69,7 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 ### Firebase (project `flashaptis`)
 - [public/assets/js/firebase/firebase-config.js](public/assets/js/firebase/firebase-config.js) (`window.FA_FIREBASE`, **được commit**: config web không phải bí mật, bảo mật nằm ở `firestore.rules`) → [public/assets/js/firebase/cloud.js](public/assets/js/firebase/cloud.js) (`FA.cloud`), nạp ngay sau `common.js` ở mọi trang HTML (kể cả `pricing.html`, `admin.html`). SDK là bản **compat** 10.14.1 nạp từ gstatic (không build).
 - Đăng nhập Google (nút ở `.auth-slot` trong header). `FA.store` vẫn là nguồn chính; cloud.js bọc `FA.store.set` để đẩy lên Firestore (`users/{uid}/attempts|kv/{khóa}`, giá trị là chuỗi JSON vì Firestore cấm mảng lồng mảng). Đăng nhập → gộp (không mất bên nào); đăng xuất → xóa bản sao cục bộ. Khóa được đồng bộ: `attempts`, `wrongbook`, `fc-known`, `tips-done`, `calc`, `speakRate:*` — thêm khóa mới cần sửa `KV_KEYS` ở cloud.js.
-- Hosting: `firebase.json` (`"public": "public"` — chỉ thư mục `public/` được deploy, **ignore `ai-config.js`**), deploy `firebase deploy --only hosting,firestore`.
+- Hosting: `firebase.json` (`"public": "public"` — chỉ thư mục `public/` được deploy; ⚠️ TẠM THỜI `ai-config.js` (chứa API key) ĐƯỢC deploy để test nội bộ — trước khi công khai phải thêm lại vào `ignore` và chuyển AI sang Cloud Function), deploy `firebase deploy --only hosting,firestore`.
 - AI qua Cloud Function `gradeWriting` ([functions/index.js](functions/index.js), cần gói Blaze, secret `AI_API_KEY`, endpoint AI phải public): bật bằng `useCloudAI: true`. Có `ai-config.js` thì vẫn ưu tiên gọi thẳng (dev). Prompt nằm ở cả `ai-grader.js` và `functions/index.js` — sửa phải sửa cả hai.
 
 ### Gói Free / Pro
