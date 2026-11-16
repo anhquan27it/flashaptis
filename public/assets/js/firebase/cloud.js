@@ -14,12 +14,25 @@
   const isKV = (k) => KV_KEYS.indexOf(k) > -1 || k.indexOf("speakRate:") === 0;
 
   let auth = null, db = null, user = null, ready = false, applying = false, pushT = null;
+  /* Nhớ hồ sơ hiển thị của lần đăng nhập trước → mỗi lần chuyển trang header vẽ ngay avatar, không nháy "Đăng nhập" trong lúc chờ Firebase.
+     Firebase xác nhận xong (onAuthStateChanged) mới là sự thật: khác thì vẽ lại, đăng xuất thì xóa cache. */
+  const SESSION_KEY = PREFIX + "session";
+  const readSession = () => { try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch (e) { return null; } };
+  const writeSession = (u) => {
+    try {
+      if (u) localStorage.setItem(SESSION_KEY, JSON.stringify({ uid: u.uid, displayName: u.displayName || "", email: u.email || "", photoURL: u.photoURL || "" }));
+      else localStorage.removeItem(SESSION_KEY);
+    } catch (e) {}
+  };
+  let cached = readSession(), authKnown = false, authResolve;
+  const authReady = new Promise((r) => (authResolve = r));
   const sent = {}; // đường dẫn doc → chuỗi JSON đã đẩy gần nhất (để không ghi lại thứ không đổi)
   const subs = [];
 
   const cloud = (FA.cloud = {
     enabled: () => !!(cfg && cfg.projectId),
     user: () => user,
+    cachedUser: () => (authKnown ? user : cached), // người dùng dùng để HIỂN THỊ (cache khi Firebase chưa xác nhận)
     db: () => db,
     onChange: (fn) => subs.push(fn),
     aiReady: () => !!(cfg && cfg.useCloudAI && user),
@@ -154,9 +167,11 @@
     }
   }
   async function signOut() {
+    await authReady;
     try { await pushNow(); } catch (e) {}
     ready = false;
     await auth.signOut();
+    writeSession(null);
     clearLocalSynced();
     FA.toast("Đã đăng xuất");
     setTimeout(() => location.reload(), 600);
@@ -164,14 +179,18 @@
 
   /* ---------- nút trong header (chỗ .auth-slot do FA.renderShell tạo) ---------- */
   function paint() {
+    const who = authKnown ? user : cached; // chưa xác nhận → tạm dùng hồ sơ đã nhớ
+    const sig = who ? [who.uid, who.displayName, who.email, who.photoURL].join("|") : "out";
     document.querySelectorAll(".auth-slot").forEach((el) => {
       if (!cfg) { el.innerHTML = ""; return; }
-      if (user) {
-        const full = user.displayName || user.email || "Tài khoản";
+      if (el.dataset.sig === sig) return; // giống hệt lần trước → giữ nguyên DOM (ảnh không tải lại, menu đang mở không bị đóng)
+      el.dataset.sig = sig;
+      if (who) {
+        const full = who.displayName || who.email || "Tài khoản";
         const initial = FA.esc((full.trim().split(/\s+/).slice(-1)[0] || "?").charAt(0).toUpperCase());
         // ảnh Google cần no-referrer; lỗi ảnh → hiện chữ cái đầu
-        const avatar = user.photoURL
-          ? `<img src="${FA.esc(user.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
+        const avatar = who.photoURL
+          ? `<img src="${FA.esc(who.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
           : `<span>${initial}</span>`;
         el.innerHTML = `
           <div class="acct">
@@ -181,7 +200,7 @@
             <div class="acct-menu" role="menu">
               <div class="acct-head">
                 <span class="avatar avatar-lg">${avatar}</span>
-                <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(user.email || "")}</span></div>
+                <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(who.email || "")}</span></div>
               </div>
               <div class="acct-plan"></div><!-- plan.js điền: gói hiện tại, lượt AI -->
               <a role="menuitem" href="pricing.html">⭐ Gói & thanh toán</a>
@@ -202,7 +221,9 @@
         el.querySelector("button").onclick = signIn;
       }
     });
+    if (FA.plan && FA.plan.paint) FA.plan.paint(); // điền huy hiệu gói vào DOM vừa vẽ
   }
+  cloud.paint = paint; // common.js gọi ngay khi tạo header
 
   /* ---------- AI chấm qua Cloud Function ---------- */
   cloud.callAI = async function (payload) {
@@ -221,6 +242,9 @@
       auth = firebase.auth(); db = firebase.firestore();
       auth.onAuthStateChanged(async (u) => {
         user = u; ready = false;
+        authKnown = true; cached = u ? { uid: u.uid } : null;
+        writeSession(u);
+        authResolve();
         paint();
         if (u) {
           try {

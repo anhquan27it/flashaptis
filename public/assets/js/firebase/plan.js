@@ -19,6 +19,16 @@
 
   const subs = [];
   let user = null, proUntil = 0, admin = false, loaded = false, usage = { day: "", n: 0 };
+  /* Nhớ gói của lần trước (theo uid) → huy hiệu PRO/FREE, link admin, đề Pro hiện đúng ngay khi chuyển trang.
+     Đây chỉ là hiển thị tạm: load() đọc Firestore xong sẽ ghi đè. */
+  const PLAN_KEY = "flashaptis:planCache";
+  const savePlan = () => { try { if (user) localStorage.setItem(PLAN_KEY, JSON.stringify({ uid: user.uid, proUntil, admin, usage })); else localStorage.removeItem(PLAN_KEY); } catch (e) {} };
+  (function restore() {
+    const who = FA.cloud && FA.cloud.cachedUser && FA.cloud.cachedUser();
+    let c = null;
+    try { c = JSON.parse(localStorage.getItem(PLAN_KEY)); } catch (e) {}
+    if (who && c && c.uid === who.uid) { user = who; proUntil = +c.proUntil || 0; admin = !!c.admin; usage = c.usage || usage; }
+  })();
 
   const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD theo giờ VN
   const db = () => FA.cloud && FA.cloud.db && FA.cloud.db();
@@ -32,7 +42,7 @@
   const fmtDay = (ms) => new Date(ms).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   function paintBadge() {
-    document.querySelectorAll(".plan-badge").forEach((el) => {
+    document.querySelectorAll(".auth-slot .plan-badge").forEach((el) => {
       el.textContent = !user ? "" : isPro() ? "PRO" : "FREE";
       el.className = "plan-badge" + (user ? (isPro() ? " pro" : " free") : "");
       el.title = user && isPro() ? "Pro đến " + fmtDay(proUntil) : "";
@@ -52,16 +62,19 @@
   }
 
   async function load(u) {
-    user = u || null; proUntil = 0; admin = false; usage = { day: "", n: 0 };
-    if (user && db()) {
-      const d = db(), uid = user.uid;
+    // đọc xong mới gán (không xóa trạng thái đang hiển thị trong lúc chờ → không nháy FREE)
+    let pu = 0, ad = false, us = { day: "", n: 0 };
+    if (u && db()) {
+      const d = db(), uid = u.uid;
       const get = (col) => d.collection(col).doc(uid).get().catch((e) => { console.warn("[FA.plan] đọc " + col + " lỗi", e); return null; });
       const [p, a, g] = await Promise.all([get("plans"), get("admins"), get("aiUsage")]);
-      proUntil = (p && p.exists && +p.data().proUntil) || 0;
-      admin = !!(a && a.exists);
-      if (g && g.exists) usage = g.data();
+      pu = (p && p.exists && +p.data().proUntil) || 0;
+      ad = !!(a && a.exists);
+      if (g && g.exists) us = g.data();
     }
+    user = u || null; proUntil = pu; admin = ad; usage = us;
     loaded = true;
+    savePlan();
     emit();
   }
 
@@ -80,6 +93,7 @@
       });
       if (n < 0) return { ok: false, reason: `Bạn đã dùng hết ${limit}/${limit} lượt AI hôm nay.` + (isPro() ? "" : ` Nâng cấp Pro để có ${CFG.aiPerDay.pro} lượt/ngày.`) };
       usage = { day, n };
+      savePlan();
       paintBadge();
       return { ok: true, used: n, limit };
     } catch (e) {
@@ -130,6 +144,7 @@
     aiLimit, aiUsed, useAI, refundAI,
     code, memo, qrUrl, myPayments, submitPayment, fmtVND, fmtDay,
     reload: () => load(user),
+    paint: paintBadge,
     onChange: (fn) => subs.push(fn),
   };
 

@@ -29,6 +29,7 @@
         </div>
       </div>`;
     document.body.prepend(header);
+    if (FA.cloud && FA.cloud.paint) FA.cloud.paint(); // vẽ ô tài khoản ngay (cloud.js dùng hồ sơ đã nhớ), tránh nháy khi chuyển trang
     const menuBtn = header.querySelector(".menu-btn"), nav = header.querySelector(".nav");
     menuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
