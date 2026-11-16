@@ -20,6 +20,7 @@
   const cloud = (FA.cloud = {
     enabled: () => !!(cfg && cfg.projectId),
     user: () => user,
+    db: () => db,
     onChange: (fn) => subs.push(fn),
     aiReady: () => !!(cfg && cfg.useCloudAI && user),
     aiLabel: () => (cfg && cfg.aiLabel) || "AI",
@@ -166,11 +167,38 @@
     document.querySelectorAll(".auth-slot").forEach((el) => {
       if (!cfg) { el.innerHTML = ""; return; }
       if (user) {
-        const name = FA.esc((user.displayName || user.email || "Tài khoản").split(" ").slice(-1)[0]);
-        el.innerHTML = `<span class="auth-user" title="${FA.esc(user.email || "")}">👤 ${name}</span><button class="btn btn-ghost btn-sm" type="button">Đăng xuất</button>`;
-        el.querySelector("button").onclick = signOut;
+        const full = user.displayName || user.email || "Tài khoản";
+        const initial = FA.esc((full.trim().split(/\s+/).slice(-1)[0] || "?").charAt(0).toUpperCase());
+        // ảnh Google cần no-referrer; lỗi ảnh → hiện chữ cái đầu
+        const avatar = user.photoURL
+          ? `<img src="${FA.esc(user.photoURL)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
+          : `<span>${initial}</span>`;
+        el.innerHTML = `
+          <div class="acct">
+            <button class="acct-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="${FA.esc(full)}">
+              <span class="avatar">${avatar}</span><span class="plan-badge"></span><svg class="caret" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="acct-menu" role="menu">
+              <div class="acct-head">
+                <span class="avatar avatar-lg">${avatar}</span>
+                <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(user.email || "")}</span></div>
+              </div>
+              <div class="acct-plan"></div><!-- plan.js điền: gói hiện tại, lượt AI -->
+              <a role="menuitem" href="pricing.html">⭐ Gói & thanh toán</a>
+              <a role="menuitem" href="admin.html" class="acct-admin" hidden>🛠️ Trang quản trị (Admin)</a>
+              <button role="menuitem" type="button" class="acct-out">↩ Đăng xuất</button>
+            </div>
+          </div>`;
+        const acct = el.querySelector(".acct"), btn = el.querySelector(".acct-btn");
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const open = acct.classList.toggle("open");
+          btn.setAttribute("aria-expanded", open);
+          document.querySelectorAll(".nav.open").forEach((n) => n.classList.remove("open"));
+        };
+        el.querySelector(".acct-out").onclick = signOut;
       } else {
-        el.innerHTML = `<button class="btn btn-outline btn-sm" type="button">Đăng nhập</button>`;
+        el.innerHTML = `<button class="btn btn-outline btn-sm login-btn" type="button"><svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Đăng nhập</span></button>`;
         el.querySelector("button").onclick = signIn;
       }
     });

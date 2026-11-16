@@ -7,22 +7,44 @@ FlashAptis là web luyện thi Aptis ESOL: site tĩnh thuần HTML/CSS/JS, **kh�
 ## Chạy
 
 ```bash
-npm start                      # http-server cổng 5501 (npx), tắt cache, tự mở trình duyệt
-python -m http.server 5500     # cách khác
+npm start                      # http-server phục vụ thư mục public/ ở cổng 5501, tắt cache, tự mở trình duyệt
+cd public && python -m http.server 5500   # cách khác
+npm run deploy                 # firebase deploy --only hosting,firestore
 ```
 
 Phải mở qua **server http(s)**, không mở thẳng file `index.html`: Harper (WASM, kiểm tra chính tả/ngữ pháp Writing) và `fetch` tới AI không chạy ở `file://`. Harper (`harper.js@3.0.0`) nạp từ jsDelivr nên cần mạng. Dùng đúng **`localhost`** (không `127.0.0.1`/IP LAN) vì Firebase Auth chỉ cho phép `localhost` và `flashaptis.web.app` làm domain đăng nhập.
 
-**Người cùng phát triển không cần setup Firebase**: `assets/js/firebase-config.js` đã được commit, chỉ cần `git checkout <branch>` + `npm start`, đăng nhập bằng tài khoản Google của mình (dữ liệu tách theo uid). Mỗi người làm branch riêng; không commit `assets/js/ai-config.js`. Chỉ chủ project (hoặc thành viên Editor) mới deploy: `firebase deploy --only hosting[,firestore]` chạy trên code đã merge — chi tiết trong README mục "Triển khai lên Firebase". Đừng tự ý tạo project Firebase khác hay đổi `firebase-config.js` / `firestore.rules` mà chưa hỏi.
+**Người cùng phát triển không cần setup Firebase**: `public/assets/js/firebase/firebase-config.js` đã được commit, chỉ cần `git checkout <branch>` + `npm start`, đăng nhập bằng tài khoản Google của mình (dữ liệu tách theo uid). Mỗi người làm branch riêng; không commit `public/assets/js/grading/ai-config.js`. Chỉ chủ project (hoặc thành viên Editor) mới deploy: `firebase deploy --only hosting[,firestore]` chạy trên code đã merge — chi tiết trong README mục "Triển khai lên Firebase". Đừng tự ý tạo project Firebase khác hay đổi `firebase-config.js` / `firestore.rules` mà chưa hỏi.
 
 Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node + `jsdom` (`JSDOM.fromURL` trỏ vào một static server cục bộ, `runScripts: "dangerously"`, `resources: "usable"`), đặt **ngoài repo** (thư mục scratchpad), mô phỏng làm bài rồi đọc DOM / `localStorage`.
 
 ## Kiến trúc
 
-- Mỗi trang (`index`, `exam`, `flashcards`, `tips`, `guide`, `calculator`) là một file HTML độc lập nạp `<script>` thủ công — thứ tự nạp là phần của kiến trúc. Mọi thứ nằm dưới namespace global `FA`.
-- [assets/js/common.js](assets/js/common.js): `FA` — header/footer (`FA.renderShell`), `FA.store` (localStorage, tiền tố `flashaptis:`), lịch sử làm bài (`FA.saveAttempt` / `FA.updateAttempt`), sổ câu sai, và **bảng quy đổi điểm → CEFR** (`FA.CEFR`, `FA.toCEFR`, `FA.speakingTo50`). Đổi thang điểm thì sửa ở đây rồi cập nhật `calculator.html`, `guide.html`, README cho khớp.
-- [exam.html](exam.html) + [assets/js/exam.js](assets/js/exam.js): SPA định tuyến bằng hash (`#/<skill>/<testId>`, `#/gym`). `RUNNERS[skill](test, replay?)` cho 5 kỹ năng (grammar, reading, listening, writing, speaking), tất cả kết thúc bằng `renderResult(o)`. Thứ tự script trong `exam.html`: `common.js` → `data/*.js` → `relevance.js` → `ai-config.js` → `ai-grader.js` → `spellcheck.js` → `exam.js`.
-- `data/*.js`: ngân hàng đề, gán vào biến global (`FA_WRITING`, …). Thêm đề Writing mới phải khai báo tiêu chí nội dung tương ứng trong [data/writing-rel.js](data/writing-rel.js) (`REL.<id>`), nếu không đề đó không được chấm bám sát câu hỏi.
+```
+flashaptis/
+├── public/                     # Web tĩnh — CHỈ thư mục này được deploy lên Firebase Hosting
+│   ├── index.html  exam.html  flashcards.html  tips.html  guide.html
+│   ├── calculator.html  pricing.html  admin.html
+│   ├── assets/
+│   │   ├── css/style.css
+│   │   └── js/
+│   │       ├── core/           common.js — namespace FA, header/footer, lưu trữ, CEFR
+│   │       ├── firebase/       firebase-config.js, cloud.js (đăng nhập + đồng bộ), plan.js (Free/Pro)
+│   │       ├── grading/        ai-grader.js, relevance.js, spellcheck.js, ai-config.example.js
+│   │       └── pages/          exam.js, flashcards.js — logic riêng của từng trang
+│   └── data/                   Ngân hàng đề: grammar, reading, listening, writing (+ writing-rel), speaking, vocab
+├── functions/                  Cloud Function gradeWriting (Node 20) — proxy AI giữ API key
+├── firebase.json  .firebaserc  firestore.rules
+├── package.json                npm start · npm run deploy · npm run deploy:functions
+└── README.md  CLAUDE.md
+```
+
+Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `assets/js/core/common.js`). Dời/đổi tên file JS thì sửa thẻ `<script>` ở mọi trang dùng nó.
+
+- Mỗi trang (`index`, `exam`, `flashcards`, `tips`, `guide`, `calculator`, `pricing`, `admin`) là một file HTML độc lập nạp `<script>` thủ công — thứ tự nạp là phần của kiến trúc. Mọi thứ nằm dưới namespace global `FA`.
+- [public/assets/js/core/common.js](public/assets/js/core/common.js): `FA` — header/footer (`FA.renderShell`), `FA.store` (localStorage, tiền tố `flashaptis:`), lịch sử làm bài (`FA.saveAttempt` / `FA.updateAttempt`), sổ câu sai, và **bảng quy đổi điểm → CEFR** (`FA.CEFR`, `FA.toCEFR`, `FA.speakingTo50`). Đổi thang điểm thì sửa ở đây rồi cập nhật `calculator.html`, `guide.html`, README cho khớp.
+- [exam.html](public/exam.html) + [public/assets/js/pages/exam.js](public/assets/js/pages/exam.js): SPA định tuyến bằng hash (`#/<skill>/<testId>`, `#/gym`). `RUNNERS[skill](test, replay?)` cho 5 kỹ năng (grammar, reading, listening, writing, speaking), tất cả kết thúc bằng `renderResult(o)`. Thứ tự script trong `exam.html`: `common.js` → `data/*.js` → `relevance.js` → `ai-config.js` → `ai-grader.js` → `spellcheck.js` → `exam.js`.
+- `data/*.js`: ngân hàng đề, gán vào biến global (`FA_WRITING`, …). Thêm đề Writing mới phải khai báo tiêu chí nội dung tương ứng trong [public/data/writing-rel.js](public/data/writing-rel.js) (`REL.<id>`), nếu không đề đó không được chấm bám sát câu hỏi.
 
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
@@ -31,13 +53,13 @@ Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node 
 
 ### Chấm Writing (phần phức tạp nhất)
 Điểm Writing = chất lượng văn bản × hệ số chính tả (Harper) × hệ số ngữ pháp (Harper) × hệ số nội dung, tính trong `finish()` của `runWriting`:
-1. **Chính tả/ngữ pháp**: `FA.spell` ([assets/js/spellcheck.js](assets/js/spellcheck.js)) bọc Harper. Không tải được Harper → không trừ điểm, có ghi chú.
-2. **Nội dung bám câu hỏi**: `FA.rel` ([assets/js/relevance.js](assets/js/relevance.js)) chấm từ khóa offline (`p1`, `factor`, `ideas`, chống chép lại câu hỏi); nếu bật AI thì `FA.ai` ([assets/js/ai-grader.js](assets/js/ai-grader.js)) chấm thay — một request cho cả bài, mục nào AI không trả về thì rơi về từ khóa, lỗi mạng/quá giờ thì cả bài dùng từ khóa. Phần AI chạy song song với Harper.
+1. **Chính tả/ngữ pháp**: `FA.spell` ([public/assets/js/grading/spellcheck.js](public/assets/js/grading/spellcheck.js)) bọc Harper. Không tải được Harper → không trừ điểm, có ghi chú.
+2. **Nội dung bám câu hỏi**: `FA.rel` ([public/assets/js/grading/relevance.js](public/assets/js/grading/relevance.js)) chấm từ khóa offline (`p1`, `factor`, `ideas`, chống chép lại câu hỏi); nếu bật AI thì `FA.ai` ([public/assets/js/grading/ai-grader.js](public/assets/js/grading/ai-grader.js)) chấm thay — một request cho cả bài, mục nào AI không trả về thì rơi về từ khóa, lỗi mạng/quá giờ thì cả bài dùng từ khóa. Phần AI chạy song song với Harper.
 3. **Kết quả AI được lưu vào `ans.ai`** của lượt làm bài; xem lại **không gọi AI lại**, dùng đúng kết quả đã lưu (lượt cũ không có `ans.ai` thì dùng từ khóa). Đừng đưa lời gọi AI vào đường replay.
 4. Bấm "✕ bỏ qua" ở màn xem lại gọi `update(calc())` → `FA.updateAttempt` ghi đè điểm của lượt đó.
 
 ### AI chấm (tùy chọn)
-`assets/js/ai-config.js` (đặt `window.FA_AI = {endpoint, apiKey, model, timeoutMs}`, API kiểu OpenAI, `stream:false`) **nằm trong `.gitignore` vì chứa API key** — không commit, không đưa lên GitHub Pages. Mẫu: `ai-config.example.js`. Không có file này thì `FA.ai.enabled()` là false và mọi thứ chạy offline. Prompt của AI chỉ chấm nội dung (không chấm chính tả/ngữ pháp để khỏi trừ hai lần) và có chống prompt-injection từ bài viết. Prompt có quy tắc "phải thực sự cung cấp nội dung được hỏi" (từ chối/né tránh như "I don't have a trip" → tối đa 0.25) vì trước đây AI từng cho điểm nội dung tối đa cho câu trả lời kiểu đó.
+`public/assets/js/grading/ai-config.js` (đặt `window.FA_AI = {endpoint, apiKey, model, timeoutMs}`, API kiểu OpenAI, `stream:false`) **nằm trong `.gitignore` vì chứa API key** — không commit, không đưa lên GitHub Pages. Mẫu: `ai-config.example.js`. Không có file này thì `FA.ai.enabled()` là false và mọi thứ chạy offline. Prompt của AI chỉ chấm nội dung (không chấm chính tả/ngữ pháp để khỏi trừ hai lần) và có chống prompt-injection từ bài viết. Prompt có quy tắc "phải thực sự cung cấp nội dung được hỏi" (từ chối/né tránh như "I don't have a trip" → tối đa 0.25) vì trước đây AI từng cho điểm nội dung tối đa cho câu trả lời kiểu đó.
 - **Cấu hình hiện tại: OpenRouter** (API tương thích OpenAI) — `endpoint: https://openrouter.ai/api/v1`, `model: openrouter/free` (router tự chọn một model miễn phí còn rảnh mỗi lần gọi, nên chất lượng chấm có thể không đều; đổi model chỉ cần sửa trường `model` trong `ai-config.js`). Đã thử: gọi thẳng từ trình duyệt được, `response_format: json_object` chạy ổn. Lỗi 429/503 hoặc JSON hỏng thì web tự rơi về chấm từ khóa offline.
 - **Chấm theo độ sâu, không chỉ đúng chủ đề**: mỗi mục Part 2–4 gửi kèm `words` (số từ đã viết) và `required_words` (khoảng đề yêu cầu, vd `20-30`), lấy từ `buildItems` (`len()`); Cloud Function phải chuyển tiếp hai trường này (đã có trong `clean`). Prompt giới hạn điểm: dưới 50% số từ tối thiểu → tối đa 0.4, dưới 75% → tối đa 0.7; chỉ nhắc lại câu hỏi/không nêu lý do ("I love travel" cho câu "Why…?") → tối đa 0.3; một lý do chung chung không giải thích → tối đa 0.6. Trước đây prompt ghi "Short but complete answers are fine" nên bài 3 từ vẫn được điểm tối đa. Đây là trần về *nội dung còn thiếu*, không phải chấm lại độ dài (độ dài/từ nối vẫn do `textQuality` chấm riêng). Các lượt đã lưu không đổi (xem lại không gọi AI).
 - **Key dự phòng**: `ai-config.js` có thêm `fallbackApiKey` (hoặc mảng `fallbackApiKeys`); `ai-grader.js` gọi bằng `apiKey` trước, chỉ khi nhận HTTP 401/402/403/429 (hết hạn mức/bị từ chối) mới thử key dự phòng. Chỉ áp dụng cho đường gọi thẳng (dev), không áp dụng Cloud Function.
@@ -45,10 +67,17 @@ Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node 
 - Key nằm ở client nên ai mở DevTools cũng thấy → chỉ dùng khi chạy local; deploy thật thì đặt key trong Cloud Function (secret `AI_API_KEY`). Không dán key vào CLAUDE.md, README hay file được commit.
 
 ### Firebase (project `flashaptis`)
-- [assets/js/firebase-config.js](assets/js/firebase-config.js) (`window.FA_FIREBASE`, **được commit**: config web không phải bí mật, bảo mật nằm ở `firestore.rules`) → [assets/js/cloud.js](assets/js/cloud.js) (`FA.cloud`), nạp ngay sau `common.js` ở cả 6 trang. SDK là bản **compat** 10.14.1 nạp từ gstatic (không build).
+- [public/assets/js/firebase/firebase-config.js](public/assets/js/firebase/firebase-config.js) (`window.FA_FIREBASE`, **được commit**: config web không phải bí mật, bảo mật nằm ở `firestore.rules`) → [public/assets/js/firebase/cloud.js](public/assets/js/firebase/cloud.js) (`FA.cloud`), nạp ngay sau `common.js` ở mọi trang HTML (kể cả `pricing.html`, `admin.html`). SDK là bản **compat** 10.14.1 nạp từ gstatic (không build).
 - Đăng nhập Google (nút ở `.auth-slot` trong header). `FA.store` vẫn là nguồn chính; cloud.js bọc `FA.store.set` để đẩy lên Firestore (`users/{uid}/attempts|kv/{khóa}`, giá trị là chuỗi JSON vì Firestore cấm mảng lồng mảng). Đăng nhập → gộp (không mất bên nào); đăng xuất → xóa bản sao cục bộ. Khóa được đồng bộ: `attempts`, `wrongbook`, `fc-known`, `tips-done`, `calc`, `speakRate:*` — thêm khóa mới cần sửa `KV_KEYS` ở cloud.js.
-- Hosting: `firebase.json` (public = thư mục gốc, **ignore `ai-config.js`**), deploy `firebase deploy --only hosting,firestore`.
+- Hosting: `firebase.json` (`"public": "public"` — chỉ thư mục `public/` được deploy, **ignore `ai-config.js`**), deploy `firebase deploy --only hosting,firestore`.
 - AI qua Cloud Function `gradeWriting` ([functions/index.js](functions/index.js), cần gói Blaze, secret `AI_API_KEY`, endpoint AI phải public): bật bằng `useCloudAI: true`. Có `ai-config.js` thì vẫn ưu tiên gọi thẳng (dev). Prompt nằm ở cả `ai-grader.js` và `functions/index.js` — sửa phải sửa cả hai.
+
+### Gói Free / Pro
+- [public/assets/js/firebase/plan.js](public/assets/js/firebase/plan.js) (`FA.plan`, cấu hình ở `FA.PLAN`: `freeTests`, `aiPerDay`, `price`, `days`, `bank`), nạp sau `cloud.js` ở mọi trang. Free: `freeTests` (=2) đề **đầu** mỗi kỹ năng (theo thứ tự trong `data/*.js` → thêm đề mới vào cuối mảng là thành đề Pro), AI 3 lượt/ngày. Pro: mọi đề, AI 6 lượt/ngày. Khách chưa đăng nhập = Free nhưng không có AI.
+- Firestore: `plans/{uid}.proUntil` (ms, **chỉ admin ghi**), `aiUsage/{uid}` {day (giờ VN), n}, `payments/{id}` (người dùng tạo `pending`), `admins/{uid}` (tạo tay trong Console). Rules ở `firestore.rules`.
+- Chặn **phía trình duyệt** (người dùng đã chọn): `exam.js` khóa đề Pro (`isLocked` → `viewLocked`, gym bỏ câu của đề khóa), `finish()` của Writing gọi `FA.plan.useAI()` trước khi gọi AI, AI lỗi thì `refundAI()`. Đề Pro vẫn nằm trong `data/*.js` công khai. Lượt AI qua Cloud Function được đếm lại ở server (`checkQuota`, `AI_PER_DAY` phải khớp `FA.PLAN.aiPerDay`).
+- `exam.js` vẽ lại khi gói thay đổi **chỉ** ở màn `list`/`locked` (biến `view`), không đụng bài đang làm hay màn kết quả.
+- Thanh toán: [pricing.html](public/pricing.html) hiện VietQR (`img.vietqr.io`, nội dung `FLASHAPTIS FA<8 ký tự đầu uid>`) → "Tôi đã chuyển khoản" tạo `payments` pending → admin duyệt ở [admin.html](public/admin.html) (transaction: cộng `days` ngày nối tiếp vào `proUntil`). Chưa có duyệt tự động.
 
 ## Thang điểm
 

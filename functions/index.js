@@ -1,5 +1,5 @@
 /* FlashAptis — Cloud Function gradeWriting: proxy gọi AI chấm NỘI DUNG Writing, giấu API key.
-   - Chỉ người đã đăng nhập (Firebase Auth) gọi được; mỗi người tối đa DAILY_LIMIT lượt/ngày.
+   - Chỉ người đã đăng nhập (Firebase Auth) gọi được; số lượt/ngày theo gói: Free 3, Pro 6 (plans/{uid}.proUntil, giữ khớp FA.PLAN.aiPerDay trong assets/js/plan.js).
    - Prompt nằm ở đây (không nhận prompt từ client → không bị lạm dụng làm proxy LLM miễn phí). Giữ SYSTEM đồng bộ với assets/js/ai-grader.js.
    - Cấu hình: secret AI_API_KEY (firebase functions:secrets:set AI_API_KEY), tham số AI_ENDPOINT (vd. https://api.openai.com/v1) và AI_MODEL
      (nhập khi deploy, hoặc đặt trong functions/.env). Endpoint phải truy cập được từ Internet — localhost:20128 trên máy bạn thì KHÔNG. */
@@ -11,7 +11,7 @@ admin.initializeApp();
 const AI_API_KEY = defineSecret("AI_API_KEY");
 const AI_ENDPOINT = defineString("AI_ENDPOINT");
 const AI_MODEL = defineString("AI_MODEL");
-const DAILY_LIMIT = 30;
+const AI_PER_DAY = { free: 3, pro: 6 };
 
 const SYSTEM = `You are an examiner assistant for the Aptis ESOL Writing test (British Council). You judge ONLY content relevance: does each answer respond to what the task asks?
 Do NOT judge spelling, grammar, punctuation, style or vocabulary — other tools handle those. Never lower a score for such mistakes. Length matters only through the content-depth rules below.
@@ -33,11 +33,14 @@ Reply with ONLY a JSON object, no markdown:
 Include exactly the ids you were given.`;
 
 async function checkQuota(uid) {
-  const day = new Date().toISOString().slice(0, 10);
+  const day = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }); // ngày theo giờ VN, khớp plan.js
+  const planSnap = await admin.firestore().doc(`plans/${uid}`).get();
+  const pro = planSnap.exists && Number(planSnap.data().proUntil) > Date.now();
+  const limit = AI_PER_DAY[pro ? "pro" : "free"];
   const ref = admin.firestore().doc(`users/${uid}/usage/${day}`);
   await admin.firestore().runTransaction(async (tx) => {
     const n = ((await tx.get(ref)).data() || {}).ai || 0;
-    if (n >= DAILY_LIMIT) throw new HttpsError("resource-exhausted", "Hết lượt chấm AI hôm nay");
+    if (n >= limit) throw new HttpsError("resource-exhausted", "Hết lượt chấm AI hôm nay");
     tx.set(ref, { ai: n + 1 }, { merge: true });
   });
 }

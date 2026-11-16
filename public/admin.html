@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Quản trị thanh toán — FlashAptis</title>
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23f97316'/><text x='50' y='70' font-size='62' text-anchor='middle'>⚡</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="page"><div class="container">
+    <span class="eyebrow">Quản trị</span>
+    <h1 class="page-title">💳 Duyệt thanh toán Pro</h1>
+    <p class="page-sub">Đối chiếu app ngân hàng: số tiền và nội dung chuyển khoản (<code>FLASHAPTIS FA…</code>) phải khớp với mã của yêu cầu. Duyệt → tài khoản được cộng thêm số ngày Pro.</p>
+    <div id="adm"></div>
+  </div></main>
+
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>
+    /* Trang quản trị: chỉ tài khoản có document admins/{uid} trong Firestore mới đọc/ghi được (firestore.rules chặn ở server). */
+    FA.renderShell("");
+    const P = FA.PLAN, esc = FA.esc, plan = FA.plan, el = document.getElementById("adm");
+    const DAY = 864e5;
+
+    async function grant(uid, days, email, payId) {
+      const db = FA.cloud.db(), me = plan.user().uid;
+      const planRef = db.collection("plans").doc(uid);
+      let until = 0;
+      await db.runTransaction(async (tx) => {
+        const s = await tx.get(planRef);
+        const cur = (s.exists && +s.data().proUntil) || 0;
+        until = Math.max(cur, Date.now()) + days * DAY; // còn Pro → cộng nối tiếp
+        tx.set(planRef, { proUntil: until, updatedAt: Date.now(), email: email || (s.exists && s.data().email) || "" });
+        if (payId) tx.update(db.collection("payments").doc(payId), { status: "approved", approvedAt: Date.now(), by: me, proUntil: until });
+      });
+      return until;
+    }
+    async function reject(payId, note) {
+      await FA.cloud.db().collection("payments").doc(payId).update({ status: "rejected", approvedAt: Date.now(), by: plan.user().uid, note: note || "" });
+    }
+
+    async function draw() {
+      if (!plan.loaded()) { el.innerHTML = `<div class="card"><p class="muted mb-0">Đang kiểm tra tài khoản…</p></div>`; return; }
+      const u = plan.user();
+      if (!u) {
+        el.innerHTML = `<div class="card"><p>Đăng nhập bằng tài khoản admin.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập với Google</button></div>`;
+        document.getElementById("loginBtn").onclick = () => FA.cloud.signIn();
+        return;
+      }
+      if (!plan.isAdmin()) {
+        el.innerHTML = `<div class="card"><h3>Tài khoản này chưa phải admin</h3>
+          <p>UID của bạn: <code>${esc(u.uid)}</code></p>
+          <p class="muted mb-0">Để cấp quyền: Firebase Console → Firestore Database → <b>Start collection</b> <code>admins</code> → Document ID = UID ở trên → thêm một field bất kỳ (vd. <code>email</code> = email của bạn) → Save. Rồi tải lại trang này.</p></div>`;
+        return;
+      }
+      el.innerHTML = `<div class="card"><p class="muted mb-0">Đang tải yêu cầu…</p></div>`;
+      const snap = await FA.cloud.db().collection("payments").orderBy("createdAt", "desc").limit(100).get();
+      const pays = [];
+      snap.forEach((d) => pays.push(Object.assign({ id: d.id }, d.data())));
+      const pending = pays.filter((p) => p.status === "pending"), done = pays.filter((p) => p.status !== "pending");
+      const row = (p, actions) => `<tr>
+        <td>${FA.fmtDate(p.createdAt)}</td>
+        <td><b>${esc(p.name || "—")}</b><br><span class="muted" style="font-size:.85rem">${esc(p.email || "")}</span></td>
+        <td><code>FLASHAPTIS ${esc(p.code)}</code></td>
+        <td>${plan.fmtVND(+p.amount || 0)}</td>
+        <td>${actions}</td></tr>`;
+      const ST = { approved: "✅ Đã duyệt", rejected: "❌ Từ chối" };
+
+      el.innerHTML = `
+        <div class="card">
+          <h3>Chờ duyệt (${pending.length})</h3>
+          ${pending.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Người dùng</th><th>Nội dung CK</th><th>Số tiền</th><th></th></tr>
+            ${pending.map((p) => row(p, `<div class="row"><button class="btn btn-green btn-sm" data-ok="${esc(p.id)}">Duyệt +${P.days} ngày</button><button class="btn btn-red btn-sm" data-no="${esc(p.id)}">Từ chối</button></div>`)).join("")}</table></div>` : `<p class="muted mb-0">Không có yêu cầu nào đang chờ.</p>`}
+        </div>
+        <div class="card mt-2">
+          <h3>Cấp Pro thủ công</h3>
+          <div class="row"><input id="gUid" placeholder="UID người dùng" style="flex:1;min-width:220px" class="inp"><input id="gDays" type="number" min="1" value="${P.days}" style="width:90px" class="inp"><button class="btn btn-outline btn-sm" id="gBtn" type="button">Cấp</button></div>
+          <p class="muted mb-0 mt-1" style="font-size:.85rem">UID xem ở Firebase Console → Authentication → Users. Nhập số ngày âm không được; muốn thu hồi thì sửa <code>plans/{uid}.proUntil</code> trong Console.</p>
+        </div>
+        <div class="card mt-2">
+          <h3>Đã xử lý gần đây</h3>
+          ${done.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Người dùng</th><th>Nội dung CK</th><th>Số tiền</th><th>Kết quả</th></tr>
+            ${done.map((p) => row(p, `${ST[p.status] || esc(p.status)}${p.proUntil ? `<br><span class="muted" style="font-size:.85rem">Pro đến ${plan.fmtDay(p.proUntil)}</span>` : ""}${p.note ? `<br><span class="muted" style="font-size:.85rem">${esc(p.note)}</span>` : ""}`)).join("")}</table></div>` : `<p class="muted mb-0">Chưa có.</p>`}
+        </div>`;
+
+      el.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = async () => {
+        const p = pending.find((x) => x.id === b.dataset.ok);
+        if (!confirm(`Đã thấy ${plan.fmtVND(+p.amount)} với nội dung "FLASHAPTIS ${p.code}" trong app ngân hàng?\nDuyệt sẽ cộng ${P.days} ngày Pro cho ${p.email || p.uid}.`)) return;
+        b.disabled = true;
+        try { const until = await grant(p.uid, P.days, p.email, p.id); FA.toast("Đã duyệt — Pro đến " + plan.fmtDay(until)); draw(); }
+        catch (e) { console.warn(e); FA.toast("Lỗi: " + ((e && e.message) || "")); b.disabled = false; }
+      }));
+      el.querySelectorAll("[data-no]").forEach((b) => (b.onclick = async () => {
+        const note = prompt("Lý do từ chối (người dùng sẽ thấy):", "Chưa nhận được tiền");
+        if (note === null) return;
+        try { await reject(b.dataset.no, note.slice(0, 200)); FA.toast("Đã từ chối"); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      }));
+      document.getElementById("gBtn").onclick = async () => {
+        const uid = document.getElementById("gUid").value.trim(), days = Math.round(+document.getElementById("gDays").value);
+        if (!uid || !(days > 0)) return FA.toast("Nhập UID và số ngày > 0");
+        if (!confirm(`Cấp ${days} ngày Pro cho UID ${uid}?`)) return;
+        try { const until = await grant(uid, days, ""); FA.toast("Đã cấp — Pro đến " + plan.fmtDay(until)); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      };
+    }
+    plan.onChange(draw);
+    draw();
+  </script>
+</body>
+</html>

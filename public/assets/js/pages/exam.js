@@ -59,8 +59,14 @@
     route();
   });
 
+  /* ---------- gói Free / Pro (FA.plan, plan.js) ---------- */
+  const isLocked = (skill, test) => !!(FA.plan && FA.plan.locked(SKILLS[skill].data.indexOf(test)));
+  let view = ""; // màn hình hiện tại — chỉ vẽ lại "list"/"locked" khi gói thay đổi (không đụng bài đang làm / màn kết quả)
+  if (FA.plan) FA.plan.onChange(() => { if (!running && (view === "list" || view === "locked")) route(); });
+
   function route() {
     clearRun();
+    view = "";
     lastHash = location.hash;
     window.scrollTo(0, 0);
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
@@ -71,7 +77,27 @@
     if (!parts[1]) return viewList(skill);
     const test = SKILLS[skill].data.find((t) => t.id === parts[1]);
     if (!test) return viewList(skill);
+    if (isLocked(skill, test)) return viewLocked(skill, test);
     viewIntro(skill, test);
+  }
+
+  /* đề Pro mà người dùng chưa có Pro */
+  function viewLocked(skill, test) {
+    view = "locked";
+    const S = SKILLS[skill], P = FA.PLAN;
+    const checking = !FA.plan.loaded();
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        <div class="crumbs"><a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}</div>
+        <div class="card empty">
+          <div class="big">${checking ? "⏳" : "🔒"}</div>
+          <h2>${esc(test.title)} — ${esc(S.name)}</h2>
+          ${checking ? `<p>Đang kiểm tra gói tài khoản…</p>` : `
+          <p>Đề này dành cho gói <b>Pro</b>. Gói Free làm được ${P.freeTests} đề đầu của mỗi kỹ năng.</p>
+          <p>Pro: toàn bộ đề + AI chấm Writing ${P.aiPerDay.pro} lượt/ngày — chỉ ${FA.plan.fmtVND(P.price)}/${P.days} ngày.</p>
+          <div class="row" style="justify-content:center"><a class="btn btn-primary" href="pricing.html">Nâng cấp Pro</a><a class="btn btn-ghost" href="#/${skill}">Chọn đề Free</a></div>`}
+        </div>
+      </div></div>`;
   }
 
   function startTimer(sec, el, onEnd) {
@@ -147,6 +173,7 @@
      DANH SÁCH ĐỀ
      ====================================================== */
   function viewList(skill) {
+    view = "list";
     const S = SKILLS[skill];
     app.innerHTML = `
       <div class="page"><div class="container narrow">
@@ -154,10 +181,11 @@
         <h1 class="page-title">Chọn đề ${esc(short(skill))}</h1>
         <p class="page-sub">${S.desc}</p>
         <div class="grid grid-2">
-          ${S.data.map((t) => {
+          ${S.data.map((t, i) => {
             const at = FA.getAttempts(skill, t.id)[0];
-            return `<a class="card test-card" href="#/${skill}/${t.id}">
-              ${t.hot ? `<span class="pill hot">🔥 Đề trọng điểm</span>` : `<span class="pill green">Miễn phí</span>`}
+            const pro = FA.plan && i >= FA.PLAN.freeTests, locked = isLocked(skill, t);
+            return `<a class="card test-card${locked ? " locked" : ""}" href="#/${skill}/${t.id}">
+              ${pro ? `<span class="pill pro">${locked ? "🔒 " : ""}⭐ Pro</span>` : t.hot ? `<span class="pill hot">🔥 Đề trọng điểm</span>` : `<span class="pill green">Miễn phí</span>`}
               <h3>${esc(t.title)}</h3>
               <div class="meta">${S.meta}</div>
               <div class="last">${at ? `Lần gần nhất: ${at.score}/50 · ${FA.fmtDate(at.at)}` : `<span class="muted" style="font-weight:500">Chưa làm lần nào</span>`}</div>
@@ -752,10 +780,17 @@
 
       // AI chấm nội dung (tùy chọn, chạy song song với Harper). Lỗi/quá giờ → dùng kiểm tra từ khóa offline.
       // Xem lại bài cũ: KHÔNG gọi AI nữa — dùng đúng kết quả AI đã lưu lúc nộp (ans.ai); lượt cũ chưa lưu thì dùng từ khóa.
-      const useAI = !replay && !!(FA.ai && FA.ai.enabled());
+      let useAI = !replay && !!(FA.ai && FA.ai.enabled());
       const savedAI = replay && replay.ans && replay.ans.ai && typeof replay.ans.ai === "object" ? replay.ans.ai : null;
-      let aiErr = "";
-      const aiP = useAI ? FA.ai.grade(T, { p1: st.p1, p2: st.p2, p3: st.p3, p4a: st.p4a, p4b: st.p4b }).catch((e) => { aiErr = (e && e.message) || "lỗi"; return null; }) : null;
+      let aiErr = "", aiQuota = "";
+      // giới hạn lượt AI theo gói (plan.js): Free 3, Pro 6 lượt/ngày; hết lượt / chưa đăng nhập → chấm từ khóa
+      if (useAI && FA.plan) {
+        app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang kiểm tra lượt AI…</p></div></div></div>`;
+        const q = await FA.plan.useAI();
+        if (!q.ok) { useAI = false; aiQuota = q.reason; }
+        else if (q.limit) aiQuota = `Đã dùng ${q.used}/${q.limit} lượt AI hôm nay.`;
+      }
+      const aiP = useAI ? FA.ai.grade(T, { p1: st.p1, p2: st.p2, p3: st.p3, p4a: st.p4a, p4b: st.p4b }).catch((e) => { aiErr = (e && e.message) || "lỗi"; if (FA.plan) FA.plan.refundAI(); return null; }) : null;
 
       // quét chính tả bằng Harper trước khi chấm (bộ kiểm tra đã được tải sẵn từ lúc bắt đầu làm bài)
       app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm bài, kiểm tra chính tả & ngữ pháp…${useAI ? `<br>AI (${esc(FA.ai.model())}) đang chấm nội dung — có thể mất 10–40 giây.` : ""}</p></div></div></div>`;
@@ -814,7 +849,7 @@
           (!spellOk ? "⚠️ Chưa trừ điểm chính tả/ngữ pháp vì không tải được bộ kiểm tra Harper (cần có mạng và mở web qua server http — xem mục “Chạy trên máy” trong README). "
             : (errs || gerrs) ? `Đã trừ điểm vì <b>${errs}</b> lỗi chính tả và <b>${gerrs}</b> lỗi ngữ pháp (Part 1: câu sai chính tả không được điểm). Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở phần xem lại, điểm sẽ tính lại. `
             : "Không có lỗi chính tả/ngữ pháp nào bị trừ điểm. ") +
-          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế. ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : "") +
+          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế (lượt AI đã được hoàn lại). ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. ${esc(aiQuota)} `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : aiQuota ? `ℹ️ ${esc(aiQuota)} Nội dung được kiểm tra bằng từ khóa. ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}` : "") +
           (offTopic ? `<b>${offTopic}</b> câu/bài chưa bám sát câu hỏi nên bị trừ điểm nội dung (xem lý do ở từng mục bên dưới). ` : "Nội dung các câu đều bám sát câu hỏi. ") +
           "Hãy so với bài mẫu và tự soát theo checklist.";
         return {
@@ -1043,9 +1078,11 @@
      ====================================================== */
   function gymPool(src) {
     const pool = [];
-    if (src === "grammar" || src === "mix") window.FA_GRAMMAR.forEach((t) => t.questions.forEach((q, k) => pool.push({ id: `${t.id}-q${k}`, src: "Grammar · " + t.title, q: q.q, o: q.o, a: q.a, e: q.e, instr: q.instr })));
-    if (src === "reading" || src === "mix") window.FA_READING.forEach((t) => t.parts.forEach((p, pi) => p.type === "gap" && p.gaps.forEach((g, k) => pool.push(gapItem(t, pi, p, k)))));
-    if (src === "listening" || src === "mix") window.FA_LISTENING.forEach((t) => t.parts.forEach((p, pi) => p.type === "mcq" && p.items.forEach((it, k) => pool.push({ id: `${t.id}-p${pi}-i${k}`, src: "Listening · " + t.title, q: it.q, o: it.o, a: it.a, e: it.e, script: it.script }))));
+    // chỉ lấy câu từ các đề người dùng được mở (đề Pro bị khóa thì không đưa vào gym)
+    const open = (skill) => SKILLS[skill].data.filter((t) => !isLocked(skill, t));
+    if (src === "grammar" || src === "mix") open("grammar").forEach((t) => t.questions.forEach((q, k) => pool.push({ id: `${t.id}-q${k}`, src: "Grammar · " + t.title, q: q.q, o: q.o, a: q.a, e: q.e, instr: q.instr })));
+    if (src === "reading" || src === "mix") open("reading").forEach((t) => t.parts.forEach((p, pi) => p.type === "gap" && p.gaps.forEach((g, k) => pool.push(gapItem(t, pi, p, k)))));
+    if (src === "listening" || src === "mix") open("listening").forEach((t) => t.parts.forEach((p, pi) => p.type === "mcq" && p.items.forEach((it, k) => pool.push({ id: `${t.id}-p${pi}-i${k}`, src: "Listening · " + t.title, q: it.q, o: it.o, a: it.a, e: it.e, script: it.script }))));
     return pool;
   }
 

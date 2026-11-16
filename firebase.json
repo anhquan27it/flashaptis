@@ -1,22 +1,12 @@
 {
   "hosting": {
-    "public": ".",
-    "cleanUrls": false,
+    "public": "public",
     "ignore": [
       "firebase.json",
-      "firestore.rules",
       "**/.*",
-      ".git/**",
-      ".vscode/**",
-      ".firebase/**",
-      ".claude/**",
       "**/node_modules/**",
-      "functions/**",
-      "package.json",
-      "package-lock.json",
-      "*.md",
-      "assets/js/ai-config.js",
-      "assets/js/ai-config.example.js"
+      "assets/js/grading/ai-config.js",
+      "assets/js/grading/ai-config.example.js"
     ],
     "headers": [
       { "source": "**/*.@(js|css|html)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }

@@ -16,9 +16,10 @@
 </head>
 <body>
   <main id="app"></main>
-  <script src="assets/js/common.js"></script>
-  <script src="assets/js/firebase-config.js"></script>
-  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
   <script src="data/grammar.js"></script>
   <script src="data/reading.js"></script>
   <script src="data/listening.js"></script>
@@ -26,10 +27,10 @@
   <script src="data/writing-rel.js"></script>
   <script src="data/speaking.js"></script>
   <script>FA.renderShell(location.hash.indexOf("gym") > -1 ? "gym" : "exam");</script>
-  <script src="assets/js/relevance.js"></script>
-  <script src="assets/js/ai-config.js"></script><!-- tùy chọn: có file này (đã .gitignore) thì AI chấm nội dung Writing -->
-  <script src="assets/js/ai-grader.js"></script>
-  <script src="assets/js/spellcheck.js"></script>
-  <script src="assets/js/exam.js"></script>
+  <script src="assets/js/grading/relevance.js"></script>
+  <script src="assets/js/grading/ai-config.js"></script><!-- tùy chọn: có file này (đã .gitignore) thì AI chấm nội dung Writing -->
+  <script src="assets/js/grading/ai-grader.js"></script>
+  <script src="assets/js/grading/spellcheck.js"></script>
+  <script src="assets/js/pages/exam.js"></script>
 </body>
 </html>

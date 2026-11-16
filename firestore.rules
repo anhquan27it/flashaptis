@@ -1,13 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Mỗi người chỉ đọc/ghi dữ liệu của chính mình (attempts, kv). Mọi thứ khác (vd. usage do Cloud Function ghi) bị chặn từ client.
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+    // admin = có document admins/{uid} (tạo tay trong Firebase Console, client không ghi được)
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    // Dữ liệu học đồng bộ (cloud.js): mỗi người chỉ đọc/ghi của chính mình.
+    // Riêng users/{uid}/usage do Cloud Function ghi (đếm lượt AI phía server) → client không đụng được.
     match /users/{uid}/{col}/{doc} {
-      allow read, delete: if request.auth != null && request.auth.uid == uid && col in ['attempts', 'kv'];
-      allow create, update: if request.auth != null && request.auth.uid == uid && col in ['attempts', 'kv']
+      allow read, delete: if isMe(uid) && col in ['attempts', 'kv'];
+      allow create, update: if isMe(uid) && col in ['attempts', 'kv']
                             && request.resource.data.keys().hasOnly(['key', 'v', 'updatedAt'])
                             && request.resource.data.v is string
                             && request.resource.data.v.size() < 900000;
+    }
+
+    match /admins/{uid} {
+      allow read: if isMe(uid);
+      allow write: if false;
+    }
+
+    // Gói Pro: proUntil (ms). Người dùng chỉ đọc; chỉ admin cấp/gia hạn.
+    match /plans/{uid} {
+      allow read: if isMe(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Lượt AI trong ngày (plan.js) — chặn phía trình duyệt, người dùng tự ghi của mình.
+    match /aiUsage/{uid} {
+      allow read: if isMe(uid);
+      allow write: if isMe(uid)
+                   && request.resource.data.keys().hasOnly(['day', 'n'])
+                   && request.resource.data.day is string
+                   && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 100;
+    }
+
+    // Yêu cầu thanh toán: người dùng tạo yêu cầu "pending" của chính mình; admin xem tất cả và duyệt / từ chối.
+    match /payments/{id} {
+      allow read: if (signedIn() && resource.data.uid == request.auth.uid) || isAdmin();
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.amount is int
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'code', 'amount', 'status', 'createdAt']);
+      allow update, delete: if isAdmin();
     }
   }
 }

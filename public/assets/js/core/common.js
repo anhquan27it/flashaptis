@@ -10,6 +10,7 @@
     { href: "tips.html", label: "Lộ trình mẹo", key: "tips" },
     { href: "guide.html", label: "Cấu trúc đề", key: "guide" },
     { href: "calculator.html", label: "Tính điểm", key: "calculator" },
+    { href: "pricing.html", label: "Gói Pro", key: "pricing" },
   ];
 
   FA.renderShell = function (active) {
@@ -18,16 +19,30 @@
     header.innerHTML = `
       <div class="container">
         <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
-        <button class="menu-btn" aria-label="Mở menu">☰</button>
-        <nav class="nav">
-          ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}">${n.label}</a>`).join("")}
-          <a class="btn btn-primary btn-sm" href="exam.html">Làm đề ngay</a>
-          <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / Đăng xuất -->
-
+        <nav class="nav" aria-label="Điều hướng chính">
+          ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}">${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
         </nav>
+        <div class="header-actions">
+          <a class="btn btn-primary btn-sm header-cta" href="exam.html">Làm đề ngay</a>
+          <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / menu tài khoản -->
+          <button class="menu-btn" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
+        </div>
       </div>`;
     document.body.prepend(header);
-    header.querySelector(".menu-btn").addEventListener("click", () => header.querySelector(".nav").classList.toggle("open"));
+    const menuBtn = header.querySelector(".menu-btn"), nav = header.querySelector(".nav");
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = nav.classList.toggle("open");
+      menuBtn.setAttribute("aria-expanded", open);
+      menuBtn.textContent = open ? "✕" : "☰";
+    });
+    // bấm ra ngoài / Esc → đóng menu điều hướng và menu tài khoản
+    const closeAll = () => {
+      nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
+      header.querySelectorAll(".acct.open").forEach((x) => x.classList.remove("open"));
+    };
+    document.addEventListener("click", (e) => { if (!e.target.closest(".nav, .acct")) closeAll(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
 
     const footer = document.createElement("footer");
     footer.className = "site-footer";

@@ -4,7 +4,7 @@ Thumbs.db
 desktop.ini
 
 # API key của AI chấm Writing — không commit
-assets/js/ai-config.js
+public/assets/js/grading/ai-config.js
 node_modules/
 functions/node_modules/
 functions/.env*
