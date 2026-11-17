@@ -20,10 +20,10 @@
       <div class="container">
         <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
         <nav class="nav" aria-label="Điều hướng chính">
-          ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}">${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          <a class="btn btn-primary nav-cta" href="exam.html">Làm đề ngay ⚡</a><!-- chỉ hiện trong menu mobile -->
         </nav>
         <div class="header-actions">
-          <a class="btn btn-primary btn-sm header-cta" href="exam.html">Làm đề ngay</a>
           <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / menu tài khoản -->
           <button class="menu-btn" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
         </div>
@@ -44,6 +44,10 @@
     };
     document.addEventListener("click", (e) => { if (!e.target.closest(".nav, .acct")) closeAll(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
+    // cuộn xuống → header có bóng nhẹ để tách khỏi nội dung
+    const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 4);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
 
     const footer = document.createElement("footer");
     footer.className = "site-footer";
