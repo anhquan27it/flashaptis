@@ -94,7 +94,7 @@ button { font-family: inherit; }
 .header-cta, .login-btn { white-space: nowrap; }
 /* nút Đăng nhập trên header (khi chưa đăng nhập) */
 .login-btn {
-  display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px 0 12px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px 0 12px; cursor: pointer;
   border: 1.5px solid var(--orange-200); border-radius: 999px; background: var(--orange-50); color: var(--orange-700);
   font: inherit; font-weight: 600; font-size: .92rem; line-height: 1;
   transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
@@ -193,7 +193,22 @@ button { font-family: inherit; }
 .auth-modal[data-mode="reset"] .f-pw,
 .auth-modal[data-mode="reset"] .auth-tabs,
 .auth-modal[data-mode="reset"] .auth-google,
-.auth-modal[data-mode="reset"] .auth-or { display: none; }
+.auth-modal[data-mode="reset"] .auth-or,
+.auth-modal:not([data-mode="otp"]) .f-otp,
+.auth-modal[data-mode="otp"] .auth-tabs,
+.auth-modal[data-mode="otp"] .auth-google,
+.auth-modal[data-mode="otp"] .auth-or,
+.auth-modal[data-mode="otp"] .auth-form > label { display: none; }
+/* bước nhập mã OTP */
+.otp-box { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 4px 0 2px; }
+.otp-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: var(--orange-50); border: 1px solid var(--orange-200); }
+.otp-info { margin: 0; font-size: .9rem; color: var(--ink-2); line-height: 1.55; }
+.otp-info b { color: var(--ink); overflow-wrap: anywhere; }
+.auth-form .otp-inp {
+  width: 100%; max-width: 240px; text-align: center; font-family: var(--font-head); font-size: 1.7rem; font-weight: 700;
+  letter-spacing: .5em; padding: 12px 0 12px .5em;
+}
+.auth-form .otp-inp::placeholder { color: var(--line-2); letter-spacing: .5em; }
 
 .menu-btn {
   display: none; place-items: center; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;

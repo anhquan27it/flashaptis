@@ -170,14 +170,44 @@
     "auth/network-request-failed": "Mất kết nối mạng.",
     "auth/operation-not-allowed": "Đăng nhập bằng email chưa được bật trong Firebase (Authentication → Sign-in method → Email/Password).",
     "auth/unauthorized-domain": "Tên miền này chưa được cho phép trong Firebase (Authentication → Settings → Authorized domains) — hãy mở bằng localhost.",
+    "otp/send-failed": "Không gửi được mã xác nhận tới email này — kiểm tra lại email hoặc thử lại sau ít phút.",
     "auth/popup-blocked": "Trình duyệt chặn cửa sổ đăng nhập Google — cho phép popup rồi thử lại.",
   };
   const errMsg = (e) => ERR[e && e.code] || (e && e.message) || "Có lỗi xảy ra.";
   const getAuth = async () => { await sdkReady(); await authReady; auth.languageCode = "vi"; return auth; }; // email đặt lại mật khẩu bằng tiếng Việt
 
-  let modal = null;
+  /* ---------- OTP xác nhận email khi tạo tài khoản (EmailJS) ----------
+     Mã 6 số tạo ở trình duyệt, gửi qua EmailJS (cấu hình FA_FIREBASE.otp). Chỉ giữ HASH của mã (SHA-256 + muối) trong bộ nhớ,
+     hết hạn sau 15 phút, sai tối đa 5 lần, gửi lại sau 60 giây. Đây là kiểm tra PHÍA TRÌNH DUYỆT (đủ cho test/nội bộ):
+     người rành DevTools vẫn lách được — muốn chặn thật phải chuyển việc tạo/kiểm mã sang Cloud Function.
+     Chưa cấu hình EmailJS → tạo tài khoản ngay như cũ (không OTP). */
+  const OTP = (cfg && cfg.otp) || {};
+  const otpOn = () => !!(OTP.serviceId && OTP.templateId && OTP.publicKey);
+  const OTP_TTL = 15 * 60e3, OTP_TRIES = 5, OTP_RESEND = 60e3; // 15 phút: khớp mẫu "One-Time Password" của EmailJS
+  const sha256 = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  async function sendOtp(p) {
+    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e6).padStart(6, "0");
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: OTP.serviceId, template_id: OTP.templateId, user_id: OTP.publicKey,
+        // gửi cả tên biến của mẫu "One-Time Password" có sẵn trong EmailJS ({{passcode}}, {{time}}) lẫn tên riêng ({{otp_code}}, {{expire_minutes}})
+        template_params: {
+          to_email: p.email, email: p.email, to_name: p.name, name: p.name, app_name: "FlashAptis",
+          otp_code: code, passcode: code, expire_minutes: OTP_TTL / 60e3,
+          time: new Date(Date.now() + OTP_TTL).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }),
+        },
+      }),
+    });
+    if (!res.ok) { const t = await res.text().catch(() => ""); const e = new Error("EmailJS " + res.status + ": " + t); e.code = "otp/send-failed"; throw e; }
+    p.salt = Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-");
+    p.hash = await sha256(p.salt + code);
+    p.exp = Date.now() + OTP_TTL; p.tries = 0; p.sentAt = Date.now();
+  }
+
+  let modal = null, otpTimer = null;
   function escClose(e) { if (e.key === "Escape") closeModal(); }
-  function closeModal() { if (modal) { modal.remove(); modal = null; document.removeEventListener("keydown", escClose); } }
+  function closeModal() { clearInterval(otpTimer); if (modal) { modal.remove(); modal = null; document.removeEventListener("keydown", escClose); } }
 
   function signIn(tab) {
     closeModal();
@@ -196,33 +226,63 @@
         <div class="auth-or"><span>hoặc dùng email</span></div>
         <form class="auth-form" novalidate>
           <label class="f-up">Họ và tên<input class="inp" name="name" autocomplete="name" maxlength="60" placeholder="Nguyễn Văn A"></label>
-          <label>Email<input class="inp" name="email" type="email" autocomplete="email" placeholder="ban@email.com"></label>
+          <label class="f-mail">Email<input class="inp" name="email" type="email" autocomplete="email" placeholder="ban@email.com"></label>
           <label class="f-pw">Mật khẩu<input class="inp" name="pw" type="password" placeholder="Ít nhất 6 ký tự"></label>
           <label class="f-up">Nhập lại mật khẩu<input class="inp" name="pw2" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu"></label>
+          <div class="f-otp otp-box">
+            <div class="otp-icon" aria-hidden="true">✉️</div>
+            <p class="otp-info"></p>
+            <input class="inp otp-inp" name="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="Mã xác nhận 6 số">
+            <button class="auth-link" type="button" data-act="resend">Gửi lại mã</button>
+          </div>
           <div class="auth-msg" role="alert"></div>
           <button class="btn btn-primary auth-submit" type="submit"></button>
           <button class="auth-link f-in" type="button" data-act="forgot">Quên mật khẩu?</button>
           <button class="auth-link f-reset" type="button" data-act="back">← Quay lại đăng nhập</button>
+          <button class="auth-link f-otp" type="button" data-act="edit">← Sửa email / thông tin</button>
         </form>
       </div>`;
     document.body.append(modal);
     document.addEventListener("keydown", escClose);
     const $ = (s) => modal.querySelector(s), form = $(".auth-form"), msg = $(".auth-msg"), submit = $(".auth-submit");
-    let mode = "in"; // in | up | reset
+    const F = {}; ["name", "email", "pw", "pw2", "otp"].forEach((n) => (F[n] = form.querySelector(`[name="${n}"]`))); // ô nhập theo tên
+    let mode = "in"; // in | up | reset | otp
+    let pending = null; // thông tin đăng ký đang chờ nhập OTP {email, pw, name, salt, hash, exp, tries, sentAt}
 
     const setMode = (m) => {
       mode = m; msg.textContent = ""; msg.className = "auth-msg";
       modal.dataset.mode = m;
       modal.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === m)));
-      submit.textContent = m === "up" ? "Tạo tài khoản" : m === "reset" ? "Gửi email đặt lại mật khẩu" : "Đăng nhập";
-      form.pw.autocomplete = m === "up" ? "new-password" : "current-password";
-      $("#authTitle").textContent = m === "reset" ? "Quên mật khẩu" : "Chào mừng đến FlashAptis";
-      $(".auth-sub").textContent = m === "reset"
-        ? "Nhập email đã đăng ký — FlashAptis sẽ gửi link để bạn đặt mật khẩu mới."
-        : m === "up" ? "Tạo tài khoản miễn phí để lưu kết quả trên mọi thiết bị và dùng AI chấm Writing."
-        : "Đăng nhập để đồng bộ kết quả giữa các thiết bị và dùng AI chấm Writing.";
-      setTimeout(() => { if (modal) (m === "up" ? form.name : form.email).focus(); }, 0);
+      submit.textContent = { up: otpOn() ? "Gửi mã xác nhận" : "Tạo tài khoản", reset: "Gửi email đặt lại mật khẩu", otp: "Xác nhận & tạo tài khoản" }[m] || "Đăng nhập";
+      F.pw.autocomplete = m === "up" ? "new-password" : "current-password";
+      $("#authTitle").textContent = { reset: "Quên mật khẩu", otp: "Nhập mã xác nhận" }[m] || "Chào mừng đến FlashAptis";
+      $(".auth-sub").textContent = {
+        reset: "Nhập email đã đăng ký — FlashAptis sẽ gửi link để bạn đặt mật khẩu mới.",
+        up: "Tạo tài khoản miễn phí để lưu kết quả trên mọi thiết bị và dùng AI chấm Writing.",
+        otp: "Bước cuối: xác nhận email là của bạn.",
+      }[m] || "Đăng nhập để đồng bộ kết quả giữa các thiết bị và dùng AI chấm Writing.";
+      clearInterval(otpTimer);
+      if (m === "otp") {
+        $(".otp-info").innerHTML = `Mã 6 số đã được gửi tới<br><b>${FA.esc(pending.email)}</b><br>Mã có hiệu lực 15 phút — xem cả thư mục Spam/Quảng cáo.`;
+        F.otp.value = "";
+        tickResend(); otpTimer = setInterval(tickResend, 1000);
+      }
+      setTimeout(() => { if (modal) ({ up: F.name, otp: F.otp }[m] || F.email).focus(); }, 0);
     };
+    // nút "Gửi lại mã": đếm ngược 60 giây kể từ lần gửi gần nhất
+    const tickResend = () => {
+      const b = $("[data-act=resend]"), left = pending ? Math.ceil((pending.sentAt + OTP_RESEND - Date.now()) / 1000) : 0;
+      b.disabled = left > 0;
+      b.textContent = left > 0 ? `Gửi lại mã sau ${left}s` : "Gửi lại mã";
+    };
+    async function createAccount(p) {
+      const a = await getAuth();
+      const cred = await a.createUserWithEmailAndPassword(p.email, p.pw);
+      await cred.user.updateProfile({ displayName: p.name });
+      writeSession(cred.user); paint(); // onAuthStateChanged chạy trước khi có tên → vẽ lại header với tên
+      if (!otpOn()) cred.user.sendEmailVerification().catch(() => {}); // đã xác nhận bằng OTP thì không cần link
+      done("Đã tạo tài khoản — chào " + p.name + "!");
+    }
     const say = (t, ok) => { msg.textContent = t; msg.className = "auth-msg " + (ok ? "ok" : "err"); };
     const busy = (b) => modal && modal.querySelectorAll("button, input").forEach((x) => (x.disabled = b));
     const done = (t) => { closeModal(); FA.toast(t); };
@@ -232,6 +292,14 @@
     modal.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => setMode(b.dataset.tab)));
     $("[data-act=forgot]").onclick = () => setMode("reset");
     $("[data-act=back]").onclick = () => setMode("in");
+    $("[data-act=edit]").onclick = () => setMode("up"); // giữ nguyên thông tin đã nhập
+    $("[data-act=resend]").onclick = async () => {
+      if (!pending) return setMode("up");
+      busy(true);
+      try { await sendOtp(pending); busy(false); setMode("otp"); say("Đã gửi mã mới.", true); }
+      catch (e) { busy(false); tickResend(); say("Không gửi được mã xác nhận — thử lại sau ít phút."); console.warn(e); }
+    };
+    F.otp.addEventListener("input", () => { F.otp.value = F.otp.value.replace(/\D/g, "").slice(0, 6); });
 
     $(".auth-google").onclick = async () => {
       busy(true);
@@ -241,28 +309,52 @@
 
     form.onsubmit = async (e) => {
       e.preventDefault();
-      const email = form.email.value.trim(), pw = form.pw.value, name = form.name.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Email không hợp lệ."); return form.email.focus(); }
-      if (mode !== "reset" && !pw) { say("Nhập mật khẩu."); return form.pw.focus(); }
+      if (mode === "otp") {
+        const code = F.otp.value.replace(/\D/g, "");
+        if (code.length !== 6) { say("Nhập đủ 6 số."); return F.otp.focus(); }
+        if (Date.now() > pending.exp) return say("Mã đã hết hạn — bấm “Gửi lại mã”.");
+        if (pending.tries >= OTP_TRIES) return say("Sai quá nhiều lần — bấm “Gửi lại mã” để nhận mã mới.");
+        pending.tries++;
+        if ((await sha256(pending.salt + code)) !== pending.hash) {
+          const left = OTP_TRIES - pending.tries;
+          F.otp.select();
+          return say(left > 0 ? `Mã không đúng (còn ${left} lần thử).` : "Sai quá nhiều lần — bấm “Gửi lại mã” để nhận mã mới.");
+        }
+        say("Mã đúng — đang tạo tài khoản…", true);
+        busy(true);
+        try { await createAccount(pending); pending = null; }
+        catch (err) {
+          busy(false); console.warn(err);
+          // email đã có tài khoản → đưa về tab đăng nhập với email đã điền
+          if (err && err.code === "auth/email-already-in-use") { setMode("in"); F.email.value = pending.email; F.pw.value = ""; }
+          say(errMsg(err));
+        }
+        return;
+      }
+      const email = F.email.value.trim(), pw = F.pw.value, name = F.name.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Email không hợp lệ."); return F.email.focus(); }
+      if (mode !== "reset" && !pw) { say("Nhập mật khẩu."); return F.pw.focus(); }
       if (mode === "up") {
-        if (!name) { say("Nhập họ và tên."); return form.name.focus(); }
-        if (pw.length < 6) { say("Mật khẩu cần ít nhất 6 ký tự."); return form.pw.focus(); }
-        if (pw !== form.pw2.value) { say("Hai mật khẩu không khớp."); return form.pw2.focus(); }
+        if (!name) { say("Nhập họ và tên."); return F.name.focus(); }
+        if (pw.length < 6) { say("Mật khẩu cần ít nhất 6 ký tự."); return F.pw.focus(); }
+        if (pw !== F.pw2.value) { say("Hai mật khẩu không khớp."); return F.pw2.focus(); }
       }
       busy(true);
       try {
-        const a = await getAuth();
         if (mode === "in") {
-          await a.signInWithEmailAndPassword(email, pw);
+          await (await getAuth()).signInWithEmailAndPassword(email, pw);
           done("Đã đăng nhập");
         } else if (mode === "up") {
-          const cred = await a.createUserWithEmailAndPassword(email, pw);
-          await cred.user.updateProfile({ displayName: name });
-          writeSession(cred.user); paint(); // onAuthStateChanged chạy trước khi có tên → vẽ lại header với tên
-          cred.user.sendEmailVerification().catch(() => {});
-          done("Đã tạo tài khoản — chào " + name + "!");
+          if (otpOn()) {
+            pending = { email, pw, name }; // gửi OTP không cần chờ Firebase
+            await sendOtp(pending);
+            busy(false);
+            setMode("otp");
+          } else {
+            await createAccount({ email, pw, name });
+          }
         } else {
-          await a.sendPasswordResetEmail(email);
+          await (await getAuth()).sendPasswordResetEmail(email);
           busy(false);
           say("Đã gửi email đặt lại mật khẩu tới " + email + " (xem cả thư mục Spam).", true);
         }

@@ -11,4 +11,12 @@ window.FA_FIREBASE = {
   functionsRegion: "asia-southeast1", // vùng đặt Cloud Function gradeWriting
   useCloudAI: false,                  // true: khi đã đăng nhập, AI chấm Writing qua Cloud Function (không lộ API key). Chỉ bật sau khi đã deploy functions/.
   aiLabel: "AI",                      // tên hiển thị khi AI chấm qua Cloud Function
+  // OTP xác nhận email khi tạo tài khoản, gửi qua EmailJS (https://www.emailjs.com — gói Free). Để trống → tạo tài khoản không cần OTP.
+  // Public key của EmailJS được thiết kế để nằm ở trình duyệt (không phải bí mật). Template dùng các biến:
+  // {{passcode}} (mã 6 số), {{time}} (giờ hết hạn), {{email}} hoặc {{to_email}} (đặt ở ô "To Email"), {{name}}/{{to_name}}, {{expire_minutes}}.
+  otp: {
+    serviceId: "service_of39spc",     // Email Services → Service ID
+    templateId: "template_csegzyf",   // Email Templates → Template ID
+    publicKey: "GVr5L24ae6COAtocE",   // Account → General → Public Key
+  },
 };
