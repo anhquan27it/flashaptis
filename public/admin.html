@@ -51,7 +51,7 @@
       if (!plan.loaded()) { el.innerHTML = `<div class="card"><p class="muted mb-0">Đang kiểm tra tài khoản…</p></div>`; return; }
       const u = plan.user();
       if (!u) {
-        el.innerHTML = `<div class="card"><p>Đăng nhập bằng tài khoản admin.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập với Google</button></div>`;
+        el.innerHTML = `<div class="card"><p>Đăng nhập bằng tài khoản admin.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập / Tạo tài khoản</button></div>`;
         document.getElementById("loginBtn").onclick = () => FA.cloud.signIn();
         return;
       }

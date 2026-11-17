@@ -92,6 +92,20 @@ button { font-family: inherit; }
 .nav a.nav-pro { color: var(--orange-700); font-weight: 600; }
 .header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .header-cta, .login-btn { white-space: nowrap; }
+/* nút Đăng nhập trên header (khi chưa đăng nhập) */
+.login-btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px 0 12px; cursor: pointer;
+  border: 1.5px solid var(--orange-200); border-radius: 999px; background: var(--orange-50); color: var(--orange-700);
+  font: inherit; font-weight: 600; font-size: .92rem; line-height: 1;
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
+}
+.login-btn svg { flex-shrink: 0; }
+.login-btn:hover {
+  background: linear-gradient(180deg, var(--orange-500), var(--orange-600)); border-color: var(--orange-600); color: #fff;
+  box-shadow: 0 6px 16px -8px var(--orange-500);
+}
+.login-btn:active { transform: translateY(1px); }
+.login-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, .25); }
 .auth-slot { display: inline-flex; align-items: center; }
 .auth-slot:empty { display: none; }
 
@@ -135,6 +149,51 @@ button { font-family: inherit; }
 .role-badge { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; font-size: .64rem; font-weight: 700; letter-spacing: .06em; vertical-align: middle; background: #1f2937; color: #fff; }
 .acct-menu > .acct-out { color: var(--red); }
 .acct-menu > .acct-out:hover { background: #fef2f2; color: var(--red); }
+
+/* hộp thoại đăng nhập / tạo tài khoản (cloud.js) — data-mode: in | up | reset */
+.auth-modal {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
+  background: rgba(28, 25, 23, .45); backdrop-filter: blur(3px); animation: auth-fade .15s ease-out;
+}
+@keyframes auth-fade { from { opacity: 0; } }
+.auth-box {
+  position: relative; width: 100%; max-width: 410px; max-height: calc(100vh - 32px); overflow-y: auto;
+  background: var(--surface); border-radius: 20px; padding: 28px 26px 22px; box-shadow: 0 24px 60px -20px rgba(124, 45, 18, .45);
+  animation: auth-pop .18s ease-out;
+}
+@keyframes auth-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
+.auth-box h2 { font-size: 1.35rem; margin: 0 0 4px; }
+.auth-sub { font-size: .9rem; margin: 0 0 16px; }
+.auth-x {
+  position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 10px; border: 0;
+  background: transparent; color: var(--muted); font-size: 16px; cursor: pointer;
+}
+.auth-x:hover { background: var(--orange-50); color: var(--ink); }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #f6efe8; border-radius: 12px; margin-bottom: 14px; }
+.auth-tabs button { border: 0; background: transparent; padding: 9px; border-radius: 9px; font: inherit; font-weight: 600; font-size: .92rem; color: var(--muted); cursor: pointer; }
+.auth-tabs button[aria-selected="true"] { background: var(--surface); color: var(--orange-700); box-shadow: 0 1px 3px rgba(124, 45, 18, .12); }
+.auth-google { width: 100%; }
+.auth-or { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--muted); font-size: .82rem; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-form label { display: flex; flex-direction: column; gap: 5px; font-size: .86rem; font-weight: 600; color: var(--ink-2); }
+.auth-form .inp { width: 100%; }
+.auth-submit { width: 100%; margin-top: 4px; }
+.auth-msg { font-size: .88rem; line-height: 1.5; }
+.auth-msg:empty { display: none; }
+.auth-msg.err { color: var(--red); }
+.auth-msg.ok { color: #166534; background: var(--green-bg); padding: 8px 10px; border-radius: 10px; }
+.auth-link { align-self: center; border: 0; background: none; color: var(--orange-700); font: inherit; font-size: .88rem; cursor: pointer; padding: 4px; }
+.auth-link:hover { text-decoration: underline; }
+.auth-modal button[disabled], .auth-modal input[disabled] { opacity: .6; cursor: wait; }
+/* ẩn/hiện theo chế độ */
+.auth-modal:not([data-mode="up"]) .f-up,
+.auth-modal:not([data-mode="in"]) .f-in,
+.auth-modal:not([data-mode="reset"]) .f-reset,
+.auth-modal[data-mode="reset"] .f-pw,
+.auth-modal[data-mode="reset"] .auth-tabs,
+.auth-modal[data-mode="reset"] .auth-google,
+.auth-modal[data-mode="reset"] .auth-or { display: none; }
 
 .menu-btn {
   display: none; place-items: center; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
