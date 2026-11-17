@@ -30,7 +30,7 @@ flashaptis/
 |---|---|
 | `index.html` | Trang chủ, giới thiệu, chọn nhanh kỹ năng |
 | `exam.html` | Thi thử 5 kỹ năng có đồng hồ, chấm điểm 0–50, quy đổi CEFR ước lượng, xem lại + giải thích |
-| `exam.html#/gym` | Phòng gym: luyện 10 câu không bấm giờ + **Sổ câu sai** |
+| `exam.html#/gym` | Ôn tập: luyện 10 câu không bấm giờ + **Sổ câu sai** |
 | `flashcards.html` | 8 bộ flashcard theo chủ đề (120 thẻ), lật thẻ, nghe phát âm, kiểm tra nhanh |
 | `tips.html` | Lộ trình 20 mẹo có nhiệm vụ, mở khóa lần lượt |
 | `guide.html` | Cấu trúc bài thi Aptis |

@@ -6,7 +6,7 @@
   const NAV = [
     { href: "exam.html", label: "Thi thử", key: "exam" },
     { href: "flashcards.html", label: "Flashcard", key: "flashcards" },
-    { href: "exam.html#/gym", label: "Phòng gym", key: "gym" },
+    { href: "exam.html#/gym", label: "Ôn tập", key: "gym" },
     { href: "tips.html", label: "Lộ trình mẹo", key: "tips" },
     { href: "guide.html", label: "Cấu trúc đề", key: "guide" },
     { href: "calculator.html", label: "Tính điểm", key: "calculator" },
