@@ -37,7 +37,7 @@
     onChange: (fn) => subs.push(fn),
     aiReady: () => !!(cfg && cfg.useCloudAI && user),
     aiLabel: () => (cfg && cfg.aiLabel) || "AI",
-    signIn: () => signIn(),
+    signIn: (tab) => signIn(tab), // mở hộp thoại: "in" đăng nhập / "up" tạo tài khoản
     signOut: () => signOut(),
   });
 
@@ -155,16 +155,124 @@
   }
 
   /* ---------- đăng nhập / đăng xuất ---------- */
-  async function signIn() {
-    try {
-      await sdkReady();
-      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    } catch (e) {
-      if (e && e.code === "auth/popup-closed-by-user") return;
-      const m = e && e.code === "auth/unauthorized-domain" ? "Tên miền này chưa được cho phép trong Firebase (Authentication → Settings → Authorized domains)." : (e && e.message) || "lỗi";
-      FA.toast("Không đăng nhập được: " + m);
-      console.warn(e);
-    }
+  /* ---------- đăng nhập: hộp thoại Google + email/mật khẩu ---------- */
+  const GOOGLE_SVG = '<svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+  const ERR = {
+    "auth/email-already-in-use": "Email này đã có tài khoản — chuyển sang tab Đăng nhập (hoặc tài khoản này được tạo bằng Google).",
+    "auth/invalid-email": "Email không hợp lệ.",
+    "auth/weak-password": "Mật khẩu quá yếu — cần ít nhất 6 ký tự.",
+    "auth/invalid-credential": "Sai email hoặc mật khẩu.",
+    "auth/invalid-login-credentials": "Sai email hoặc mật khẩu.",
+    "auth/wrong-password": "Sai email hoặc mật khẩu.",
+    "auth/user-not-found": "Chưa có tài khoản với email này — hãy Tạo tài khoản.",
+    "auth/missing-password": "Nhập mật khẩu.",
+    "auth/too-many-requests": "Thử sai quá nhiều lần, vui lòng đợi vài phút rồi thử lại.",
+    "auth/network-request-failed": "Mất kết nối mạng.",
+    "auth/operation-not-allowed": "Đăng nhập bằng email chưa được bật trong Firebase (Authentication → Sign-in method → Email/Password).",
+    "auth/unauthorized-domain": "Tên miền này chưa được cho phép trong Firebase (Authentication → Settings → Authorized domains) — hãy mở bằng localhost.",
+    "auth/popup-blocked": "Trình duyệt chặn cửa sổ đăng nhập Google — cho phép popup rồi thử lại.",
+  };
+  const errMsg = (e) => ERR[e && e.code] || (e && e.message) || "Có lỗi xảy ra.";
+  const getAuth = async () => { await sdkReady(); await authReady; auth.languageCode = "vi"; return auth; }; // email đặt lại mật khẩu bằng tiếng Việt
+
+  let modal = null;
+  function escClose(e) { if (e.key === "Escape") closeModal(); }
+  function closeModal() { if (modal) { modal.remove(); modal = null; document.removeEventListener("keydown", escClose); } }
+
+  function signIn(tab) {
+    closeModal();
+    modal = document.createElement("div");
+    modal.className = "auth-modal";
+    modal.innerHTML = `
+      <div class="auth-box" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button class="auth-x" type="button" aria-label="Đóng">✕</button>
+        <h2 id="authTitle">Chào mừng đến FlashAptis</h2>
+        <p class="muted auth-sub">Đăng nhập để đồng bộ kết quả giữa các thiết bị và dùng AI chấm Writing.</p>
+        <div class="auth-tabs" role="tablist">
+          <button type="button" role="tab" data-tab="in">Đăng nhập</button>
+          <button type="button" role="tab" data-tab="up">Tạo tài khoản</button>
+        </div>
+        <button class="btn btn-outline auth-google" type="button">${GOOGLE_SVG}<span>Tiếp tục với Google</span></button>
+        <div class="auth-or"><span>hoặc dùng email</span></div>
+        <form class="auth-form" novalidate>
+          <label class="f-up">Họ và tên<input class="inp" name="name" autocomplete="name" maxlength="60" placeholder="Nguyễn Văn A"></label>
+          <label>Email<input class="inp" name="email" type="email" autocomplete="email" placeholder="ban@email.com"></label>
+          <label class="f-pw">Mật khẩu<input class="inp" name="pw" type="password" placeholder="Ít nhất 6 ký tự"></label>
+          <label class="f-up">Nhập lại mật khẩu<input class="inp" name="pw2" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu"></label>
+          <div class="auth-msg" role="alert"></div>
+          <button class="btn btn-primary auth-submit" type="submit"></button>
+          <button class="auth-link f-in" type="button" data-act="forgot">Quên mật khẩu?</button>
+          <button class="auth-link f-reset" type="button" data-act="back">← Quay lại đăng nhập</button>
+        </form>
+      </div>`;
+    document.body.append(modal);
+    document.addEventListener("keydown", escClose);
+    const $ = (s) => modal.querySelector(s), form = $(".auth-form"), msg = $(".auth-msg"), submit = $(".auth-submit");
+    let mode = "in"; // in | up | reset
+
+    const setMode = (m) => {
+      mode = m; msg.textContent = ""; msg.className = "auth-msg";
+      modal.dataset.mode = m;
+      modal.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === m)));
+      submit.textContent = m === "up" ? "Tạo tài khoản" : m === "reset" ? "Gửi email đặt lại mật khẩu" : "Đăng nhập";
+      form.pw.autocomplete = m === "up" ? "new-password" : "current-password";
+      $("#authTitle").textContent = m === "reset" ? "Quên mật khẩu" : "Chào mừng đến FlashAptis";
+      $(".auth-sub").textContent = m === "reset"
+        ? "Nhập email đã đăng ký — FlashAptis sẽ gửi link để bạn đặt mật khẩu mới."
+        : m === "up" ? "Tạo tài khoản miễn phí để lưu kết quả trên mọi thiết bị và dùng AI chấm Writing."
+        : "Đăng nhập để đồng bộ kết quả giữa các thiết bị và dùng AI chấm Writing.";
+      setTimeout(() => { if (modal) (m === "up" ? form.name : form.email).focus(); }, 0);
+    };
+    const say = (t, ok) => { msg.textContent = t; msg.className = "auth-msg " + (ok ? "ok" : "err"); };
+    const busy = (b) => modal && modal.querySelectorAll("button, input").forEach((x) => (x.disabled = b));
+    const done = (t) => { closeModal(); FA.toast(t); };
+
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); }); // bấm nền tối → đóng
+    $(".auth-x").onclick = closeModal;
+    modal.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => setMode(b.dataset.tab)));
+    $("[data-act=forgot]").onclick = () => setMode("reset");
+    $("[data-act=back]").onclick = () => setMode("in");
+
+    $(".auth-google").onclick = async () => {
+      busy(true);
+      try { const a = await getAuth(); await a.signInWithPopup(new firebase.auth.GoogleAuthProvider()); done("Đã đăng nhập"); }
+      catch (e) { busy(false); if (e && e.code === "auth/popup-closed-by-user") return; say(errMsg(e)); console.warn(e); }
+    };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim(), pw = form.pw.value, name = form.name.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Email không hợp lệ."); return form.email.focus(); }
+      if (mode !== "reset" && !pw) { say("Nhập mật khẩu."); return form.pw.focus(); }
+      if (mode === "up") {
+        if (!name) { say("Nhập họ và tên."); return form.name.focus(); }
+        if (pw.length < 6) { say("Mật khẩu cần ít nhất 6 ký tự."); return form.pw.focus(); }
+        if (pw !== form.pw2.value) { say("Hai mật khẩu không khớp."); return form.pw2.focus(); }
+      }
+      busy(true);
+      try {
+        const a = await getAuth();
+        if (mode === "in") {
+          await a.signInWithEmailAndPassword(email, pw);
+          done("Đã đăng nhập");
+        } else if (mode === "up") {
+          const cred = await a.createUserWithEmailAndPassword(email, pw);
+          await cred.user.updateProfile({ displayName: name });
+          writeSession(cred.user); paint(); // onAuthStateChanged chạy trước khi có tên → vẽ lại header với tên
+          cred.user.sendEmailVerification().catch(() => {});
+          done("Đã tạo tài khoản — chào " + name + "!");
+        } else {
+          await a.sendPasswordResetEmail(email);
+          busy(false);
+          say("Đã gửi email đặt lại mật khẩu tới " + email + " (xem cả thư mục Spam).", true);
+        }
+      } catch (err) {
+        busy(false);
+        say(errMsg(err));
+        console.warn(err);
+      }
+    };
+    setMode(tab === "up" ? "up" : "in");
   }
   async function signOut() {
     await authReady;
@@ -217,8 +325,8 @@
         };
         el.querySelector(".acct-out").onclick = signOut;
       } else {
-        el.innerHTML = `<button class="btn btn-outline btn-sm login-btn" type="button"><svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Đăng nhập</span></button>`;
-        el.querySelector("button").onclick = signIn;
+        el.innerHTML = `<button class="btn btn-outline btn-sm login-btn" type="button">${GOOGLE_SVG}<span>Đăng nhập</span></button>`;
+        el.querySelector("button").onclick = () => signIn("in");
       }
     });
     if (FA.plan && FA.plan.paint) FA.plan.paint(); // điền huy hiệu gói vào DOM vừa vẽ

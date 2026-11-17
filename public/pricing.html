@@ -69,7 +69,7 @@
       if (!plan.loaded()) { area.innerHTML = `<p class="muted mb-0">Đang kiểm tra tài khoản…</p>`; return; }
       const u = plan.user();
       if (!u) {
-        area.innerHTML = `<h3>Thanh toán</h3><p class="muted">Đăng nhập bằng Google để nâng cấp — gói Pro được gắn với tài khoản, dùng được trên mọi thiết bị.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập với Google</button>`;
+        area.innerHTML = `<h3>Thanh toán</h3><p class="muted">Đăng nhập (Google hoặc email) để nâng cấp — gói Pro được gắn với tài khoản, dùng được trên mọi thiết bị.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập / Tạo tài khoản</button>`;
         document.getElementById("loginBtn").onclick = () => FA.cloud && FA.cloud.signIn();
         return;
       }
