@@ -49,7 +49,14 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
 - Đáp án trắc nghiệm bị **xáo thứ tự mỗi lần tải trang** → `ans` phải lưu **văn bản** lựa chọn, không lưu chỉ số (xem `optText` / `optIdx`).
-- Speaking không lưu bản ghi âm (chỉ lưu điểm tự chấm 4 part × 0–5).
+- Speaking không lưu bản ghi âm (chỉ lưu điểm 4 part × 0–5, và nếu có AI thì thêm `ans.ai` + `ans.tx` = bản ghi chữ từng câu).
+
+### Chấm Speaking bằng AI (tùy chọn)
+[public/assets/js/grading/speaking-ai.js](public/assets/js/grading/speaking-ai.js) (`FA.speakAI`, nạp sau `ai-grader.js` trong `exam.html`): bật khi có `ai-config.js` **và** trình duyệt có `SpeechRecognition` (Chrome/Edge). Hai bước: (1) `runSpeaking` chạy Web Speech API song song với MediaRecorder, mỗi câu một bộ nhận dạng → `st.tx[i]`; (2) `finish()` gửi bản ghi chữ cả bài (4 part) trong MỘT request cho model chat, điểm mỗi part là số nguyên 0–5 làm giá trị ban đầu cho thanh tự chấm (người dùng vẫn chỉnh được).
+- Model mặc định `google/gemma-4-31b-it:free`, đổi bằng `speakingModel` trong `ai-config.js` (dự phòng: `speakingFallbackModels`, mặc định chỉ `google/gemma-4-26b-a4b-it:free`; cả hai lỗi thì quay về tự chấm). Model `:free` hay trả 429 "rate-limited upstream" → tự thử model kế tiếp; ghi chú kết quả nêu model thực sự đã chấm. Prompt gộp vào một tin nhắn **user** (Gemma qua AI Studio không nhận vai system).
+- AI **không chấm phát âm** (nhận dạng giọng nói tự sửa lỗi) — prompt cấm nhắc tới phát âm; part không có lời nào nhận dạng được thì 0 điểm ở phía client, không phụ thuộc AI.
+- Dùng chung bộ đếm lượt AI của Writing (`FA.plan.useAI` / `refundAI`). Xem lại **không gọi AI lại**, dùng `ans.ai`/`ans.tx` đã lưu; mọi lần ghi đè `ans` (nút "Lưu điểm") phải giữ cả `ai` và `tx` (`mkAns()`).
+- Chưa có đường Cloud Function cho Speaking (chỉ chạy khi có `ai-config.js`, tức local/dev); deploy thật cần thêm hàm `gradeSpeaking` giống `gradeWriting` (prompt `INSTR` ở `speaking-ai.js`).
 
 ### Chấm Writing (phần phức tạp nhất)
 Điểm Writing = chất lượng văn bản × hệ số chính tả (Harper) × hệ số ngữ pháp (Harper) × hệ số nội dung, tính trong `finish()` của `runWriting`:
