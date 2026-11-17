@@ -92,6 +92,20 @@ button { font-family: inherit; }
 .nav a.nav-pro { color: var(--orange-700); font-weight: 600; }
 .header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .header-cta, .login-btn { white-space: nowrap; }
+/* nút Đăng nhập trên header (khi chưa đăng nhập) */
+.login-btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px 0 12px; cursor: pointer;
+  border: 1.5px solid var(--orange-200); border-radius: 999px; background: var(--orange-50); color: var(--orange-700);
+  font: inherit; font-weight: 600; font-size: .92rem; line-height: 1;
+  transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
+}
+.login-btn svg { flex-shrink: 0; }
+.login-btn:hover {
+  background: linear-gradient(180deg, var(--orange-500), var(--orange-600)); border-color: var(--orange-600); color: #fff;
+  box-shadow: 0 6px 16px -8px var(--orange-500);
+}
+.login-btn:active { transform: translateY(1px); }
+.login-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, .25); }
 .auth-slot { display: inline-flex; align-items: center; }
 .auth-slot:empty { display: none; }
 

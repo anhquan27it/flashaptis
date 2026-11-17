@@ -325,7 +325,7 @@
         };
         el.querySelector(".acct-out").onclick = signOut;
       } else {
-        el.innerHTML = `<button class="btn btn-outline btn-sm login-btn" type="button">${GOOGLE_SVG}<span>Đăng nhập</span></button>`;
+        el.innerHTML = `<button class="login-btn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Đăng nhập</span></button>`;
         el.querySelector("button").onclick = () => signIn("in");
       }
     });
