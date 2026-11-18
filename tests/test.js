@@ -69,7 +69,7 @@ loadScripts(sb, [
   "public/data/speaking.js",
   "public/data/vocab.js",
   "public/assets/js/grading/relevance.js",
-  "public/assets/js/grading/speaking-ai.js",
+  "public/assets/js/grading/speaking-grader.js",
 ]);
 
 const { FA, FA_GRAMMAR, FA_READING, FA_LISTENING, FA_WRITING, FA_SPEAKING, FA_VOCAB } = sb;
@@ -248,20 +248,11 @@ test("FA.rel.factor phát hiện chép đề và tích hợp điểm AI hợp l�
   assert.deepEqual(Array.from(withAI.missing), ["thiếu lý do"]);
 });
 
-test("FA.speakAI._buildParts gom đúng 4 part và tính expected_words", () => {
-  const steps = [
-    { part: 1, q: "Q1", time: 30 },
-    { part: 2, q: "Q2", time: 45, photo: { cap: "A cat" } },
-    { part: 3, q: "Q3", time: 45, photos: [{ cap: "A" }, { cap: "B" }] },
-    { part: 4, qs: ["A", "B", "C"], time: 120, photo: { cap: "Stage" } },
-  ];
-  const tx = [{ text: "hello world" }, { text: "this is a cat" }, null, { text: "one two three" }];
-  const parts = FA.speakAI._buildParts(steps, tx);
-  assert.equal(parts.length, 4);
-  assert.equal(parts[1].questions[0].picture, "A cat");
-  assert.deepEqual(Array.from(parts[2].questions[0].pictures), ["A", "B"]);
-  assert.equal(parts[2].questions[0].words, 0);
-  assert.equal(parts[3].questions[0].expected_words, 144);
+test("FA.speakAI (speaking-grader.js): đếm từ và chỉ bật khi có AI + nhận dạng giọng nói", () => {
+  assert.equal(FA.speakAI.words("I'm 20 years old, really!"), 4); // chỉ đếm từ chữ cái
+  assert.equal(FA.speakAI.words(""), 0);
+  assert.equal(FA.speakAI.enabled(), false); // test không nạp ai-config.js / ai-grader.js
+  assert.equal(FA.speakAI.supported(), false); // Node không có SpeechRecognition
 });
 
 test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng Overall CEFR", () => {

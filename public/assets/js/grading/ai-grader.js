@@ -64,7 +64,9 @@ Include exactly the ids you were given.`;
   }
 
   function parseJSON(text) {
-    const s = String(text).replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    /* Gemma xuất phần suy luận trong <thought>…</thought> (có thể chứa dấu { }) trước JSON → bỏ đi; thiếu thẻ đóng thì lấy phần sau thẻ cuối */
+    const s = String(text).replace(/<thought>[\s\S]*?<\/thought>/gi, "").replace(/^[\s\S]*<\/thought>/i, "")
+      .replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
     const a = s.indexOf("{"), b = s.lastIndexOf("}");
     if (a < 0 || b <= a) throw new Error("bad-json");
     return JSON.parse(s.slice(a, b + 1));
@@ -72,6 +74,42 @@ Include exactly the ids you were given.`;
 
   const clamp01 = (x) => (typeof x === "number" && isFinite(x) ? Math.max(0, Math.min(1, x)) : null);
   const str = (x, n) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n);
+
+  /* Gọi thẳng API (dev, có ai-config.js). Key chính trước, key dự phòng (fallbackApiKey) chỉ dùng khi key trước hết hạn mức / bị từ chối (401, 402, 403, 429).
+     Lỗi 500/502/503 (nhà cung cấp quá tải) thì thử lại 1 lần sau 2,5 giây. Dùng chung cho Writing và Speaking. */
+  async function postLocal(c, body, ctl) {
+    const keys = [c.apiKey].concat(c.fallbackApiKey || [], c.fallbackApiKeys || []).filter(Boolean);
+    const url = String(c.endpoint).replace(/\/+$/, "") + "/chat/completions";
+    let res;
+    for (let i = 0; i < keys.length; i++) {
+      for (let t = 0; t < 2; t++) {
+        res = await fetch(url, { method: "POST", signal: ctl.signal, headers: { "Content-Type": "application/json", Authorization: "Bearer " + keys[i] }, body });
+        if (res.ok) return res;
+        if (![500, 502, 503].includes(res.status)) break;
+        await new Promise((r) => setTimeout(r, 2500));
+      }
+      if (![401, 402, 403, 429].includes(res.status) || i === keys.length - 1) throw new Error("HTTP " + res.status);
+    }
+    return res;
+  }
+
+  /* Một lượt hỏi–đáp trả về JSON (dùng cho chấm Speaking). Chỉ chạy khi có ai-config.js (chưa có Cloud Function cho Speaking). */
+  async function chatJSON(system, user, timeoutMs) {
+    if (!localEnabled()) throw new Error("ai-disabled");
+    const c = cfg(), ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeoutMs || c.timeoutMs || 120000);
+    try {
+      const res = await postLocal(c, JSON.stringify({
+        model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
+        messages: [{ role: "system", content: system }, { role: "user", content: typeof user === "string" ? user : JSON.stringify(user) }],
+      }), ctl);
+      return parseJSON(extractContent(await res.text()));
+    } catch (e) {
+      throw ctl.signal.aborted ? new Error("timeout") : e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   /* Trả về { [id]: { score: 0..1, missing: string[], comment } } — mục nào AI không trả về hợp lệ thì bị bỏ (nơi gọi dùng kiểm tra từ khóa thay thế) */
   async function grade(T, texts) {
@@ -86,24 +124,13 @@ Include exactly the ids you were given.`;
     try {
       let content;
       if (localEnabled()) {
-        const body = JSON.stringify({
+        res = await postLocal(c, JSON.stringify({
           model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
           messages: [
             { role: "system", content: SYSTEM },
             { role: "user", content: "Grade these items. Context: the student is joining the \"" + T.club + "\".\n" + JSON.stringify({ items }) },
           ],
-        });
-        /* key chính trước, key dự phòng (fallbackApiKey) chỉ dùng khi key trước hết hạn mức / bị từ chối (401, 402, 403, 429) */
-        const keys = [c.apiKey].concat(c.fallbackApiKey || [], c.fallbackApiKeys || []).filter(Boolean);
-        for (let i = 0; i < keys.length; i++) {
-          res = await fetch(String(c.endpoint).replace(/\/+$/, "") + "/chat/completions", {
-            method: "POST", signal: ctl.signal,
-            headers: { "Content-Type": "application/json", Authorization: "Bearer " + keys[i] },
-            body,
-          });
-          if (res.ok) break;
-          if (![401, 402, 403, 429].includes(res.status) || i === keys.length - 1) throw new Error("HTTP " + res.status);
-        }
+        }), ctl);
         content = extractContent(await res.text());
       } else {
         // Cloud Function giữ prompt + API key phía server; client chỉ gửi các mục cần chấm. Hàm tự ép quá giờ bằng ctl.
@@ -129,5 +156,5 @@ Include exactly the ids you were given.`;
     }
   }
 
-  FA.ai = { enabled, grade, model: () => (localEnabled() ? cfg().model : FA.cloud ? FA.cloud.aiLabel() : "") };
+  FA.ai = { enabled, grade, chatJSON, localEnabled, model: () => (localEnabled() ? cfg().model : FA.cloud ? FA.cloud.aiLabel() : "") };
 })();
