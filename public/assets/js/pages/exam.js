@@ -1282,7 +1282,10 @@
           }
           st.trans[idx] = (finals + interim).trim(); // kết quả cuối có thể về sau khi đã stop() → vẫn ghi đúng bước idx
         };
-        r.onerror = (e) => { if (["not-allowed", "service-not-allowed", "audio-capture", "network"].includes(e.error)) { recogOn = false; st.sttErr = e.error; } };
+        r.onerror = (e) => {
+          if (e.error && e.error !== "aborted") st.sttErr = e.error; // ghi lại mã lỗi để báo người dùng (no-speech = im lặng quá lâu)
+          if (["not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(e.error)) recogOn = false;
+        };
         r.onend = () => { if (recogOn && recog === r) { try { mk(); } catch (e) { recogOn = false; } } }; // Chrome tự ngắt khi im lặng → bật lại cho tới khi hết câu
         recog = r;
         try { r.start(); } catch (e) { recogOn = false; }
@@ -1326,7 +1329,7 @@
             <button class="btn btn-primary" id="goBtn">▶ Bắt đầu câu này</button>
             <button class="btn btn-outline hidden" id="doneBtn">Xong, câu tiếp →</button>
           </div>
-          <div class="muted" style="font-size:.88rem">Máy sẽ đọc câu hỏi, sau đó đồng hồ chạy và ghi âm tự động. ${s.prep ? "Part 4 có 1 phút chuẩn bị (có thể ghi chú ra giấy). " : ""}${sttOn() ? "Trình duyệt đồng thời chuyển lời nói thành chữ để AI chấm (cần mạng, hãy nói rõ và gần micro)." : FA.ai && FA.ai.localEnabled() ? "Trình duyệt này không hỗ trợ nhận dạng giọng nói — dùng Chrome hoặc Edge để AI chấm Speaking." : ""}</div>
+          <div class="muted" style="font-size:.88rem">Máy sẽ đọc câu hỏi, sau đó đồng hồ chạy và ghi âm tự động. ${s.prep ? "Part 4 có 1 phút chuẩn bị (có thể ghi chú ra giấy). " : ""}${sttOn() ? "Trình duyệt đồng thời chuyển lời nói thành chữ để AI chấm (cần mạng, hãy nói rõ và gần micro)." : FA.ai && FA.ai.ready && FA.ai.ready("speaking") && FA.speakAI && !FA.speakAI.supported() ? "Trình duyệt này không hỗ trợ nhận dạng giọng nói — dùng Chrome hoặc Edge để AI chấm Speaking." : ""}</div>
         </div>`;
       sh.stage.querySelector("#goBtn").onclick = start;
       sh.stage.querySelector("#doneBtn").onclick = next;
@@ -1387,11 +1390,17 @@
         const trans = replay ? (Array.isArray(sv.trans) ? sv.trans.map((x) => String(x || "")) : []) : steps.map((_, i) => st.trans[i] || "");
         let ai = replay && sv.ai && typeof sv.ai === "object" ? sv.ai : null;
         let aiNote = "";
+        // có cấu hình AI Speaking nhưng trình duyệt không nhận dạng được giọng nói (Brave, Firefox, Safari…) → nói rõ lý do thay vì im lặng
+        if (!replay && !sttUsed && FA.ai && FA.ai.ready && FA.ai.ready("speaking") && FA.speakAI && !FA.speakAI.supported())
+          aiNote = window.navigator && window.navigator.brave
+            ? "AI chưa chấm vì Brave không hỗ trợ nhận dạng giọng nói — hãy làm bài bằng Chrome hoặc Edge để AI chấm Speaking."
+            : "AI chưa chấm vì trình duyệt này không hỗ trợ nhận dạng giọng nói — hãy làm bài bằng Chrome hoặc Edge để AI chấm Speaking.";
         if (sttUsed) {
           if (!trans.some((t) => FA.speakAI.words(t) >= 3)) {
-            aiNote = st.sttErr === "not-allowed" || st.sttErr === "service-not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói bị lỗi kết nối nên AI chưa chấm được (kiểm tra mạng; trình duyệt như Brave, Opera, Cốc Cốc thường không hỗ trợ dịch vụ này — hãy dùng Chrome hoặc Edge)." : "Không nhận dạng được lời nói nào nên AI chưa chấm được.";
+            aiNote = st.sttErr === "not-allowed" || st.sttErr === "service-not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói bị lỗi kết nối nên AI chưa chấm được (kiểm tra mạng; trình duyệt như Brave, Opera, Cốc Cốc thường không hỗ trợ dịch vụ này — hãy dùng Chrome hoặc Edge)." : st.sttErr === "service-not-allowed" || st.sttErr === "language-not-supported" ? `Trình duyệt chặn dịch vụ nhận dạng giọng nói (mã lỗi: ${st.sttErr}) nên AI chưa chấm được — với Edge, bật Windows Settings → Privacy & security → Speech → Online speech recognition, hoặc dùng Chrome.`
+              : "Không nhận dạng được lời nói nào nên AI chưa chấm được" + (st.sttErr ? ` (mã lỗi: ${st.sttErr})` : " — hãy nói rõ, to và gần micro hơn") + ".";
           } else {
-            app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm Speaking…<br>AI (${esc(FA.ai.model())}) đang đọc bản nhận dạng giọng nói của bạn — có thể mất 30–90 giây.</p></div></div></div>`;
+            app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm Speaking…<br>AI (${esc(FA.ai.model("speaking"))}) đang đọc bản nhận dạng giọng nói của bạn — có thể mất 30–90 giây.</p></div></div></div>`;
             let ok = true;
             if (FA.plan) {
               const q = await FA.plan.useAI();
@@ -1401,7 +1410,7 @@
             if (ok) {
               try {
                 ai = await FA.speakAI.grade(steps, trans);
-                ai.model = FA.ai.model();
+                ai.model = FA.ai.model("speaking");
                 if (ai.rates.some((x) => x == null)) aiNote += " Một số part AI chưa chấm được (lỗi/quá tải) nên giữ điểm mặc định — bạn tự chấm bù.";
               } catch (e) {
                 aiNote = `AI chấm lỗi (${(e && e.message) || "không rõ"}) nên dùng điểm tự chấm.`;

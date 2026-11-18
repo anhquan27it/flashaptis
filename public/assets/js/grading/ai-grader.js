@@ -7,9 +7,18 @@
   const FA = (window.FA = window.FA || {});
 
   const cfg = () => window.FA_AI || null;
-  /* Writing có thể dùng nhà cung cấp/key/model riêng: khối `writing: { endpoint, apiKey, model, … }` trong ai-config.js ghi đè lên cấu hình chung
-     (Speaking luôn dùng cấu hình chung). Key dự phòng KHÔNG thừa hưởng — key của nhà cung cấp này không dùng được ở nhà cung cấp kia. */
-  const wcfg = () => { const c = cfg(); return c && c.writing ? Object.assign({}, c, { fallbackApiKey: undefined, fallbackApiKeys: undefined }, c.writing) : c; };
+  /* Writing và Speaking có cấu hình riêng: khối `writing: {…}` và `speaking: {…}` trong ai-config.js ghi đè lên phần chung
+     (model, fallbackModels, timeoutMs; cả endpoint/apiKey nếu muốn dùng nhà cung cấp khác). Không có khối nào thì dùng phần chung.
+     Khối nào tự đặt endpoint/apiKey thì KHÔNG thừa hưởng key dự phòng chung — key của nhà cung cấp này không dùng được ở nhà cung cấp kia. */
+  const roleCfg = (kind) => {
+    const c = cfg(), o = c && c[kind];
+    if (!o) return c;
+    const ownProvider = !!(o.endpoint || o.apiKey);
+    return Object.assign({}, c, ownProvider ? { fallbackApiKey: undefined, fallbackApiKeys: undefined } : {}, o);
+  };
+  const wcfg = () => roleCfg("writing");
+  const scfg = () => roleCfg("speaking");
+  const lastModel = {}; // model thực sự đã chấm lần gần nhất (có thể là model dự phòng) → hiển thị cho người dùng
   const localEnabled = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey && c.model); };
   /* có ai-config.js (dev, gọi thẳng) → dùng nó; không có thì dùng Cloud Function nếu đã bật + đã đăng nhập (FA.cloud, cloud.js) */
   const cloudEnabled = () => !localEnabled() && !!(FA.cloud && FA.cloud.aiReady());
@@ -96,17 +105,36 @@ Include exactly the ids you were given.`;
     return res;
   }
 
-  /* Một lượt hỏi–đáp trả về JSON (dùng cho chấm Speaking). Chỉ chạy khi có ai-config.js (chưa có Cloud Function cho Speaking). */
+  /* Thử lần lượt model chính rồi các model dự phòng (`fallbackModels`) của cấu hình c; model nào lỗi (429 quá tải, 404 hết miễn phí, JSON hỏng…)
+     thì chuyển model kế tiếp. Gemma qua Google AI Studio không nhận vai "system" → gộp chỉ dẫn vào tin nhắn user.
+     Trả về { model, json } — json là object đã parse. */
+  async function callModels(kind, c, system, user, ctl) {
+    const models = [c.model].concat(c.fallbackModels || []).filter(Boolean);
+    let lastErr = new Error("ai-failed");
+    for (const model of models) {
+      const messages = /gemma/i.test(model)
+        ? [{ role: "user", content: system + "\n\n" + user }]
+        : [{ role: "system", content: system }, { role: "user", content: user }];
+      try {
+        const res = await postLocal(c, JSON.stringify({ model, stream: false, temperature: 0, response_format: { type: "json_object" }, messages }), ctl);
+        const json = parseJSON(extractContent(await res.text()));
+        lastModel[kind] = model;
+        return { model, json };
+      } catch (e) {
+        if (ctl.signal.aborted) throw e; // hết giờ → dừng, không thử model khác
+        lastErr = e;
+      }
+    }
+    throw lastErr;
+  }
+
+  /* Một lượt hỏi–đáp trả về JSON (dùng cho chấm Speaking, cấu hình `speaking`). Chỉ chạy khi có ai-config.js (chưa có Cloud Function cho Speaking). */
   async function chatJSON(system, user, timeoutMs) {
-    if (!localEnabled()) throw new Error("ai-disabled");
-    const c = cfg(), ctl = new AbortController();
+    if (!ready("speaking")) throw new Error("ai-disabled");
+    const c = scfg(), ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), timeoutMs || c.timeoutMs || 120000);
     try {
-      const res = await postLocal(c, JSON.stringify({
-        model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
-        messages: [{ role: "system", content: system }, { role: "user", content: typeof user === "string" ? user : JSON.stringify(user) }],
-      }), ctl);
-      return parseJSON(extractContent(await res.text()));
+      return (await callModels("speaking", c, system, typeof user === "string" ? user : JSON.stringify(user), ctl)).json;
     } catch (e) {
       throw ctl.signal.aborted ? new Error("timeout") : e;
     } finally {
@@ -123,26 +151,20 @@ Include exactly the ids you were given.`;
     const ctl = new AbortController();
     const timeoutMs = (c && c.timeoutMs) || 120000;
     const timer = setTimeout(() => ctl.abort(), timeoutMs);
-    let res;
     try {
-      let content;
+      let json;
       if (localEnabled()) {
-        res = await postLocal(c, JSON.stringify({
-          model: c.model, stream: false, temperature: 0, response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: SYSTEM },
-            { role: "user", content: "Grade these items. Context: the student is joining the \"" + T.club + "\".\n" + JSON.stringify({ items }) },
-          ],
-        }), ctl);
-        content = extractContent(await res.text());
+        const user = "Grade these items. Context: the student is joining the \"" + T.club + "\".\n" + JSON.stringify({ items });
+        json = (await callModels("writing", c, SYSTEM, user, ctl)).json;
       } else {
         // Cloud Function giữ prompt + API key phía server; client chỉ gửi các mục cần chấm. Hàm tự ép quá giờ bằng ctl.
-        content = await Promise.race([
+        const content = await Promise.race([
           FA.cloud.callAI({ items, club: T.club }),
           new Promise((_, rej) => ctl.signal.addEventListener("abort", () => rej(new Error("timeout")))),
         ]);
+        json = parseJSON(content);
       }
-      const results = (parseJSON(content).results) || {};
+      const results = (json && json.results) || {};
       const out = {};
       items.forEach((it) => {
         const r = results[it.id];
@@ -159,5 +181,17 @@ Include exactly the ids you were given.`;
     }
   }
 
-  FA.ai = { enabled, grade, chatJSON, localEnabled, model: (kind) => (localEnabled() ? (kind === "writing" ? wcfg() : cfg()).model : FA.cloud ? FA.cloud.aiLabel() : "") };
+  /* model(kind): tên model để hiển thị — model thực sự đã chấm lần gần nhất nếu có, không thì model chính trong cấu hình. kind = "writing" | "speaking" */
+  const modelOf = (kind) => {
+    if (!localEnabled()) return FA.cloud ? FA.cloud.aiLabel() : "";
+    const k = kind === "writing" ? "writing" : "speaking";
+    return lastModel[k] || (k === "writing" ? wcfg() : scfg()).model;
+  };
+  /* ready(kind): cấu hình của kỹ năng đó đủ endpoint + key + model chưa (vd. khối speaking dùng key Google riêng mà chưa dán key → false) */
+  const ready = (kind) => {
+    if (!localEnabled()) return false;
+    const c = kind === "writing" ? wcfg() : scfg();
+    return !!(c && c.endpoint && c.apiKey && c.model);
+  };
+  FA.ai = { enabled, grade, chatJSON, localEnabled, ready, model: modelOf };
 })();
