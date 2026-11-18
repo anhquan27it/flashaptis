@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -20,13 +21,13 @@
   <script src="assets/js/firebase/firebase-config.js"></script>
   <script src="assets/js/firebase/cloud.js"></script>
   <script src="assets/js/firebase/plan.js"></script>
+  <script>FA.renderShell(location.hash.indexOf("gym") > -1 ? "gym" : "exam");</script>
   <script src="data/grammar.js"></script>
   <script src="data/reading.js"></script>
   <script src="data/listening.js"></script>
   <script src="data/writing.js"></script>
   <script src="data/writing-rel.js"></script>
   <script src="data/speaking.js"></script>
-  <script>FA.renderShell(location.hash.indexOf("gym") > -1 ? "gym" : "exam");</script>
   <script src="assets/js/grading/relevance.js"></script>
   <script src="assets/js/grading/ai-config.js"></script><!-- tùy chọn: có file này (đã .gitignore) thì AI chấm nội dung Writing -->
   <script src="assets/js/grading/ai-grader.js"></script>

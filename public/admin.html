@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -93,20 +94,20 @@
 
       el.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = async () => {
         const p = pending.find((x) => x.id === b.dataset.ok);
-        if (!confirm(`Đã thấy ${plan.fmtVND(+p.amount)} với nội dung "FLASHAPTIS ${p.code}" trong app ngân hàng?\nDuyệt sẽ cộng ${P.days} ngày Pro cho ${p.email || p.uid}.`)) return;
+        if (!(await FA.confirm(`Đã thấy ${plan.fmtVND(+p.amount)} với nội dung "FLASHAPTIS ${p.code}" trong app ngân hàng?\nDuyệt sẽ cộng ${P.days} ngày Pro cho ${p.email || p.uid}.`, { title: "Duyệt thanh toán", okText: `Duyệt +${P.days} ngày` }))) return;
         b.disabled = true;
         try { const until = await grant(p.uid, P.days, p.email, p.id); FA.toast("Đã duyệt — Pro đến " + plan.fmtDay(until)); draw(); }
         catch (e) { console.warn(e); FA.toast("Lỗi: " + ((e && e.message) || "")); b.disabled = false; }
       }));
       el.querySelectorAll("[data-no]").forEach((b) => (b.onclick = async () => {
-        const note = prompt("Lý do từ chối (người dùng sẽ thấy):", "Chưa nhận được tiền");
+        const note = await FA.prompt("Lý do từ chối (người dùng sẽ thấy):", "Chưa nhận được tiền", { title: "Từ chối yêu cầu", okText: "Từ chối" });
         if (note === null) return;
         try { await reject(b.dataset.no, note.slice(0, 200)); FA.toast("Đã từ chối"); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
       }));
       document.getElementById("gBtn").onclick = async () => {
         const uid = document.getElementById("gUid").value.trim(), days = Math.round(+document.getElementById("gDays").value);
         if (!uid || !(days > 0)) return FA.toast("Nhập UID và số ngày > 0");
-        if (!confirm(`Cấp ${days} ngày Pro cho UID ${uid}?`)) return;
+        if (!(await FA.confirm(`Cấp ${days} ngày Pro cho UID ${uid}?`, { title: "Cấp Pro thủ công", okText: "Cấp ngay" }))) return;
         try { const until = await grant(uid, days, ""); FA.toast("Đã cấp — Pro đến " + plan.fmtDay(until)); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
       };
     }

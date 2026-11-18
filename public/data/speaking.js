@@ -70,4 +70,38 @@ window.FA_SPEAKING = [
       s: "I want to talk about my first part-time job in a coffee shop. On my first day, I had to learn how to make more than twenty kinds of drinks very quickly. At first I was nervous and made a lot of mistakes, but my manager was patient and my colleagues helped me. After about a week, I felt much more confident and even enjoyed it.\nI strongly believe that lifelong learning is important. The world changes very fast, especially technology, so if we stop learning we will fall behind. Learning new things also keeps our minds active and makes life more interesting.",
     },
   },
+  {
+    id: "s3",
+    title: "Đề 3 — Technology & environment",
+    p1: [
+      { q: "How often do you use your mobile phone?", s: "I use my mobile phone every day, probably for three or four hours in total. I mostly use it to message my friends, check emails and read the news on the bus." },
+      { q: "What is your favourite season of the year?", s: "My favourite season is autumn because the weather is cool and dry. In Hanoi, the streets look very romantic with yellow leaves, and it is comfortable to walk outside." },
+      { q: "Do you like cooking? Why or why not?", s: "Yes, I enjoy cooking simple meals at weekends. It is much healthier and cheaper than eating out, and I feel happy when my family enjoys the dishes I make." },
+    ],
+    p2: {
+      photo: { emo: "🧑‍🌾 🌱 🏙️", cap: "People planting young trees in a city park" },
+      questions: [
+        { q: "Describe this picture.", s: "In this picture I can see a group of volunteers planting young trees in a park. Some people are digging holes while others are watering the plants. They are wearing casual clothes and smiling, so it looks like a community weekend activity." },
+        { q: "Are there many green spaces where you live?", s: "There are a few small parks in my neighbourhood, and a large lake about ten minutes away. However, because the city is growing fast, many trees have been cut down to build apartments." },
+        { q: "Why are trees important for big cities?", s: "Trees produce oxygen and absorb carbon dioxide, which helps reduce air pollution. They also provide shade on hot summer days and give birds and insects a place to live." },
+      ],
+    },
+    p3: {
+      photos: [{ emo: "🛍️ 🏬 💳", cap: "A shopper paying at a busy store counter" }, { emo: "📦 📱 🛋️", cap: "Someone ordering products online from a sofa" }],
+      questions: [
+        { q: "Tell me what you see in the two pictures.", s: "The first picture shows a customer shopping inside a busy store and paying at the counter, while the second shows someone ordering items on a phone at home. In the shop you can touch the products, whereas online shopping looks much more relaxed." },
+        { q: "Which way of shopping do you prefer and why?", s: "I prefer online shopping for books and electronics because it saves time and it is easy to compare prices. However, for clothes and shoes, I still go to shops so I can try them on first." },
+        { q: "How has online shopping affected local businesses?", s: "Small local shops face stronger competition from big websites that offer lower prices and fast delivery. However, shops that build a good website or social media page can now reach customers across the whole country." },
+      ],
+    },
+    p4: {
+      photo: { emo: "📵 🌲 ⛺", cap: "Friends camping in nature without looking at phones" },
+      questions: [
+        "Tell me about a time when you had to live without the internet or your phone.",
+        "How did that experience affect you?",
+        "Do you think people today depend too much on technology?",
+      ],
+      s: "Last summer I went on a two-day camping trip in the mountains where there was no mobile signal at all. At first I felt a bit anxious because I couldn't check messages or take photos to post online. However, after a few hours I stopped reaching for my pocket. My friends and I cooked over a fire, played card games and talked until midnight. I slept better than I had in months and felt completely refreshed when I returned to the city.\nI definitely think many people depend too much on technology today. We check our phones dozens of times a day without even thinking, which reduces real conversation with family and friends. Technology is wonderful for work and study, but we need to set healthy limits.",
+    },
+  },
 ];

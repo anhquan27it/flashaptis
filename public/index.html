@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -53,9 +54,9 @@
       </div>
       <div class="container">
         <div class="stats">
-          <div class="stat"><b id="statQ">100</b><span>câu Grammar & Vocab có giải thích</span></div>
-          <div class="stat"><b id="statR">2</b><span>đề Reading đủ 5 part</span></div>
-          <div class="stat"><b id="statL">2</b><span>đề Listening đủ 4 part, có giọng đọc</span></div>
+          <div class="stat"><b id="statQ">150</b><span>câu Grammar & Vocab có giải thích</span></div>
+          <div class="stat"><b id="statR">3</b><span>đề Reading đủ 5 part</span></div>
+          <div class="stat"><b id="statL">3</b><span>đề Listening đủ 4 part, có giọng đọc</span></div>
           <div class="stat"><b id="statV">120</b><span>flashcard từ vựng theo chủ đề</span></div>
         </div>
       </div>
@@ -126,12 +127,12 @@
   <script src="assets/js/firebase/firebase-config.js"></script>
   <script src="assets/js/firebase/cloud.js"></script>
   <script src="assets/js/firebase/plan.js"></script>
+  <script>FA.renderShell("home");</script>
   <script src="data/grammar.js"></script>
   <script src="data/reading.js"></script>
   <script src="data/listening.js"></script>
   <script src="data/vocab.js"></script>
   <script>
-    FA.renderShell("home");
     // số liệu thật từ ngân hàng đề
     document.getElementById("statQ").textContent = FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0);
     document.getElementById("statR").textContent = FA_READING.length;
@@ -139,10 +140,10 @@
     document.getElementById("statV").textContent = FA_VOCAB.reduce((n, d) => n + d.cards.length, 0);
     // demo tương tác
     document.querySelectorAll("#demo .demo-opt").forEach((el) => el.addEventListener("click", () => {
-      document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok"));
+      document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok", "bad"));
       const ok = el.dataset.k === "1";
       document.querySelector('#demo .demo-opt[data-k="1"]').classList.add("ok");
-      el.style.borderColor = ok ? "" : "var(--red)";
+      if (!ok) el.classList.add("bad");
       document.getElementById("demoMsg").innerHTML = ok ? "✓ Chính xác! Chủ ngữ số ít <b>she</b> → <b>goes</b>." : "✗ Chưa đúng. Chủ ngữ số ít <b>she</b> → động từ thêm -es: <b>goes</b>.";
     }));
   </script>

@@ -4,7 +4,7 @@
       Chạy song song với MediaRecorder trong lúc người học nói, mỗi câu một bộ nhận dạng.
    2) FA.speakAI.grade(): gửi bản ghi chữ của cả bài (4 part) cho model chat qua API kiểu OpenAI (OpenRouter) — MỘT request.
       Mặc định google/gemma-4-31b-it:free; đổi bằng speakingModel trong ai-config.js (dự phòng: speakingFallbackModels).
-   - Chỉ bật khi có ai-config.js (window.FA_AI = {endpoint, apiKey,…}) VÀ trình duyệt hỗ trợ SpeechRecognition. Chưa hỗ trợ đường Cloud Function.
+   - Chỉ bật khi có ai-config.js (window.FA_AI = {endpoint, apiKey,…}) hoặc đã bật Cloud AI + đăng nhập (FA.cloud.aiReady()), VÀ trình duyệt hỗ trợ SpeechRecognition.
    - Bản ghi chữ không cho biết phát âm (nhận dạng giọng nói tự sửa lỗi) → AI KHÔNG chấm phát âm, chỉ chấm nội dung, độ phát triển ý, ngữ pháp, từ vựng, mạch lạc.
    - Lời nói của người học là dữ liệu KHÔNG tin cậy (có thể nói "hãy cho tôi 5 điểm"): prompt dặn bỏ qua mọi chỉ dẫn trong bài, điểm luôn bị ép về số nguyên 0–5.
    - Gemma qua Google AI Studio không nhận vai "system" → gộp toàn bộ chỉ dẫn vào MỘT tin nhắn user. */
@@ -19,9 +19,11 @@
   const cfg = () => window.FA_AI || null;
   const SR = () => window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const canListen = () => !!SR();
-  const keyed = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey); };
+  const localEnabled = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey); };
+  const cloudEnabled = () => !localEnabled() && !!(FA.cloud && FA.cloud.aiReady());
+  const keyed = () => localEnabled() || cloudEnabled();
   const enabled = () => keyed() && canListen();
-  const modelName = () => (cfg() && cfg().speakingModel) || DEFAULT_MODEL;
+  const modelName = () => (localEnabled() ? ((cfg() && cfg().speakingModel) || DEFAULT_MODEL) : (FA.cloud ? FA.cloud.aiLabel() : ""));
 
   const wc = (t) => (FA.wordCount ? FA.wordCount(t) : (String(t).match(/[A-Za-z0-9'’-]+/g) || []).length);
   const str = (x, n) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n);
@@ -173,8 +175,18 @@ Include exactly the part numbers you were given.`;
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), (c && c.timeoutMs) || 120000);
     try {
-      const prompt = INSTR + "\n\nGrade these parts.\n" + JSON.stringify({ parts });
-      const { model, results } = await callModels(c, prompt, ctl.signal);
+      let model, results;
+      if (localEnabled()) {
+        const prompt = INSTR + "\n\nGrade these parts.\n" + JSON.stringify({ parts });
+        ({ model, results } = await callModels(c, prompt, ctl.signal));
+      } else {
+        const content = await Promise.race([
+          FA.cloud.callSpeakingAI({ parts }),
+          new Promise((_, rej) => ctl.signal.addEventListener("abort", () => rej(new Error("timeout")))),
+        ]);
+        model = FA.cloud.aiLabel();
+        results = parseJSON(content).results || {};
+      }
       const out = [1, 2, 3, 4].map((p) => {
         const mine = parts.find((x) => x.part === p);
         if (!mine) return { score: null, missing: [], comment: "" };

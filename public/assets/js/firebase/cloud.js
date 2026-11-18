@@ -35,6 +35,7 @@
     cachedUser: () => (authKnown ? user : cached), // người dùng dùng để HIỂN THỊ (cache khi Firebase chưa xác nhận)
     db: () => db,
     onChange: (fn) => subs.push(fn),
+    cloudAIEnabled: () => !!(cfg && cfg.useCloudAI),
     aiReady: () => !!(cfg && cfg.useCloudAI && user),
     aiLabel: () => (cfg && cfg.aiLabel) || "AI",
     signIn: (tab) => signIn(tab), // mở hộp thoại: "in" đăng nhập / "up" tạo tài khoản
@@ -83,7 +84,16 @@
       });
       return key === "wrongbook" ? out.slice(0, 300) : out;
     }
-    if (local && remote && typeof local === "object" && typeof remote === "object") return Object.assign({}, remote, local);
+    if (local && remote && typeof local === "object" && typeof remote === "object") {
+      const out = Object.assign({}, remote, local);
+      // nếu là bảng mốc thời gian (vd. fc-known) thì giữ mốc mới hơn giữa 2 thiết bị
+      if (key === "fc-known") {
+        Object.keys(remote).forEach((k) => {
+          if (typeof remote[k] === "number" && typeof local[k] === "number") out[k] = Math.max(local[k], remote[k]);
+        });
+      }
+      return out;
+    }
     return local; // giá trị đơn (vd. calc): máy này thắng
   }
 
@@ -150,6 +160,8 @@
   function clearLocalSynced() {
     try {
       localStorage.removeItem(PREFIX + "attempts");
+      localStorage.removeItem(PREFIX + "spell-ignore");
+      localStorage.removeItem(PREFIX + "devAiUsage");
       localKVKeys().forEach((k) => localStorage.removeItem(PREFIX + k));
     } catch (e) {}
   }
@@ -403,6 +415,7 @@
                 <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(who.email || "")}</span></div>
               </div>
               <div class="acct-plan"></div><!-- plan.js điền: gói hiện tại, lượt AI -->
+              <a role="menuitem" href="exam.html#/progress">📊 Tiến độ & lịch sử</a>
               <a role="menuitem" href="pricing.html">⭐ Gói & thanh toán</a>
               <a role="menuitem" href="admin.html" class="acct-admin" hidden>🛠️ Trang quản trị (Admin)</a>
               <button role="menuitem" type="button" class="acct-out">↩ Đăng xuất</button>
@@ -426,13 +439,15 @@
   cloud.paint = paint; // common.js gọi ngay khi tạo header
 
   /* ---------- AI chấm qua Cloud Function ---------- */
-  cloud.callAI = async function (payload) {
+  async function callCloudFn(name, payload) {
     await sdkReady();
     await loadScript(SDK + "firebase-functions-compat.js");
-    const fn = firebase.app().functions(cfg.functionsRegion || "us-central1").httpsCallable("gradeWriting", { timeout: 120000 });
+    const fn = firebase.app().functions(cfg.functionsRegion || "us-central1").httpsCallable(name, { timeout: 120000 });
     const r = await fn(payload);
     return (r.data && r.data.content) || "";
-  };
+  }
+  cloud.callAI = (payload) => callCloudFn("gradeWriting", payload);
+  cloud.callSpeakingAI = (payload) => callCloudFn("gradeSpeaking", payload);
 
   /* ---------- khởi động ---------- */
   if (cfg) {
@@ -451,7 +466,10 @@
             const changed = await syncDown();
             ready = true;
             await pushNow();
-            if (changed) FA.toast("Đã đồng bộ dữ liệu từ tài khoản — tải lại trang để thấy đầy đủ");
+            if (changed) {
+              window.dispatchEvent(new CustomEvent("fa:synced"));
+              FA.toast("Đã đồng bộ dữ liệu từ tài khoản ⚡");
+            }
           } catch (e) { console.warn("[FA.cloud] đồng bộ lỗi", e); FA.toast("Không đồng bộ được dữ liệu (kiểm tra Firestore Rules / mạng)"); }
         }
         subs.forEach((fn) => { try { fn(user); } catch (e) {} });

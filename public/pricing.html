@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -80,16 +81,19 @@
       const ST = { pending: "⏳ Chờ duyệt", approved: "✅ Đã kích hoạt", rejected: "❌ Từ chối" };
       const hist = pays.length ? `<h4 class="mt-3">Lịch sử thanh toán</h4><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr>${pays.map((p) => `<tr><td>${FA.fmtDate(p.createdAt)}</td><td>${plan.fmtVND(p.amount)}</td><td>${ST[p.status] || esc(p.status)}${p.note ? ` · <span class="muted">${esc(p.note)}</span>` : ""}</td></tr>`).join("")}</table></div>` : "";
 
-      const qr = `
+      const bankReady = P.bank && P.bank.accountNo && !/^0+$/.test(String(P.bank.accountNo).trim());
+      const qr = !bankReady
+        ? `<div class="explain mt-2">⚠️ Chủ trang chưa cấu hình số tài khoản ngân hàng nhận thanh toán (<code>FA.PLAN.bank</code> trong <code>plan.js</code>). Vui lòng quay lại sau.</div>`
+        : `
         <div class="pay-box mt-2">
           <img src="${esc(plan.qrUrl())}" alt="Mã QR chuyển khoản ${esc(plan.fmtVND(P.price))}" width="240" height="240">
           <div>
             <dl>
               <dt>Ngân hàng</dt><dd>${esc(P.bank.id)}</dd>
-              <dt>Số tài khoản</dt><dd>${esc(P.bank.accountNo)}</dd>
+              <dt>Số tài khoản</dt><dd>${esc(P.bank.accountNo)} <button type="button" class="copy-btn" data-copy="${esc(P.bank.accountNo)}">📋 Sao chép</button></dd>
               <dt>Chủ tài khoản</dt><dd>${esc(P.bank.accountName)}</dd>
               <dt>Số tiền</dt><dd>${plan.fmtVND(P.price)}</dd>
-              <dt>Nội dung</dt><dd><code>${esc(plan.memo())}</code></dd>
+              <dt>Nội dung</dt><dd><code>${esc(plan.memo())}</code> <button type="button" class="copy-btn" data-copy="${esc(plan.memo())}">📋 Sao chép</button></dd>
             </dl>
             <div class="explain">Mở app ngân hàng → quét QR (số tiền và nội dung đã điền sẵn). Nếu chuyển tay, <b>ghi đúng nội dung <code>${esc(plan.memo())}</code></b> để admin nhận ra tài khoản của bạn.</div>
             ${pending ? "" : `<button class="btn btn-primary mt-2" id="paidBtn" type="button">Tôi đã chuyển khoản</button>`}
@@ -102,9 +106,10 @@
         ${pending ? `<div class="explain">⏳ Yêu cầu gửi lúc ${FA.fmtDate(pending.createdAt)} đang chờ admin xác nhận. Pro sẽ tự bật khi được duyệt — tải lại trang để cập nhật.</div>` : ""}
         ${showQR || pending ? qr : `<p class="muted mt-1 mb-0">Bấm “${plan.isPro() ? "Gia hạn Pro" : "Nâng cấp Pro"}” ở trên để lấy mã QR.</p>`}
         ${hist}`;
+      area.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => FA.copy(b.dataset.copy, b)));
       const btn = document.getElementById("paidBtn");
       if (btn) btn.onclick = async () => {
-        if (!confirm(`Xác nhận bạn đã chuyển ${plan.fmtVND(P.price)} với nội dung "${plan.memo()}"?`)) return;
+        if (!(await FA.confirm(`Xác nhận bạn đã chuyển ${plan.fmtVND(P.price)} với nội dung "${plan.memo()}"?`, { title: "Xác nhận chuyển khoản", okText: "Đã chuyển khoản" }))) return;
         btn.disabled = true;
         try { await plan.submitPayment(); FA.toast("Đã gửi yêu cầu — chờ admin xác nhận"); drawPay(); }
         catch (e) { console.warn(e); FA.toast("Không gửi được yêu cầu: " + ((e && e.message) || "lỗi")); btn.disabled = false; }

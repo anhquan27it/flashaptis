@@ -33,6 +33,11 @@
   const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }); // YYYY-MM-DD theo giờ VN
   const db = () => FA.cloud && FA.cloud.db && FA.cloud.db();
   const firebaseOn = () => !!(FA.cloud && FA.cloud.enabled());
+  const isLocalDevAI = () => !!(window.FA_AI && window.FA_AI.endpoint && window.FA_AI.apiKey);
+  const usingCloudAI = () => !isLocalDevAI() && !!(FA.cloud && FA.cloud.cloudAIEnabled && FA.cloud.cloudAIEnabled());
+  const DEV_USAGE_KEY = "flashaptis:devAiUsage";
+  const readDevUsage = () => { try { const x = JSON.parse(localStorage.getItem(DEV_USAGE_KEY)); return x && x.day === today() ? x : { day: today(), n: 0 }; } catch (e) { return { day: today(), n: 0 }; } };
+  const writeDevUsage = (u) => { try { localStorage.setItem(DEV_USAGE_KEY, JSON.stringify(u)); } catch (e) {} };
   const isPro = () => proUntil > Date.now();
   const aiLimit = () => CFG.aiPerDay[isPro() ? "pro" : "free"];
   const aiUsed = () => (usage.day === today() ? usage.n || 0 : 0);
@@ -63,14 +68,18 @@
 
   async function load(u) {
     // đọc xong mới gán (không xóa trạng thái đang hiển thị trong lúc chờ → không nháy FREE)
-    let pu = 0, ad = false, us = { day: "", n: 0 };
+    let pu = 0, ad = false, us = { day: today(), n: 0 };
     if (u && db()) {
-      const d = db(), uid = u.uid;
+      const d = db(), uid = u.uid, day = today();
       const get = (col) => d.collection(col).doc(uid).get().catch((e) => { console.warn("[FA.plan] đọc " + col + " lỗi", e); return null; });
-      const [p, a, g] = await Promise.all([get("plans"), get("admins"), get("aiUsage")]);
+      const getUsage = usingCloudAI()
+        ? d.collection("users").doc(uid).collection("usage").doc(day).get().catch((e) => { console.warn("[FA.plan] đọc usage lỗi", e); return null; })
+        : Promise.resolve(null);
+      const [p, a, g] = await Promise.all([get("plans"), get("admins"), getUsage]);
       pu = (p && p.exists && +p.data().proUntil) || 0;
       ad = !!(a && a.exists);
-      if (g && g.exists) us = g.data();
+      if (usingCloudAI()) us = { day, n: (g && g.exists && +g.data().ai) || 0 };
+      else if (isLocalDevAI()) us = readDevUsage();
     }
     user = u || null; proUntil = pu; admin = ad; usage = us;
     loaded = true;
@@ -78,40 +87,57 @@
     emit();
   }
 
-  /* trừ 1 lượt AI hôm nay. Trả {ok:true} hoặc {ok:false, reason} (lý do hiển thị cho người dùng) */
+  /* Kiểm tra & (ở chế độ dev) trừ 1 lượt AI hôm nay. Ở chế độ Cloud AI, server (functions/index.js) kiểm tra & trừ lượt nguyên tử. */
   async function useAI() {
     if (!firebaseOn()) return { ok: true }; // không cấu hình Firebase (dev) → không giới hạn
     if (!user) return { ok: false, reason: `Đăng nhập để dùng AI chấm nội dung (Free ${CFG.aiPerDay.free} lượt/ngày, Pro ${CFG.aiPerDay.pro} lượt/ngày).` };
-    const limit = aiLimit(), day = today(), d = db(), ref = d.collection("aiUsage").doc(user.uid);
-    try {
-      const n = await d.runTransaction(async (tx) => {
-        const s = await tx.get(ref), x = s.exists ? s.data() : {};
-        const used = x.day === day ? x.n || 0 : 0;
-        if (used >= limit) return -1;
-        tx.set(ref, { day, n: used + 1 });
-        return used + 1;
-      });
-      if (n < 0) return { ok: false, reason: `Bạn đã dùng hết ${limit}/${limit} lượt AI hôm nay.` + (isPro() ? "" : ` Nâng cấp Pro để có ${CFG.aiPerDay.pro} lượt/ngày.`) };
-      usage = { day, n };
+    const limit = aiLimit(), day = today();
+    const outOfQuota = () => `Bạn đã dùng hết ${limit}/${limit} lượt AI hôm nay.` + (isPro() ? "" : ` Nâng cấp Pro để có ${CFG.aiPerDay.pro} lượt/ngày.`);
+
+    if (usingCloudAI()) {
+      try {
+        const s = await db().collection("users").doc(user.uid).collection("usage").doc(day).get();
+        const used = (s.exists && +s.data().ai) || 0;
+        if (used >= limit) {
+          usage = { day, n: used }; savePlan(); paintBadge();
+          return { ok: false, reason: outOfQuota() };
+        }
+        usage = { day, n: used + 1 };
+        savePlan();
+        paintBadge();
+        return { ok: true, used: used + 1, limit, cloud: true };
+      } catch (e) {
+        console.warn("[FA.plan] đọc lượt AI lỗi", e);
+        return { ok: false, reason: "Không kiểm tra được lượt AI (mạng / Firestore)." };
+      }
+    }
+
+    if (isLocalDevAI()) {
+      const cur = readDevUsage();
+      if (cur.n >= limit) return { ok: false, reason: outOfQuota() };
+      usage = { day, n: cur.n + 1 };
+      writeDevUsage(usage);
       savePlan();
       paintBadge();
-      return { ok: true, used: n, limit };
-    } catch (e) {
-      console.warn("[FA.plan] trừ lượt AI lỗi", e);
-      return { ok: false, reason: "Không kiểm tra được lượt AI (mạng / Firestore)." };
+      return { ok: true, used: usage.n, limit };
     }
+
+    return { ok: false, reason: "AI chấm điểm chưa được bật." };
   }
-  /* AI lỗi → trả lại lượt vừa trừ */
+  /* AI lỗi → hoàn lượt (Cloud AI hoàn ngay trên server; ở đây đồng bộ lại số lượt thực tế) */
   async function refundAI() {
     if (!firebaseOn() || !user) return;
-    const day = today(), d = db(), ref = d.collection("aiUsage").doc(user.uid);
-    try {
-      await d.runTransaction(async (tx) => {
-        const s = await tx.get(ref), x = s.exists ? s.data() : {};
-        if (x.day === day && x.n > 0) tx.set(ref, { day, n: x.n - 1 });
-      });
-      if (usage.day === day && usage.n > 0) usage.n--;
-    } catch (e) {}
+    const day = today();
+    if (usingCloudAI()) { await load(user); return; }
+    if (isLocalDevAI()) {
+      const cur = readDevUsage();
+      if (cur.n > 0) {
+        usage = { day, n: cur.n - 1 };
+        writeDevUsage(usage);
+        savePlan();
+        paintBadge();
+      }
+    }
   }
 
   /* ---------- thanh toán ---------- */

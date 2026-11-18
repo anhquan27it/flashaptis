@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -74,7 +75,8 @@
       document.querySelectorAll("[data-done]").forEach((b) => (b.onclick = () => { FA.store.set("tips-done", [...done(), +b.dataset.done]); FA.toast("Tuyệt! Đã mở mẹo tiếp theo ⚡"); draw(); }));
       document.querySelectorAll("[data-undo]").forEach((b) => (b.onclick = () => { FA.store.set("tips-done", done().filter((x) => x !== +b.dataset.undo)); draw(); }));
     }
-    document.getElementById("tipReset").onclick = () => { if (confirm("Xóa tiến độ lộ trình mẹo?")) { FA.store.set("tips-done", []); draw(); } };
+    document.getElementById("tipReset").onclick = async () => { if (await FA.confirm("Xóa toàn bộ tiến độ lộ trình mẹo?", { okText: "Xóa tiến độ", danger: true })) { FA.store.set("tips-done", []); draw(); } };
+    window.addEventListener("fa:synced", draw);
     draw();
   </script>
 </body>

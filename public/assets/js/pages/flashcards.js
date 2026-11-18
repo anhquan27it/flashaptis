@@ -61,18 +61,62 @@
   /* ---------- chế độ học lật thẻ ---------- */
   function viewStudy(deck) {
     let onlyNew = deck.cards.some((c) => !isKnown(deck.id, c.w)) && deckKnown(deck) > 0;
-    let reverse = false;
-    let queue, flipped = false, seen = 0;
+    let reverse = false, showList = false, search = "", slide = false;
+    let queue, flipped = false;
     const build = () => {
       queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !isKnown(deck.id, c.w)));
-      seen = 0;
     };
     build();
 
+    function drawList() {
+      setKeys(null);
+      const q = search.trim().toLowerCase();
+      const rows = deck.cards.filter((c) => !q || c.w.toLowerCase().includes(q) || c.m.toLowerCase().includes(q));
+      app.innerHTML = shell(`
+        <input class="inp mb-2" id="fcSearch" value="${esc(search)}" placeholder="🔍 Tìm từ tiếng Anh hoặc nghĩa tiếng Việt…">
+        <div class="fc-vocab-list">
+          ${rows.length ? rows.map((c, idx) => {
+            const kn = isKnown(deck.id, c.w);
+            return `<div class="fc-vocab-row">
+              <div style="min-width:0">
+                <div><b>${esc(c.w)}</b> ${c.p ? `<span class="muted" style="font-size:.86rem">${esc(c.p)}</span>` : ""} <span class="pill gray">${esc(c.t)}</span></div>
+                <div style="color:var(--orange-700);font-weight:600;font-size:.94rem">${esc(c.m)}</div>
+                <div class="muted" style="font-size:.84rem;font-style:italic">“${esc(c.x)}”</div>
+              </div>
+              <div class="row" style="flex-shrink:0">
+                <button type="button" class="btn btn-ghost btn-sm" data-say="${idx}" title="Nghe phát âm">🔊</button>
+                <button type="button" class="btn ${kn ? "btn-green" : "btn-outline"} btn-sm" data-kn="${idx}">${kn ? "✓ Thuộc" : "Đánh dấu"}</button>
+              </div>
+            </div>`;
+          }).join("") : `<div class="card empty"><p class="mb-0">Không tìm thấy từ nào khớp “${esc(search)}”.</p></div>`}
+        </div>`);
+      const inp = app.querySelector("#fcSearch");
+      inp.oninput = () => {
+        search = inp.value;
+        const pos = inp.selectionStart;
+        drawList();
+        const ni = app.querySelector("#fcSearch");
+        if (ni) { ni.focus(); ni.setSelectionRange(pos, pos); }
+      };
+      app.querySelectorAll("[data-say]").forEach((b) => (b.onclick = () => {
+        const c = rows[+b.dataset.say];
+        FA.speak(c.w + ". " + c.x, { gender: "f", rate: 0.9 }).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."));
+      }));
+      app.querySelectorAll("[data-kn]").forEach((b) => (b.onclick = () => {
+        const c = rows[+b.dataset.kn];
+        setKnown(deck.id, c.w, !isKnown(deck.id, c.w));
+        build();
+        drawList();
+      }));
+      bindTop();
+    }
+
     function draw() {
+      if (showList) return drawList();
       flipped = false;
       const n = deckKnown(deck);
       if (!queue.length) {
+        setKeys(null);
         app.innerHTML = shell(`<div class="card empty"><div class="big">🎉</div><h2>Xong bộ thẻ!</h2><p>Bạn đã thuộc ${n}/${deck.cards.length} từ trong bộ “${esc(deck.name)}”.</p>
           <div class="row" style="justify-content:center"><button class="btn btn-primary" id="restart">Học lại cả bộ</button><a class="btn btn-outline" href="#${deck.id}/quiz">Kiểm tra nhanh</a><a class="btn btn-ghost" href="#">Bộ khác</a></div></div>`);
         app.querySelector("#restart").onclick = () => { onlyNew = false; build(); draw(); };
@@ -87,7 +131,7 @@
       app.innerHTML = shell(`
         <div class="progress-meta" style="max-width:560px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ</span><span>${isKnown(deck.id, c.w) ? "✅ Đã thuộc" : ""}</span></div>
         <div class="fc-wrap">
-          <div class="fc" id="fc">
+          <div class="fc ${slide ? "fc-slide" : ""}" id="fc">
             <div class="fc-face fc-front"><button class="speak-btn" title="Nghe phát âm">🔊</button>${front}<div class="fc-hint">Bấm vào thẻ hoặc phím <kbd>Space</kbd> để lật</div></div>
             <div class="fc-face fc-back"><button class="speak-btn" title="Nghe phát âm">🔊</button>${back}<div class="fc-hint">Đã nhớ chưa?</div></div>
           </div>
@@ -97,16 +141,18 @@
           <button class="btn btn-outline" id="flip">🔄 Lật <kbd>Space</kbd></button>
           <button class="btn btn-green" id="got">✅ Đã thuộc <kbd>2</kbd></button>
         </div>`);
+      slide = false;
       const fc = app.querySelector("#fc");
       const flip = () => { flipped = !flipped; fc.classList.toggle("flipped", flipped); };
       fc.onclick = (e) => { if (!e.target.closest(".speak-btn")) flip(); };
       app.querySelectorAll(".speak-btn").forEach((b) => (b.onclick = () => FA.speak(c.w + ". " + c.x, { gender: "f", rate: 0.9 }).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."))));
-      const again = () => { setKnown(deck.id, c.w, false); queue.push(queue.shift()); draw(); };
-      const got = () => { setKnown(deck.id, c.w, true); queue.shift(); draw(); };
+      const again = () => { setKnown(deck.id, c.w, false); queue.push(queue.shift()); slide = true; draw(); };
+      const got = () => { setKnown(deck.id, c.w, true); queue.shift(); slide = true; draw(); };
       app.querySelector("#flip").onclick = flip;
       app.querySelector("#again").onclick = again;
       app.querySelector("#got").onclick = got;
       setKeys((e) => {
+        if (e.target.matches("input,textarea,select")) return;
         if (e.code === "Space") { e.preventDefault(); flip(); }
         else if (e.key === "1") again();
         else if (e.key === "2") got();
@@ -118,17 +164,20 @@
         <div class="crumbs"><a href="#">← Bộ thẻ</a> / ${esc(deck.name)}</div>
         <div class="row mb-2"><h1 class="page-title mb-0" style="font-size:1.8rem">${deck.emoji} ${esc(deck.name)}</h1><div class="spacer"></div><a class="btn btn-outline btn-sm" href="#${deck.id}/quiz">Kiểm tra nhanh</a></div>
         <div class="tabs">
-          <button class="tab ${!reverse ? "active" : ""}" data-rev="0">Anh → Việt</button>
-          <button class="tab ${reverse ? "active" : ""}" data-rev="1">Việt → Anh</button>
-          <button class="tab ${onlyNew ? "active" : ""}" id="onlyNew">Chỉ từ chưa thuộc</button>
+          <button class="tab ${!showList && !reverse ? "active" : ""}" data-rev="0">Anh → Việt</button>
+          <button class="tab ${!showList && reverse ? "active" : ""}" data-rev="1">Việt → Anh</button>
+          <button class="tab ${!showList && onlyNew ? "active" : ""}" id="onlyNew">Chỉ từ chưa thuộc</button>
+          <button class="tab ${showList ? "active" : ""}" id="listTab">📖 Danh sách từ (${deck.cards.length})</button>
         </div>
         ${inner}
       </div></div>`;
     }
     function bindTop() {
-      app.querySelectorAll("[data-rev]").forEach((b) => (b.onclick = () => { reverse = b.dataset.rev === "1"; draw(); }));
+      app.querySelectorAll("[data-rev]").forEach((b) => (b.onclick = () => { showList = false; reverse = b.dataset.rev === "1"; draw(); }));
       const on = app.querySelector("#onlyNew");
-      if (on) on.onclick = () => { onlyNew = !onlyNew; build(); draw(); };
+      if (on) on.onclick = () => { showList = false; onlyNew = !onlyNew; build(); draw(); };
+      const lt = app.querySelector("#listTab");
+      if (lt) lt.onclick = () => { showList = !showList; draw(); };
     }
     draw();
   }
@@ -183,5 +232,6 @@
     draw();
   }
 
+  window.addEventListener("fa:synced", () => { if (!location.hash || location.hash === "#") route(); });
   route();
 })();

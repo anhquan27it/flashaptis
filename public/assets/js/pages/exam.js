@@ -49,11 +49,16 @@
   window.addEventListener("beforeunload", (e) => {
     if (running) { e.preventDefault(); e.returnValue = ""; }
   });
-  window.addEventListener("hashchange", () => {
+  window.addEventListener("hashchange", async () => {
     if (ignoreHash) { ignoreHash = false; return; }
-    if (running && !confirm("Bạn đang làm bài. Thoát ra sẽ mất bài làm hiện tại. Vẫn thoát?")) {
-      ignoreHash = true;
-      location.hash = lastHash;
+    if (running) {
+      const target = location.hash;
+      if (location.hash !== lastHash) { ignoreHash = true; location.hash = lastHash; }
+      if (await FA.confirm("Bạn đang làm bài. Thoát ra sẽ mất bài làm hiện tại. Vẫn thoát?", { title: "Thoát bài thi?", okText: "Vẫn thoát", cancelText: "Làm tiếp", danger: true })) {
+        ignoreHash = false;
+        clearRun();
+        if (location.hash !== target) location.hash = target; else route();
+      }
       return;
     }
     route();
@@ -61,16 +66,22 @@
 
   /* ---------- gói Free / Pro (FA.plan, plan.js) ---------- */
   const isLocked = (skill, test) => !!(FA.plan && FA.plan.locked(SKILLS[skill].data.indexOf(test)));
-  let view = ""; // màn hình hiện tại — chỉ vẽ lại "list"/"locked" khi gói thay đổi (không đụng bài đang làm / màn kết quả)
-  if (FA.plan) FA.plan.onChange(() => { if (!running && (view === "list" || view === "locked")) route(); });
+  let view = ""; // màn hình hiện tại — chỉ vẽ lại khi chưa vào bài / chưa ở màn kết quả
+  if (FA.plan) FA.plan.onChange(() => { if (!running && (view === "list" || view === "locked" || view === "progress")) route(); });
+  window.addEventListener("fa:synced", () => { if (!running && view) route(); });
+
+  let speakUrls = [];
+  function revokeSpeakUrls() { speakUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} }); speakUrls = []; }
 
   function route() {
     clearRun();
+    revokeSpeakUrls();
     view = "";
     lastHash = location.hash;
     window.scrollTo(0, 0);
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return viewHub();
+    if (parts[0] === "progress") return viewProgress();
     if (parts[0] === "gym") return parts[1] === "wrong" ? viewGym(true) : viewGym(false);
     const skill = parts[0];
     if (!SKILLS[skill]) return viewHub();
@@ -104,6 +115,7 @@
     const end = Date.now() + sec * 1000;
     let id;
     const stop = () => clearInterval(id);
+    const leftSec = () => Math.max(0, Math.round((end - Date.now()) / 1000));
     const tick = () => {
       const left = (end - Date.now()) / 1000;
       el.textContent = FA.fmtTime(left);
@@ -113,14 +125,14 @@
     id = setInterval(tick, 500);
     tick();
     cleanup.push(stop);
-    return stop;
+    return leftSec;
   }
 
   /* thanh trên cùng của phòng thi */
   function examShell(title, timeMin) {
     app.innerHTML = `
-      <div class="page"><div class="container narrow">
-        <div class="row mb-2">
+      <div class="page"><div class="container narrow" id="examContainer">
+        <div class="exam-top row">
           <div><div class="crumbs mb-0">${esc(title)}</div></div>
           <div class="spacer"></div>
           <div class="exam-bar">
@@ -136,19 +148,61 @@
       const seg = location.hash.replace(/^#\/?/, "").split("/")[0];
       location.hash = "#/" + (seg || "");
     };
-    return { stage: app.querySelector("#stage"), timer: app.querySelector("#timer"), submit: app.querySelector("#submitBtn") };
+    return { box: app.querySelector("#examContainer"), stage: app.querySelector("#stage"), timer: app.querySelector("#timer"), submit: app.querySelector("#submitBtn") };
   }
 
   /* ======================================================
-     HUB
+     HUB & TIẾN ĐỘ TỔNG HỢP
      ====================================================== */
+  const CORE_SKILLS = ["listening", "reading", "speaking", "writing"];
+  function progressStats() {
+    const all = FA.store.get("attempts", {});
+    const bySkill = {}, timeline = [];
+    Object.keys(SKILLS).forEach((skill) => {
+      const list = [];
+      let doneTests = 0;
+      SKILLS[skill].data.forEach((test) => {
+        const recs = all[skill + ":" + test.id] || [];
+        if (recs.length) doneTests++;
+        recs.forEach((r) => {
+          const item = Object.assign({ skill, test }, r);
+          list.push(item);
+          timeline.push(item);
+        });
+      });
+      list.sort((a, b) => b.at - a.at);
+      const best = list.slice().sort((a, b) => b.score - a.score || b.at - a.at)[0] || null;
+      bySkill[skill] = { list, latest: list[0] || null, best, doneTests, totalTests: SKILLS[skill].data.length };
+    });
+    timeline.sort((a, b) => b.at - a.at);
+    const overall = (mode) => CORE_SKILLS.reduce((n, k) => n + (bySkill[k][mode] ? bySkill[k][mode].score : 0), 0);
+    const doneCore = CORE_SKILLS.filter((k) => bySkill[k].latest).length;
+    return { bySkill, timeline, overall, doneCore };
+  }
+
   function viewHub() {
+    view = "hub";
     const wrongN = FA.store.get("wrongbook", []).length;
+    const stats = progressStats();
+    const ov = stats.overall("latest");
+    const fcN = Object.keys(FA.store.get("fc-known", {})).length;
+    const tipN = FA.store.get("tips-done", []).length;
+    const hasProgress = stats.timeline.length > 0 || fcN > 0 || tipN > 0 || wrongN > 0;
     app.innerHTML = `
       <div class="page"><div class="container">
         <span class="eyebrow">Thi thử Aptis</span>
         <h1 class="page-title">Chọn kỹ năng, làm luôn</h1>
         <p class="page-sub">Không cần đăng ký. Mọi lượt làm bài được lưu ngay trên máy của bạn.</p>
+        ${hasProgress ? `
+        <div class="card mb-2 row" style="padding:16px 20px;gap:16px">
+          <div class="ring" style="--p:${Math.round((ov / 200) * 100)}" data-label="${ov}"></div>
+          <div style="flex:1;min-width:220px">
+            <div style="font-family:var(--font-head);font-weight:700">Overall ước lượng: ${ov}/200 · <span class="pill">${FA.toCEFR("overall", ov)}</span></div>
+            <div class="muted" style="font-size:.9rem">Đã làm ${stats.doneCore}/4 kỹ năng chính (${stats.timeline.length} lượt thi) · ${fcN} từ vựng · ${tipN}/20 mẹo</div>
+          </div>
+          <a class="btn btn-outline btn-sm" href="#/progress">📊 Xem bảng tiến độ →</a>
+        </div>` : `
+        <div class="mb-2"><a class="btn btn-outline btn-sm" href="#/progress">📊 Bảng tiến độ & lịch sử làm bài →</a></div>`}
         <div class="grid grid-3">
           ${Object.entries(SKILLS).map(([k, s]) => `
             <a class="card skill-card" href="#/${k}">
@@ -167,6 +221,108 @@
           </a>
         </div>
       </div></div>`;
+  }
+
+  function viewProgress() {
+    view = "progress";
+    const stats = progressStats();
+    let mode = "latest";
+    const wrongN = FA.store.get("wrongbook", []).length;
+    const fcN = Object.keys(FA.store.get("fc-known", {})).length;
+    const tipN = FA.store.get("tips-done", []).length;
+    const ovNext = (ov) => {
+      const t = FA.CEFR.overall.slice().reverse();
+      const nx = t.find(([min]) => ov < min);
+      return nx ? `còn ${nx[0] - ov} điểm lên ${nx[1]}` : "đã đạt bậc cao nhất";
+    };
+
+    const draw = () => {
+      const ov = stats.overall(mode);
+      const ovLv = FA.toCEFR("overall", ov);
+      const miss = CORE_SKILLS.filter((k) => !stats.bySkill[k].latest).map((k) => short(k));
+      app.innerHTML = `
+        <div class="page"><div class="container narrow">
+          <div class="crumbs"><a href="#/">← Kỹ năng</a> / Tiến độ & lịch sử</div>
+          <div class="row mb-2">
+            <div><h1 class="page-title mb-0">📊 Bảng tiến độ học tập</h1></div>
+            <div class="spacer"></div>
+            <div class="tabs mb-0">
+              <button class="tab ${mode === "latest" ? "active" : ""}" data-m="latest">Điểm gần nhất</button>
+              <button class="tab ${mode === "best" ? "active" : ""}" data-m="best">Điểm cao nhất</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="result-hero">
+              <div class="ring-lg" style="--p:${Math.round((ov / 200) * 100)}"><div><b>${ov}</b><span>/200</span></div></div>
+              <div>
+                <span class="eyebrow">Overall ước lượng (${mode === "latest" ? "lần gần nhất" : "điểm cao nhất"})</span>
+                <div class="row"><span class="cefr-badge">${ovLv}</span><span class="muted">· ${ovNext(ov)}</span></div>
+                <p class="muted mt-1 mb-0" style="font-size:.9rem">${miss.length ? `Còn ${miss.length} kỹ năng chưa thi (${esc(miss.join(", "))}) — hoàn thành đủ 4 kỹ năng chính để ước lượng Overall sát hơn.` : "Đã có điểm cả 4 kỹ năng chính (Listening + Reading + Speaking + Writing)."}</p>
+                <div class="breakdown">
+                  ${CORE_SKILLS.map((k) => {
+                    const pick = stats.bySkill[k][mode];
+                    const sc = pick ? pick.score : 0;
+                    return `<div class="bar-row"><span>${SKILLS[k].icon} ${esc(short(k))}</span><div class="progress"><i style="width:${sc * 2}%"></i></div><b>${pick ? `${sc}/50` : "—"}</b></div>`;
+                  }).join("")}
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <a class="btn btn-outline btn-sm" href="calculator.html">🧮 Mở máy tính CEFR</a>
+              <a class="btn btn-ghost btn-sm" href="#/gym/wrong">📒 Sổ câu sai (${wrongN})</a>
+              <a class="btn btn-ghost btn-sm" href="flashcards.html">⚡ Flashcard (${fcN} từ đã thuộc)</a>
+              <a class="btn btn-ghost btn-sm" href="tips.html">💡 Mẹo (${tipN}/20)</a>
+            </div>
+          </div>
+
+          <h2 class="mt-4">Chi tiết theo kỹ năng</h2>
+          <div class="grid grid-2">
+            ${Object.entries(SKILLS).map(([k, s]) => {
+              const b = stats.bySkill[k];
+              const pick = b[mode];
+              const trend = b.list.slice(0, 6).reverse();
+              return `<div class="card" style="padding:18px">
+                <div class="row"><span style="font-size:1.3rem">${s.icon}</span><b>${esc(s.name)}</b><div class="spacer"></div><span class="pill ${b.doneTests ? "green" : "gray"}">${b.doneTests}/${b.totalTests} đề</span></div>
+                ${pick ? `
+                  <div class="row mt-2" style="align-items:baseline">
+                    <b style="font-family:var(--font-head);font-size:1.7rem;color:var(--orange-600)">${pick.score}</b><span class="muted">/50</span>
+                    ${pick.cefr ? `<span class="pill">${esc(pick.cefr)}</span>` : ""}
+                    <span class="muted" style="font-size:.82rem">· ${esc(pick.test.title)}</span>
+                  </div>
+                  <div class="muted" style="font-size:.84rem">Gần nhất: <b>${b.latest.score}</b> · Cao nhất: <b>${b.best.score}</b> · Tổng ${b.list.length} lượt</div>
+                  ${trend.length > 1 ? `<div class="row mt-1" style="gap:4px">${trend.map((x) => `<span class="pill gray" title="${FA.fmtDate(x.at)}: ${x.score}/50">${x.score}</span>`).join("")}</div>` : ""}
+                ` : `<p class="muted mt-2 mb-0" style="font-size:.9rem">Chưa làm đề nào.</p>`}
+                <div class="row mt-2">
+                  <a class="btn btn-primary btn-sm" href="#/${k}">${pick ? "Làm tiếp →" : "Thi thử ngay →"}</a>
+                  ${pick && pick.ans && !isLocked(k, pick.test) ? `<button class="btn btn-outline btn-sm" data-preplay="${k}:${esc(pick.test.id)}:${pick.at}">👁 Xem lại</button>` : ""}
+                </div>
+              </div>`;
+            }).join("")}
+          </div>
+
+          <h2 class="mt-4">Lịch sử làm bài gần đây</h2>
+          ${stats.timeline.length ? `<div class="tbl-wrap"><table class="tbl">
+            <tr><th>Thời gian</th><th>Kỹ năng</th><th>Đề</th><th>Điểm</th><th></th></tr>
+            ${stats.timeline.slice(0, 15).map((r) => `<tr>
+              <td>${FA.fmtDate(r.at)}</td>
+              <td>${SKILLS[r.skill].icon} ${esc(short(r.skill))}</td>
+              <td>${esc(r.test.title)}</td>
+              <td><b>${r.score}</b>/50${r.cefr ? ` · ${esc(r.cefr)}` : ""}</td>
+              <td>${r.ans ? (isLocked(r.skill, r.test) ? `<a class="pill pro" href="pricing.html">🔒 Pro</a>` : `<button class="btn btn-outline btn-sm" data-preplay="${r.skill}:${esc(r.test.id)}:${r.at}">👁 Xem lại</button>`) : `<span class="muted">—</span>`}</td>
+            </tr>`).join("")}
+          </table></div>` : `<div class="card empty"><div class="big">📝</div><p>Bạn chưa có lượt làm bài nào. Chọn một kỹ năng để bắt đầu!</p><a class="btn btn-primary" href="#/">Chọn kỹ năng</a></div>`}
+        </div></div>`;
+
+      app.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => { mode = b.dataset.m; draw(); }));
+      app.querySelectorAll("[data-preplay]").forEach((b) => (b.onclick = () => {
+        const [sk, tid, at] = b.dataset.preplay.split(":");
+        const test = SKILLS[sk] && SKILLS[sk].data.find((t) => t.id === tid);
+        const rec = stats.timeline.find((x) => x.skill === sk && x.test.id === tid && String(x.at) === at);
+        if (test && rec && !isLocked(sk, test)) RUNNERS[sk](test, rec);
+      }));
+    };
+    draw();
   }
 
   /* ======================================================
@@ -205,20 +361,56 @@
     writing: ["4 part: trả lời ngắn, điền form, chat 3 câu, viết 2 email.", "Đồng hồ 50 phút, đếm từ tự động cho từng câu.", "Nộp xong có điểm ước lượng tự động + bài mẫu đặt cạnh bài của bạn.", "Writing thật do giám khảo chấm; điểm ở đây là ước lượng tự động dựa trên độ dài, cấu trúc, từ nối — chỉ để tham khảo.", "Bài bị trừ điểm khi sai chính tả, sai ngữ pháp (kiểm tra bằng Harper — cần mạng, tải ~8 MB lần đầu, chạy trên máy bạn) hoặc trả lời lạc đề/thiếu ý so với câu hỏi (kiểm tra từ khóa offline, hoặc do AI chấm nếu đã cấu hình — khi đó bài viết được gửi tới máy chủ AI)."],
     speaking: ["4 part, khoảng 12 phút. Máy đọc câu hỏi, sau đó đồng hồ đếm ngược thời gian nói.", "Trình duyệt sẽ xin quyền micro để thu âm. Bản ghi chỉ nằm trên máy bạn, không gửi đi đâu.", "Part 1: 30 giây/câu · Part 2–3: 45 giây/câu · Part 4: 1 phút chuẩn bị + 2 phút nói.", "Xong bài, nghe lại từng câu, so với bài mẫu rồi tự chấm từng part theo thang Aptis: mỗi part 0–5 điểm, tối đa 20 (web quy ra thang 50)."],
   };
+  /* ---------- lưu nháp bài làm dở (chỉ cục bộ trên máy, tối đa 24 giờ) ---------- */
+  const DRAFT_TTL = 24 * 3600 * 1000;
+  const draftKey = (skill, id) => "draft:" + skill + ":" + id;
+  function getDraft(skill, id) {
+    const d = FA.store.get(draftKey(skill, id), null);
+    if (!d || !d.savedAt || Date.now() - d.savedAt > DRAFT_TTL) return null;
+    return d;
+  }
+  function saveDraft(skill, id, data) { FA.store.set(draftKey(skill, id), Object.assign({}, data, { savedAt: Date.now() })); }
+  function clearDraft(skill, id) { try { localStorage.removeItem("flashaptis:" + draftKey(skill, id)); } catch (e) {} }
+  function makeAutoSave(skill, id, payloadFn, leftFn) {
+    let t = null;
+    const flush = () => {
+      clearTimeout(t); t = null;
+      if (running) saveDraft(skill, id, Object.assign(payloadFn(), { leftSec: leftFn() }));
+    };
+    const schedule = () => { if (!t) t = setTimeout(flush, 400); };
+    window.addEventListener("pagehide", flush);
+    cleanup.push(() => { clearTimeout(t); window.removeEventListener("pagehide", flush); });
+    return { flush, schedule };
+  }
+
   function viewIntro(skill, test) {
+    view = "intro";
     const S = SKILLS[skill];
     const ttsWarn = (skill === "listening" || skill === "speaking") && !FA.ttsSupported();
     const hist = FA.getAttempts(skill, test.id);
+    const draft = ["grammar", "reading", "listening", "writing"].includes(skill) ? getDraft(skill, test.id) : null;
     app.innerHTML = `
       <div class="page"><div class="container narrow">
         <div class="crumbs"><a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}</div>
         <h1 class="page-title">${esc(test.title)} — ${esc(S.name)}</h1>
         <div class="card intro-box mt-2"><ul>${INTRO[skill].map((x) => `<li>${x}</li>`).join("")}</ul></div>
         ${ttsWarn ? `<div class="explain">⚠️ Trình duyệt của bạn không hỗ trợ giọng đọc. Hãy dùng Chrome, Edge hoặc Safari bản mới.</div>` : ""}
-        <div class="row mt-3"><button class="btn btn-primary btn-lg" id="startBtn">Bắt đầu tính giờ</button></div>
+        ${draft ? `<div class="explain">💾 Có bản nháp lưu lúc <b>${FA.fmtDate(draft.savedAt)}</b> (còn <b>${FA.fmtTime(draft.leftSec || 0)}</b>). Bạn có thể làm tiếp ngay.</div>` : ""}
+        <div class="row mt-3">
+          ${draft ? `<button class="btn btn-primary btn-lg" id="resumeBtn">▶ Tiếp tục bài làm dở</button><button class="btn btn-outline btn-lg" id="startBtn">Làm mới từ đầu</button><button class="btn btn-ghost btn-sm" id="dropDraft">Xóa bản nháp</button>`
+            : `<button class="btn btn-primary btn-lg" id="startBtn">Bắt đầu tính giờ</button>`}
+        </div>
         ${hist.length ? `<div class="mt-4"><h3>Lịch sử làm bài</h3><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Điểm</th><th>Bài làm</th></tr>${hist.map((h, i) => `<tr><td>${FA.fmtDate(h.at)}</td><td><b>${h.score}</b>/50 ${h.cefr ? `· ${h.cefr}` : ""}</td><td>${h.ans ? `<button class="btn btn-outline btn-sm" data-replay="${i}">👁 Xem lại</button>` : `<span class="muted" style="font-size:.85rem" title="Lượt làm này được lưu trước khi có tính năng xem lại">—</span>`}</td></tr>`).join("")}</table></div></div>` : ""}
       </div></div>`;
-    app.querySelector("#startBtn").onclick = () => RUNNERS[skill](test);
+    if (draft) {
+      app.querySelector("#resumeBtn").onclick = () => RUNNERS[skill](test, null, draft);
+      app.querySelector("#dropDraft").onclick = () => { clearDraft(skill, test.id); viewIntro(skill, test); };
+    }
+    app.querySelector("#startBtn").onclick = async () => {
+      if (draft && !(await FA.confirm("Bắt đầu lại sẽ xóa bản nháp bài làm dở. Tiếp tục?", { title: "Làm mới từ đầu", okText: "Làm mới", danger: true }))) return;
+      clearDraft(skill, test.id);
+      RUNNERS[skill](test);
+    };
     app.querySelectorAll("[data-replay]").forEach((b) => (b.onclick = () => RUNNERS[skill](test, hist[+b.dataset.replay])));
   }
 
@@ -232,15 +424,19 @@
   function renderResult(o) {
     // o: {skill, test, score, cefr, note, breakdown:[{label,got,total}], review(el)}
     running = false;
+    view = "";
     FA.stopSpeak();
     // o.replay: đang xem lại một lượt đã làm → không lưu thêm lượt mới, o.attemptAt là lượt đó
-    if (!o.replay) o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans });
+    if (!o.replay) {
+      clearDraft(o.skill, o.test.id);
+      o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans });
+    }
     const titleOf = (s) => (s >= 40 ? "Xuất sắc! 🎉" : s >= 26 ? "Làm tốt lắm! 💪" : "Cố lên, luyện thêm nhé! 🔥");
     const cefrHTML = (c) => (c ? `<span class="cefr-badge">${c}</span><span class="muted">bậc CEFR ước lượng</span>` : `<span class="muted">Grammar & Vocabulary không quy đổi CEFR riêng</span>`);
     const breakHTML = (bd) => (bd || []).map((b) => `
                 <div class="bar-row"><span>${esc(b.label)}</span><div class="progress"><i style="width:${b.total ? Math.round((b.got / b.total) * 100) : 0}%"></i></div><b>${b.got}/${b.total}</b></div>`).join("");
     app.innerHTML = `
-      <div class="page"><div class="container narrow">
+      <div class="page"><div class="container ${o.skill === "writing" ? "wide-exam" : "narrow"}">
         <div class="crumbs"><a href="#/${o.skill}">← Chọn đề</a> / ${esc(o.test.title)} / Kết quả</div>
         <div class="card">
           <div class="result-hero">
@@ -264,7 +460,7 @@
         <div id="review"></div>
       </div></div>`;
     window.scrollTo(0, 0);
-    app.querySelector("#retryBtn").onclick = () => RUNNERS[o.skill](o.test);
+    app.querySelector("#retryBtn").onclick = () => { revokeSpeakUrls(); RUNNERS[o.skill](o.test); };
     const back = app.querySelector("#backHist");
     if (back) back.onclick = () => viewIntro(o.skill, o.test);
     // cập nhật điểm sau khi đã hiển thị (vd: Writing bị trừ điểm chính tả, hoặc người dùng bỏ qua một tên riêng)
@@ -286,25 +482,36 @@
   /* ======================================================
      GRAMMAR & VOCABULARY
      ====================================================== */
-  function runGrammar(test, replay) {
+  function runGrammar(test, replay, draft) {
     clearRun();
     const Q = test.questions;
-    const st = { i: 0, ans: Array(Q.length).fill(null) };
+    const st = { i: 0, ans: Array(Q.length).fill(null), flags: new Set() };
     if (replay) { st.ans = Q.map((q, k) => optIdx(q.o, (replay.ans || [])[k])); return finish(); }
+    if (draft) {
+      st.ans = Q.map((q, k) => optIdx(q.o, (draft.ans || [])[k]));
+      st.i = Math.max(0, Math.min(Q.length - 1, +draft.i || 0));
+      if (Array.isArray(draft.flags)) st.flags = new Set(draft.flags);
+    }
     const sh = examShell(`${test.title} — Grammar & Vocabulary`, 25);
-    startTimer(25 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
-    sh.submit.onclick = () => {
+    const leftSec = startTimer(draft ? Math.max(10, +draft.leftSec || 25 * 60) : 25 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
+    const auto = makeAutoSave("grammar", test.id, () => ({ i: st.i, ans: st.ans.map((a, k) => optText(Q[k].o, a)), flags: Array.from(st.flags) }), leftSec);
+    sh.submit.onclick = async () => {
       const left = st.ans.filter((x) => x == null).length;
-      if (left && !confirm(`Bạn còn ${left} câu chưa trả lời. Vẫn nộp bài?`)) return;
+      if (left && !(await FA.confirm(`Bạn còn ${left} câu chưa trả lời. Vẫn nộp bài?`, { title: "Nộp bài Grammar", okText: "Nộp bài" }))) return;
       finish();
+    };
+    const toggleFlag = () => {
+      if (st.flags.has(st.i)) st.flags.delete(st.i); else st.flags.add(st.i);
+      auto.flush(); render();
     };
     const onKey = (e) => {
       if (e.target.matches("input,textarea,select")) return;
       const map = { 1: 0, 2: 1, 3: 2, 4: 3, a: 0, b: 1, c: 2, d: 3 };
       const k = e.key.toLowerCase();
-      if (k in map && map[k] < Q[st.i].o.length) { st.ans[st.i] = map[k]; render(); }
-      else if (e.key === "ArrowRight" && st.i < Q.length - 1) { st.i++; render(); }
-      else if (e.key === "ArrowLeft" && st.i > 0) { st.i--; render(); }
+      if (k in map && map[k] < Q[st.i].o.length) { st.ans[st.i] = map[k]; auto.flush(); render(); }
+      else if (k === "f") toggleFlag();
+      else if (e.key === "ArrowRight" && st.i < Q.length - 1) { st.i++; auto.flush(); render(); }
+      else if (e.key === "ArrowLeft" && st.i > 0) { st.i--; auto.flush(); render(); }
     };
     document.addEventListener("keydown", onKey);
     cleanup.push(() => document.removeEventListener("keydown", onKey));
@@ -312,11 +519,13 @@
     function render() {
       const q = Q[st.i];
       const done = st.ans.filter((x) => x != null).length;
+      const flagged = st.flags.has(st.i);
       sh.stage.innerHTML = `
         <div class="progress"><i style="width:${((st.i + 1) / Q.length) * 100}%"></i></div>
-        <div class="progress-meta"><span>Câu ${st.i + 1}/${Q.length}</span><span>Đã trả lời ${done}</span></div>
+        <div class="progress-meta"><span>Câu ${st.i + 1}/${Q.length}</span><span>Đã trả lời ${done}${st.flags.size ? ` · 🚩 ${st.flags.size} câu đánh dấu` : ""}</span></div>
         <div class="q-card">
-          <div class="q-part">${q.sec === "grammar" ? "Grammar" : "Vocabulary"}</div>
+          <div class="row mb-1"><div class="q-part mb-0">${q.sec === "grammar" ? "Grammar" : "Vocabulary"}</div><div class="spacer"></div>
+            <button type="button" class="flag-btn ${flagged ? "on" : ""}" id="flagBtn" title="Phím tắt: F">${flagged ? "🚩 Đã đánh dấu" : "🏳️ Đánh dấu xem lại"}</button></div>
           ${q.instr ? `<div class="q-instr">${esc(q.instr)}</div>` : ""}
           <div class="q-text" ${q.sec === "vocab" && q.q.split(" ").length < 4 ? 'style="font-size:1.5rem"' : ""}>${esc(q.q).replace(/_{3,}/g, '<span style="letter-spacing:2px">______</span>')}</div>
           ${q.o.map((o, k) => `<button class="opt ${st.ans[st.i] === k ? "selected" : ""}" data-k="${k}"><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
@@ -325,12 +534,13 @@
           <button class="btn btn-outline" id="prev" ${st.i === 0 ? "disabled" : ""}>← Trước</button>
           ${st.i < Q.length - 1 ? `<button class="btn btn-primary" id="next">Tiếp →</button>` : `<button class="btn btn-primary" id="fin">Nộp bài</button>`}
         </div>
-        <div class="qgrid">${Q.map((_, k) => `<button data-j="${k}" class="${k === st.i ? "current" : ""} ${st.ans[k] != null ? "done" : ""}">${k + 1}</button>`).join("")}</div>`;
-      sh.stage.querySelectorAll(".opt").forEach((b) => (b.onclick = () => { st.ans[st.i] = +b.dataset.k; render(); }));
-      sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => { st.i = +b.dataset.j; render(); }));
+        <div class="qgrid">${Q.map((_, k) => `<button data-j="${k}" class="${k === st.i ? "current" : ""} ${st.ans[k] != null ? "done" : ""} ${st.flags.has(k) ? "flagged" : ""}">${k + 1}</button>`).join("")}</div>`;
+      sh.stage.querySelector("#flagBtn").onclick = toggleFlag;
+      sh.stage.querySelectorAll(".opt").forEach((b) => (b.onclick = () => { st.ans[st.i] = +b.dataset.k; auto.flush(); render(); }));
+      sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => { st.i = +b.dataset.j; auto.flush(); render(); }));
       const p = sh.stage.querySelector("#prev"), n = sh.stage.querySelector("#next"), f = sh.stage.querySelector("#fin");
-      if (p) p.onclick = () => { st.i--; render(); };
-      if (n) n.onclick = () => { st.i++; render(); };
+      if (p) p.onclick = () => { st.i--; auto.flush(); render(); };
+      if (n) n.onclick = () => { st.i++; auto.flush(); render(); };
       if (f) f.onclick = () => sh.submit.click();
     }
     render();
@@ -398,38 +608,40 @@
       })}</div>${review ? p.gaps.map((g, k) => `<div class="explain"><b>(${k + 1})</b> ${esc(g.e)}</div>`).join("") : ""}`;
     }
     if (p.type === "order") {
-      return `<div class="muted mb-2"><b>Chủ đề:</b> ${esc(p.topic)}</div>
+      return `<div class="muted mb-2"><b>Chủ đề:</b> ${esc(p.topic)}${review ? "" : " · Kéo thả câu hoặc bấm ▲ ▼ để sắp xếp"}</div>
         <ol class="order-list">
           <li class="order-item fixed"><span class="num">1</span><span class="txt">${esc(p.first)}</span></li>
           ${ans.map((si, pos) => {
             const cls = review ? (si === pos ? "ok" : "bad") : "";
-            return `<li class="order-item ${cls}"><span class="num">${pos + 2}</span><span class="txt">${esc(p.sentences[si])}${review && si !== pos ? `<div class="fix">Vị trí đúng: ${si + 2}</div>` : ""}</span>
+            return `<li class="order-item ${cls}" ${review ? "" : `draggable="true" data-ord="${pos}"`}><span class="num">${pos + 2}</span><span class="txt">${esc(p.sentences[si])}${review && si !== pos ? `<div class="fix">Vị trí đúng: ${si + 2}</div>` : ""}</span>
               ${review ? "" : `<span class="mv"><button data-up="${pos}" ${pos === 0 ? "disabled" : ""} aria-label="Lên">▲</button><button data-down="${pos}" ${pos === ans.length - 1 ? "disabled" : ""} aria-label="Xuống">▼</button></span>`}</li>`;
           }).join("")}
         </ol>
         ${review ? `<div class="explain"><b>Thứ tự đúng:</b><br>${[p.first, ...p.sentences].map((s, i) => `${i + 1}. ${esc(s)}`).join("<br>")}<br><br>${esc(p.tip || "")}</div>` : ""}`;
     }
     if (p.type === "opinion") {
-      return `<div class="people">${p.people.map((pp, i) => `<div class="person"><b>${L[i]}. ${esc(pp.name)}</b><br>${esc(pp.text)}</div>`).join("")}</div>
-        ${p.questions.map((q, k) => {
-          const ok = ans[k] === q.a;
-          return `<div class="match-row ${review ? (ok ? "ok" : "bad") : ""}"><span>${k + 1}. ${esc(q.q)}</span>
-            <div><select class="sel" data-op="${k}" ${review ? "disabled" : ""}><option value="">Chọn người…</option>${p.people.map((pp, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(pp.name)}</option>`).join("")}</select>
-            ${review && !ok ? `<div class="fix">Đáp án: ${L[q.a]}. ${esc(p.people[q.a].name)}</div>` : ""}</div></div>`;
-        }).join("")}`;
+      const left = `<div class="${review ? "people" : "split-left"}">${p.people.map((pp, i) => `<div class="person ${review ? "" : "mb-2"}"><b>${L[i]}. ${esc(pp.name)}</b><br>${esc(pp.text)}</div>`).join("")}</div>`;
+      const right = `<div>${p.questions.map((q, k) => {
+        const ok = ans[k] === q.a;
+        return `<div class="match-row ${review ? (ok ? "ok" : "bad") : ""}"><span>${k + 1}. ${esc(q.q)}</span>
+          <div><select class="sel" data-op="${k}" ${review ? "disabled" : ""}><option value="">Chọn người…</option>${p.people.map((pp, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(pp.name)}</option>`).join("")}</select>
+          ${review && !ok ? `<div class="fix">Đáp án: ${L[q.a]}. ${esc(p.people[q.a].name)}</div>` : ""}</div></div>`;
+      }).join("")}</div>`;
+      return review ? left + right : `<div class="split-2">${left}${right}</div>`;
     }
     if (p.type === "heading") {
-      return `<div class="muted mb-2"><b>Chủ đề:</b> ${esc(p.topic)}</div>
-        <div class="passage" style="line-height:1.7"><b>Các tiêu đề:</b><br>${p.headings.map((h, i) => `${L[i]}. ${esc(h)}`).join("<br>")}</div>
-        ${p.paragraphs.map((pa, k) => {
-          const ok = ans[k] === pa.a;
-          return `<div class="card mb-2 ${review ? "" : ""}" style="padding:16px;${review ? `border-color:${ok ? "#bbf7d0" : "#fecaca"}` : ""}">
-            <div class="row mb-2"><b>Đoạn ${k + 1}</b><div class="spacer"></div>
-              <select class="sel" style="max-width:340px" data-hd="${k}" ${review ? "disabled" : ""}><option value="">Chọn tiêu đề…</option>${p.headings.map((h, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(h)}</option>`).join("")}</select></div>
-            <div style="color:var(--ink-2)">${esc(pa.text)}</div>
-            ${review && !ok ? `<div class="fix mt-1">Đáp án: ${L[pa.a]}. ${esc(p.headings[pa.a])}</div>` : ""}
-          </div>`;
-        }).join("")}`;
+      const left = `<div class="${review ? "" : "split-left"}"><div class="muted mb-2"><b>Chủ đề:</b> ${esc(p.topic)}</div>
+        <div class="passage" style="line-height:1.7"><b>Các tiêu đề:</b><br>${p.headings.map((h, i) => `${L[i]}. ${esc(h)}`).join("<br>")}</div></div>`;
+      const right = `<div>${p.paragraphs.map((pa, k) => {
+        const ok = ans[k] === pa.a;
+        return `<div class="card mb-2" style="padding:16px;${review ? `border-color:${ok ? "var(--green)" : "var(--red)"}` : ""}">
+          <div class="row mb-2"><b>Đoạn ${k + 1}</b><div class="spacer"></div>
+            <select class="sel" style="max-width:340px" data-hd="${k}" ${review ? "disabled" : ""}><option value="">Chọn tiêu đề…</option>${p.headings.map((h, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(h)}</option>`).join("")}</select></div>
+          <div style="color:var(--ink-2)">${esc(pa.text)}</div>
+          ${review && !ok ? `<div class="fix mt-1">Đáp án: ${L[pa.a]}. ${esc(p.headings[pa.a])}</div>` : ""}
+        </div>`;
+      }).join("")}</div>`;
+      return review ? left + right : `<div class="split-2">${left}${right}</div>`;
     }
     return "";
   }
@@ -443,21 +655,25 @@
     return p.paragraphs.filter((pa, k) => ans[k] === pa.a).length;
   }
 
-  function runReading(test, replay) {
+  function runReading(test, replay, draft) {
     clearRun();
     const P = test.parts;
     const st = { i: 0, ans: P.map((p) => (p.type === "order" ? shuffledOrder(p.sentences.length) : Array(readingItems(p)).fill(null))) };
-    if (replay) {
-      const sv = replay.ans || [];
-      st.ans = P.map((p, i) => (p.type === "gap" ? p.gaps.map((g, k) => optIdx(g.o, sv[i] && sv[i][k])) : Array.isArray(sv[i]) && sv[i].length === st.ans[i].length ? sv[i] : st.ans[i]));
-      return finish();
+    const restoreAns = (sv) => P.map((p, i) => (p.type === "gap" ? p.gaps.map((g, k) => optIdx(g.o, sv[i] && sv[i][k])) : Array.isArray(sv[i]) && sv[i].length === st.ans[i].length ? sv[i] : st.ans[i]));
+    if (replay) { st.ans = restoreAns(replay.ans || []); return finish(); }
+    if (draft) {
+      st.ans = restoreAns(draft.ans || []);
+      st.i = Math.max(0, Math.min(P.length - 1, +draft.i || 0));
     }
     const sh = examShell(`${test.title} — Reading`, 35);
-    startTimer(35 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
-    sh.submit.onclick = () => { if (confirm("Nộp bài Reading?")) finish(); };
+    const leftSec = startTimer(draft ? Math.max(10, +draft.leftSec || 35 * 60) : 35 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
+    const encodeAns = () => st.ans.map((a, i) => (P[i].type === "gap" ? a.map((x, k) => optText(P[i].gaps[k].o, x)) : a.slice()));
+    const auto = makeAutoSave("reading", test.id, () => ({ i: st.i, ans: encodeAns() }), leftSec);
+    sh.submit.onclick = async () => { if (await FA.confirm("Nộp bài Reading?", { title: "Nộp bài Reading", okText: "Nộp bài" })) finish(); };
 
     function render() {
       const p = P[st.i];
+      if (sh.box) sh.box.className = "container " + (p.type === "opinion" || p.type === "heading" ? "wide-exam" : "narrow");
       sh.stage.innerHTML = `
         <div class="progress"><i style="width:${((st.i + 1) / P.length) * 100}%"></i></div>
         <div class="progress-meta"><span>Part ${st.i + 1}/${P.length}</span><span>${esc(p.title)}</span></div>
@@ -472,15 +688,31 @@
         </div>
         <div class="qgrid">${P.map((_, k) => `<button data-j="${k}" class="${k === st.i ? "current" : ""}" style="width:auto;padding:0 12px">Part ${k + 1}</button>`).join("")}</div>`;
       const a = st.ans[st.i];
-      sh.stage.querySelectorAll("select[data-gap]").forEach((s) => (s.onchange = () => (a[+s.dataset.gap] = s.value === "" ? null : +s.value)));
-      sh.stage.querySelectorAll("select[data-op]").forEach((s) => (s.onchange = () => (a[+s.dataset.op] = s.value === "" ? null : +s.value)));
-      sh.stage.querySelectorAll("select[data-hd]").forEach((s) => (s.onchange = () => (a[+s.dataset.hd] = s.value === "" ? null : +s.value)));
-      sh.stage.querySelectorAll("[data-up]").forEach((b) => (b.onclick = () => { const k = +b.dataset.up; [a[k - 1], a[k]] = [a[k], a[k - 1]]; render(); }));
-      sh.stage.querySelectorAll("[data-down]").forEach((b) => (b.onclick = () => { const k = +b.dataset.down; [a[k + 1], a[k]] = [a[k], a[k + 1]]; render(); }));
-      sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => { st.i = +b.dataset.j; render(); window.scrollTo(0, 0); }));
+      sh.stage.querySelectorAll("select[data-gap]").forEach((s) => (s.onchange = () => { a[+s.dataset.gap] = s.value === "" ? null : +s.value; auto.flush(); }));
+      sh.stage.querySelectorAll("select[data-op]").forEach((s) => (s.onchange = () => { a[+s.dataset.op] = s.value === "" ? null : +s.value; auto.flush(); }));
+      sh.stage.querySelectorAll("select[data-hd]").forEach((s) => (s.onchange = () => { a[+s.dataset.hd] = s.value === "" ? null : +s.value; auto.flush(); }));
+      sh.stage.querySelectorAll("[data-up]").forEach((b) => (b.onclick = () => { const k = +b.dataset.up; [a[k - 1], a[k]] = [a[k], a[k - 1]]; auto.flush(); render(); }));
+      sh.stage.querySelectorAll("[data-down]").forEach((b) => (b.onclick = () => { const k = +b.dataset.down; [a[k + 1], a[k]] = [a[k], a[k + 1]]; auto.flush(); render(); }));
+      let dragPos = -1;
+      sh.stage.querySelectorAll("[data-ord]").forEach((li) => {
+        const pos = +li.dataset.ord;
+        li.ondragstart = (e) => { dragPos = pos; li.classList.add("dragging"); if (e.dataTransfer) e.dataTransfer.effectAllowed = "move"; };
+        li.ondragend = () => { dragPos = -1; sh.stage.querySelectorAll(".order-item").forEach((x) => x.classList.remove("dragging", "drag-over")); };
+        li.ondragover = (e) => { e.preventDefault(); if (dragPos >= 0 && dragPos !== pos) li.classList.add("drag-over"); };
+        li.ondragleave = () => li.classList.remove("drag-over");
+        li.ondrop = (e) => {
+          e.preventDefault();
+          if (dragPos < 0 || dragPos === pos) return;
+          const [mv] = a.splice(dragPos, 1);
+          a.splice(pos, 0, mv);
+          auto.flush(); render();
+        };
+      });
+      const go = (k) => { st.i = k; auto.flush(); render(); window.scrollTo(0, 0); };
+      sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => go(+b.dataset.j)));
       const pv = sh.stage.querySelector("#prev"), nx = sh.stage.querySelector("#next"), fn = sh.stage.querySelector("#fin");
-      if (pv) pv.onclick = () => { st.i--; render(); window.scrollTo(0, 0); };
-      if (nx) nx.onclick = () => { st.i++; render(); window.scrollTo(0, 0); };
+      if (pv) pv.onclick = () => go(st.i - 1);
+      if (nx) nx.onclick = () => go(st.i + 1);
       if (fn) fn.onclick = () => sh.submit.click();
     }
     render();
@@ -498,7 +730,7 @@
       renderResult({
         skill: "reading", test, score, cefr: FA.toCEFR("reading", (got / total) * 50), breakdown, replay: !!replay, attemptAt: replay && replay.at,
         ans: st.ans.map((a, i) => (P[i].type === "gap" ? a.map((x, k) => optText(P[i].gaps[k].o, x)) : a.slice())),
-        note: `Bạn đúng <b>${got}/${total}</b> ý → quy ra thang 50 (đúng ÷ tổng × 50). Bậc CEFR ước lượng theo ngưỡng tham khảo (≈ B1 từ 52% số câu đúng, B2 từ 76%, C từ 92%), không phải kết quả chính thức.`,
+        note: `Bạn đúng <b>${got}/${total}</b> ý → quy ra thang 50 (đúng ÷ ${total} × 50). Bậc CEFR ước lượng theo ngưỡng quy đổi từ bảng tham khảo 25 câu (≈ B1 từ 52%, B2 từ 76%, C từ 92%), không phải kết quả chính thức.`,
         review(el) {
           el.innerHTML = P.map((p, i) => `<div class="q-card mb-2"><div class="q-part">${esc(p.title)} · ${readingCorrect(p, st.ans[i])}/${readingItems(p)}</div>${readingPartHTML(p, st.ans[i], true)}</div>`).join("");
         },
@@ -525,14 +757,18 @@
       return `<div><b>${who}:</b> ${t}</div>`;
     }).join("");
   }
-  function audioBox(id, plays, maxPlays) {
+  function audioBox(id, plays, maxPlays, playingId) {
     const left = maxPlays - (plays[id] || 0);
-    return `<div class="audio-box"><button class="play-btn" data-play="${id}" ${left <= 0 ? "disabled" : ""} aria-label="Phát">▶</button>
-      <div class="info"><b>${left > 0 ? "Bấm để nghe" : "Đã hết lượt nghe"}</b><br>Còn ${Math.max(0, left)}/${maxPlays} lượt</div>
-      <div class="wave" data-wave="${id}">${"<i></i>".repeat(12)}</div></div>`;
+    const active = playingId === id;
+    return `<div class="audio-box"><button class="play-btn" data-play="${id}" ${left <= 0 || playingId ? "disabled" : ""} aria-label="Phát">▶</button>
+      <div class="info"><b>${active ? "Đang phát…" : left > 0 ? "Bấm để nghe" : "Đã hết lượt nghe"}</b><br>Còn ${Math.max(0, left)}/${maxPlays} lượt
+        ${active ? `<div class="audio-prog"><i data-prog="${id}"></i></div>` : ""}
+      </div>
+      ${active ? `<button type="button" class="btn btn-outline btn-sm" data-stop="${id}">⏹ Dừng</button>` : ""}
+      <div class="wave ${active ? "on" : ""}" data-wave="${id}">${"<i></i>".repeat(12)}</div></div>`;
   }
 
-  function runListening(test, replay) {
+  function runListening(test, replay, draft) {
     clearRun();
     // tạo danh sách màn hình
     const screens = [];
@@ -543,28 +779,38 @@
       if (p.type === "mono") p.talks.forEach((tk, k) => screens.push({ kind: "mono", p, pi, tk, k, label: `Câu ${16 + k}` }));
     });
     const st = { i: 0, plays: {}, ans: screens.map((s) => (s.kind === "mcq" ? null : s.kind === "speakers" ? Array(4).fill(null) : s.kind === "conv" ? Array(s.p.statements.length).fill(null) : Array(s.tk.questions.length).fill(null))), playing: false };
-    if (replay) {
-      const sv = replay.ans || [];
-      st.ans = screens.map((s, i) => {
-        const v = sv[i];
-        if (s.kind === "mcq") return optIdx(s.it.o, v);
-        if (s.kind === "mono") return s.tk.questions.map((q, k) => optIdx(q.o, v && v[k]));
-        return Array.isArray(v) && v.length === st.ans[i].length ? v : st.ans[i]; // speakers / conv: chỉ số cố định, không bị xáo
-      });
-      return finish();
+    const restoreAns = (sv) => screens.map((s, i) => {
+      const v = sv[i];
+      if (s.kind === "mcq") return optIdx(s.it.o, v);
+      if (s.kind === "mono") return s.tk.questions.map((q, k) => optIdx(q.o, v && v[k]));
+      return Array.isArray(v) && v.length === st.ans[i].length ? v : st.ans[i]; // speakers / conv: chỉ số cố định, không bị xáo
+    });
+    if (replay) { st.ans = restoreAns(replay.ans || []); return finish(); }
+    if (draft) {
+      st.ans = restoreAns(draft.ans || []);
+      if (draft.plays && typeof draft.plays === "object") st.plays = draft.plays;
+      st.i = Math.max(0, Math.min(screens.length - 1, +draft.i || 0));
     }
     const sh = examShell(`${test.title} — Listening`, 40);
-    startTimer(40 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
-    sh.submit.onclick = () => { if (confirm("Nộp bài Listening?")) finish(); };
+    const leftSec = startTimer(draft ? Math.max(10, +draft.leftSec || 40 * 60) : 40 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
+    const encodeAns = () => screens.map((s, i) => (s.kind === "mcq" ? optText(s.it.o, st.ans[i]) : s.kind === "mono" ? st.ans[i].map((x, k) => optText(s.tk.questions[k].o, x)) : st.ans[i].slice()));
+    const auto = makeAutoSave("listening", test.id, () => ({ i: st.i, plays: st.plays, ans: encodeAns() }), leftSec);
+    sh.submit.onclick = async () => { if (await FA.confirm("Nộp bài Listening?", { title: "Nộp bài Listening", okText: "Nộp bài" })) finish(); };
 
     function play(id, script) {
       if (st.playing) return;
       if ((st.plays[id] || 0) >= 2) return;
       st.plays[id] = (st.plays[id] || 0) + 1;
+      auto.flush();
       st.playing = id;
       render();
-      FA.speak(script).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc.")).then(() => {
-        if (st.playing !== id) return; // đã chuyển câu
+      FA.speak(script, {
+        onProgress(pct) {
+          const bar = sh.stage.querySelector(`[data-prog="${id}"]`);
+          if (bar) bar.style.width = pct + "%";
+        },
+      }).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc.")).then(() => {
+        if (st.playing !== id) return; // đã chuyển câu hoặc tự dừng
         st.playing = false;
         if (running) render();
       });
@@ -575,17 +821,17 @@
       const a = st.ans;
       let body = "";
       if (s.kind === "mcq") {
-        body = `${audioBox("s" + st.i, st.plays, 2)}<div class="q-text">${esc(s.it.q)}</div>
+        body = `${audioBox("s" + st.i, st.plays, 2, st.playing)}<div class="q-text">${esc(s.it.q)}</div>
           ${s.it.o.map((o, k) => `<button class="opt ${a[st.i] === k ? "selected" : ""}" data-k="${k}"><span class="key">${"ABC"[k]}</span>${esc(o)}</button>`).join("")}`;
       } else if (s.kind === "speakers") {
         body = s.p.speakers.map((sp, k) => `<div class="card mb-2" style="padding:14px"><div class="row"><b>Speaker ${"ABCD"[k]}</b><div class="spacer"></div>
             <select class="sel" style="max-width:340px" data-sp="${k}"><option value="">Chọn…</option>${s.p.options.map((o, j) => `<option value="${j}" ${a[st.i][k] === j ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
-            <div class="mt-1">${audioBox("s" + st.i + "-" + k, st.plays, 2)}</div></div>`).join("");
+            <div class="mt-1">${audioBox("s" + st.i + "-" + k, st.plays, 2, st.playing)}</div></div>`).join("");
       } else if (s.kind === "conv") {
-        body = audioBox("s" + st.i, st.plays, 2) + s.p.statements.map((x, k) => `<div class="match-row"><span>${k + 1}. ${esc(x.q)}</span>
+        body = audioBox("s" + st.i, st.plays, 2, st.playing) + s.p.statements.map((x, k) => `<div class="match-row"><span>${k + 1}. ${esc(x.q)}</span>
             <select class="sel" data-cv="${k}"><option value="">Chọn…</option>${["Man", "Woman", "Both"].map((o) => `<option ${a[st.i][k] === o ? "selected" : ""}>${o}</option>`).join("")}</select></div>`).join("");
       } else {
-        body = `<div class="muted mb-2"><b>Chủ đề:</b> ${esc(s.tk.topic)}</div>${audioBox("s" + st.i, st.plays, 2)}` +
+        body = `<div class="muted mb-2"><b>Chủ đề:</b> ${esc(s.tk.topic)}</div>${audioBox("s" + st.i, st.plays, 2, st.playing)}` +
           s.tk.questions.map((q, k) => `<div class="mt-2"><div class="q-text" style="font-size:1rem">${k + 1}. ${esc(q.q)}</div>
             ${q.o.map((o, j) => `<button class="opt ${a[st.i][k] === j ? "selected" : ""}" data-mq="${k}" data-k="${j}"><span class="key">${"ABC"[j]}</span>${esc(o)}</button>`).join("")}</div>`).join("");
       }
@@ -605,16 +851,12 @@
         const script = m ? s.p.speakers[+m[2]].script : s.kind === "mcq" ? s.it.script : s.kind === "conv" ? s.p.script : s.tk.script;
         play(id, script);
       }));
-      if (st.playing) {
-        sh.stage.querySelectorAll(".play-btn").forEach((b) => (b.disabled = true));
-        const w = sh.stage.querySelector(`[data-wave="${st.playing}"]`);
-        if (w) w.classList.add("on");
-      }
-      sh.stage.querySelectorAll(".opt[data-k]:not([data-mq])").forEach((b) => (b.onclick = () => { a[st.i] = +b.dataset.k; render(); }));
-      sh.stage.querySelectorAll("[data-mq]").forEach((b) => (b.onclick = () => { a[st.i][+b.dataset.mq] = +b.dataset.k; render(); }));
-      sh.stage.querySelectorAll("[data-sp]").forEach((x) => (x.onchange = () => { a[st.i][+x.dataset.sp] = x.value === "" ? null : +x.value; }));
-      sh.stage.querySelectorAll("[data-cv]").forEach((x) => (x.onchange = () => { a[st.i][+x.dataset.cv] = x.value || null; }));
-      const go = (k) => { if (st.playing) { FA.stopSpeak(); st.playing = false; } st.i = k; render(); };
+      sh.stage.querySelectorAll("[data-stop]").forEach((b) => (b.onclick = () => { FA.stopSpeak(); st.playing = false; render(); }));
+      sh.stage.querySelectorAll(".opt[data-k]:not([data-mq])").forEach((b) => (b.onclick = () => { a[st.i] = +b.dataset.k; auto.flush(); render(); }));
+      sh.stage.querySelectorAll("[data-mq]").forEach((b) => (b.onclick = () => { a[st.i][+b.dataset.mq] = +b.dataset.k; auto.flush(); render(); }));
+      sh.stage.querySelectorAll("[data-sp]").forEach((x) => (x.onchange = () => { a[st.i][+x.dataset.sp] = x.value === "" ? null : +x.value; auto.flush(); }));
+      sh.stage.querySelectorAll("[data-cv]").forEach((x) => (x.onchange = () => { a[st.i][+x.dataset.cv] = x.value || null; auto.flush(); }));
+      const go = (k) => { if (st.playing) { FA.stopSpeak(); st.playing = false; } st.i = k; auto.flush(); render(); };
       sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => go(+b.dataset.j)));
       const pv = sh.stage.querySelector("#prev"), nx = sh.stage.querySelector("#next"), fn = sh.stage.querySelector("#fin");
       if (pv) pv.onclick = () => go(st.i - 1);
@@ -710,15 +952,24 @@
     return Math.max(0, Math.min(1, s));
   }
 
-  function runWriting(test, replay) {
+  function runWriting(test, replay, draft) {
     clearRun();
     const st = { i: 0, p1: Array(5).fill(""), p2: "", p3: Array(3).fill(""), p4a: "", p4b: "" };
     // xem lại: nạp bài đã viết rồi chấm lại như lúc nộp (chính tả/ngữ pháp cần Harper, nội dung chạy offline)
     if (replay && replay.ans) { const a = replay.ans; Object.assign(st, { p1: a.p1 || st.p1, p2: a.p2 || "", p3: a.p3 || st.p3, p4a: a.p4a || "", p4b: a.p4b || "" }); return finish(); }
+    if (draft) {
+      if (Array.isArray(draft.p1) && draft.p1.length === 5) st.p1 = draft.p1.slice();
+      if (typeof draft.p2 === "string") st.p2 = draft.p2;
+      if (Array.isArray(draft.p3) && draft.p3.length === 3) st.p3 = draft.p3.slice();
+      if (typeof draft.p4a === "string") st.p4a = draft.p4a;
+      if (typeof draft.p4b === "string") st.p4b = draft.p4b;
+      st.i = Math.max(0, Math.min(3, +draft.i || 0));
+    }
     const sh = examShell(`${test.title} — Writing`, 50);
     if (FA.spell) FA.spell.warm(); // tải sẵn bộ kiểm tra chính tả (Harper) để lúc xem lại có ngay
-    startTimer(50 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
-    sh.submit.onclick = () => { if (confirm("Nộp bài Writing?")) finish(); };
+    const leftSec = startTimer(draft ? Math.max(10, +draft.leftSec || 50 * 60) : 50 * 60, sh.timer, () => { FA.toast("Hết giờ! Bài đã được nộp tự động."); finish(); });
+    const auto = makeAutoSave("writing", test.id, () => ({ i: st.i, p1: st.p1.slice(), p2: st.p2, p3: st.p3.slice(), p4a: st.p4a, p4b: st.p4b }), leftSec);
+    sh.submit.onclick = async () => { if (await FA.confirm("Nộp bài Writing?", { title: "Nộp bài Writing", okText: "Nộp bài" })) finish(); };
     const titles = ["Part 1 · Word-level writing", "Part 2 · Short text", "Part 3 · Three written responses", "Part 4 · Formal & informal emails"];
 
     function ta(key, idx, min, max, rows) {
@@ -728,13 +979,17 @@
     }
     function render() {
       const T = test;
+      if (sh.box) sh.box.className = "container " + (st.i === 3 ? "wide-exam" : "narrow");
       let body = "";
       if (st.i === 0) body = `<div class="q-instr">${esc(T.p1.instr)}</div>` + T.p1.questions.map((q, k) => `<div class="mb-2"><div style="font-weight:600;margin-bottom:6px">${k + 1}. ${esc(q.q)}</div><input class="inp" data-key="p1" data-idx="${k}" value="${esc(st.p1[k])}" spellcheck="false"><div class="wc" data-wc="p1${k}" data-min="1" data-max="5"></div></div>`).join("");
       if (st.i === 1) body = `<div class="q-instr">${esc(T.p2.instr)}</div><div class="q-text">${esc(T.p2.q)}</div>${ta("p2", null, T.p2.min, T.p2.max, 120)}`;
       if (st.i === 2) body = `<div class="q-instr">${esc(T.p3.instr)}</div>` + T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div>${ta("p3", k, T.p3.min, T.p3.max, 110)}</div>`).join("");
-      if (st.i === 3) body = `<div class="passage" style="white-space:pre-line;line-height:1.7">${esc(T.p4.notice)}</div>
-        <div class="q-text" style="font-size:1rem">Email 1 (informal)</div><div class="q-instr">${esc(T.p4.informal.instr)}</div>${ta("p4a", null, T.p4.informal.min, T.p4.informal.max, 140)}
-        <div class="q-text mt-3" style="font-size:1rem">Email 2 (formal)</div><div class="q-instr">${esc(T.p4.formal.instr)}</div>${ta("p4b", null, T.p4.formal.min, T.p4.formal.max, 260)}`;
+      if (st.i === 3) body = `<div class="split-2">
+        <div class="split-left"><div class="sample-label mb-1" style="color:var(--orange-700)">Thông báo từ câu lạc bộ</div><div class="passage mb-0" style="white-space:pre-line;line-height:1.7">${esc(T.p4.notice)}</div></div>
+        <div>
+          <div class="q-text" style="font-size:1rem">Email 1 (informal)</div><div class="q-instr">${esc(T.p4.informal.instr)}</div>${ta("p4a", null, T.p4.informal.min, T.p4.informal.max, 140)}
+          <div class="q-text mt-3" style="font-size:1rem">Email 2 (formal)</div><div class="q-instr">${esc(T.p4.formal.instr)}</div>${ta("p4b", null, T.p4.formal.min, T.p4.formal.max, 240)}
+        </div></div>`;
       sh.stage.innerHTML = `
         <div class="progress"><i style="width:${((st.i + 1) / 4) * 100}%"></i></div>
         <div class="progress-meta"><span>Part ${st.i + 1}/4</span><span>${esc(test.club)}</span></div>
@@ -754,8 +1009,8 @@
           wcEl.className = "wc " + (n === 0 ? "" : n < mn ? "" : n <= mx ? "ok" : "over");
         }
       };
-      sh.stage.querySelectorAll("[data-key]").forEach((el) => { el.oninput = () => upd(el); upd(el); });
-      const go = (k) => { st.i = k; render(); window.scrollTo(0, 0); };
+      sh.stage.querySelectorAll("[data-key]").forEach((el) => { el.oninput = () => { upd(el); auto.schedule(); }; upd(el); });
+      const go = (k) => { st.i = k; auto.flush(); render(); window.scrollTo(0, 0); };
       sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => go(+b.dataset.j)));
       const pv = sh.stage.querySelector("#prev"), nx = sh.stage.querySelector("#next"), fn = sh.stage.querySelector("#fin");
       if (pv) pv.onclick = () => go(st.i - 1);
@@ -790,18 +1045,34 @@
         if (!q.ok) { useAI = false; aiQuota = q.reason; }
         else if (q.limit) aiQuota = `Đã dùng ${q.used}/${q.limit} lượt AI hôm nay.`;
       }
-      const aiP = useAI ? FA.ai.grade(T, { p1: st.p1, p2: st.p2, p3: st.p3, p4a: st.p4a, p4b: st.p4b }).catch((e) => { aiErr = (e && e.message) || "lỗi"; if (FA.plan) FA.plan.refundAI(); return null; }) : null;
+      const markStep = (id, text, ok) => {
+        const el = app.querySelector("#" + id);
+        if (!el) return;
+        el.textContent = text;
+        if (ok) el.classList.add("done");
+      };
+      const aiP = useAI ? FA.ai.grade(T, { p1: st.p1, p2: st.p2, p3: st.p3, p4a: st.p4a, p4b: st.p4b })
+        .then((r) => { if (FA.plan) FA.plan.reload(); markStep("stepAI", "✓ Đã xong bước chấm nội dung bằng AI", true); return r; })
+        .catch((e) => { aiErr = (e && e.message) || "lỗi"; if (FA.plan) FA.plan.refundAI(); markStep("stepAI", "⚠️ Chuyển sang chấm nội dung bằng từ khóa", true); return null; }) : null;
 
       // quét chính tả bằng Harper trước khi chấm (bộ kiểm tra đã được tải sẵn từ lúc bắt đầu làm bài)
-      app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm bài, kiểm tra chính tả & ngữ pháp…${useAI ? `<br>AI (${esc(FA.ai.model())}) đang chấm nội dung — có thể mất 10–40 giây.` : ""}</p></div></div></div>`;
+      app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty">
+        <div class="big">⏳</div>
+        <h3 class="mb-0">Đang chấm bài Writing…</h3>
+        <div class="step-list">
+          <div class="step-row" id="stepSpell">⏳ 1. Kiểm tra chính tả & ngữ pháp (Harper)…</div>
+          ${useAI ? `<div class="step-row" id="stepAI">⏳ 2. AI (${esc(FA.ai.model())}) chấm mức bám sát câu hỏi (10–40 giây)…</div>` : `<div class="step-row done">✓ 2. Chấm nội dung bám sát câu hỏi (từ khóa)</div>`}
+        </div>
+      </div></div></div>`;
       let spellOk = false;
       if (FA.spell) {
         try {
-          const res = await Promise.all(keys.map((k) => (J[k].opts.skip || !J[k].t.trim() ? [] : FA.spell.check(J[k].t, Object.assign({ timeoutMs: 15000 }, J[k].opts)))));
+          const res = await Promise.all(keys.map((k) => (J[k].opts.skip || !J[k].t.trim() ? [] : FA.spell.check(J[k].t, Object.assign({ timeoutMs: 60000 }, J[k].opts)))));
           keys.forEach((k, i) => (J[k].issues = res[i]));
           spellOk = true;
-        } catch (e) { /* không tải được → chấm không trừ điểm chính tả */ }
-      }
+          markStep("stepSpell", "✓ 1. Đã xong kiểm tra chính tả & ngữ pháp", true);
+        } catch (e) { markStep("stepSpell", "⚠️ Không tải được Harper — bỏ qua trừ lỗi chính tả", true); }
+      } else markStep("stepSpell", "✓ 1. Hoàn tất", true);
       const ai = savedAI || (aiP ? await aiP : null);
       if (location.hash !== hash0) return; // người dùng đã rời trang trong lúc chờ
 
@@ -849,7 +1120,7 @@
           (!spellOk ? "⚠️ Chưa trừ điểm chính tả/ngữ pháp vì không tải được bộ kiểm tra Harper (cần có mạng và mở web qua server http — xem mục “Chạy trên máy” trong README). "
             : (errs || gerrs) ? `Đã trừ điểm vì <b>${errs}</b> lỗi chính tả và <b>${gerrs}</b> lỗi ngữ pháp (Part 1: câu sai chính tả không được điểm). Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở phần xem lại, điểm sẽ tính lại. `
             : "Không có lỗi chính tả/ngữ pháp nào bị trừ điểm. ") +
-          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế (lượt AI đã được hoàn lại). ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. ${esc(aiQuota)} `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : aiQuota ? `ℹ️ ${esc(aiQuota)} Nội dung được kiểm tra bằng từ khóa. ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}` : "") +
+          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế${/hết lượt/i.test(aiErr) ? "" : " (lượt AI đã được hoàn lại)"}. ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. ${esc(aiQuota)} `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : aiQuota ? `ℹ️ ${esc(aiQuota)} Nội dung được kiểm tra bằng từ khóa. ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}` : "") +
           (offTopic ? `<b>${offTopic}</b> câu/bài chưa bám sát câu hỏi nên bị trừ điểm nội dung (xem lý do ở từng mục bên dưới). ` : "Nội dung các câu đều bám sát câu hỏi. ") +
           "Hãy so với bài mẫu và tự soát theo checklist.";
         return {
@@ -876,19 +1147,19 @@
         ans: { p1: st.p1.slice(), p2: st.p2, p3: st.p3.slice(), p4a: st.p4a, p4b: st.p4b, ai: ai || undefined }, // lưu kết quả AI để xem lại không phải chấm lại
         review(el, update) {
           const spellBox = (k) => `<div class="spell-box" data-spell="${k}"></div>`;
-          const yours = (t, min, max, k) => `<div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox(k)}${relBox(k)}`;
+          const yours = (t, min, max, k) => `<div><div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox(k)}${relBox(k)}</div>`;
           const sample = (s) => `<div class="sample"><div class="sample-label">Bài mẫu tham khảo</div>${esc(s)}</div>`;
           el.innerHTML = `
             <div class="q-card mb-2"><div class="q-part">Part 1</div>${T.p1.questions.map((q, k) => `<div class="mb-2"><b>${k + 1}. ${esc(q.q)}</b><div>Bạn: ${esc(st.p1[k]) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox("p1-" + k)}${relBox("p1-" + k)}<div style="color:#166534">Mẫu: ${esc(q.s)}</div></div>`).join("")}</div>
-            <div class="q-card mb-2"><div class="q-part">Part 2</div><div class="q-text">${esc(T.p2.q)}</div>${yours(st.p2, T.p2.min, T.p2.max, "p2")}${sample(T.p2.s)}</div>
-            <div class="q-card mb-2"><div class="q-part">Part 3</div>${T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div>${yours(st.p3[k], T.p3.min, T.p3.max, "p3-" + k)}${sample(q.s)}</div>`).join("")}</div>
+            <div class="q-card mb-2"><div class="q-part">Part 2</div><div class="q-text">${esc(T.p2.q)}</div><div class="review-split">${yours(st.p2, T.p2.min, T.p2.max, "p2")}${sample(T.p2.s)}</div></div>
+            <div class="q-card mb-2"><div class="q-part">Part 3</div>${T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div><div class="review-split">${yours(st.p3[k], T.p3.min, T.p3.max, "p3-" + k)}${sample(q.s)}</div></div>`).join("")}</div>
             <div class="q-card mb-2"><div class="q-part">Part 4</div><div class="passage" style="white-space:pre-line">${esc(T.p4.notice)}</div>
-              <h3>Email informal</h3>${yours(st.p4a, T.p4.informal.min, T.p4.informal.max, "p4a")}${sample(T.p4.informal.s)}
-              <h3 class="mt-3">Email formal</h3>${yours(st.p4b, T.p4.formal.min, T.p4.formal.max, "p4b")}${sample(T.p4.formal.s)}</div>
+              <h3>Email informal</h3><div class="review-split">${yours(st.p4a, T.p4.informal.min, T.p4.informal.max, "p4a")}${sample(T.p4.informal.s)}</div>
+              <h3 class="mt-3">Email formal</h3><div class="review-split">${yours(st.p4b, T.p4.formal.min, T.p4.formal.max, "p4b")}${sample(T.p4.formal.s)}</div></div>
             <div class="q-card checklist"><div class="q-part">Checklist tự soát</div>
               ${["Trả lời đúng và đủ ý tất cả câu hỏi", "Đủ số từ yêu cầu ở mọi part", "Email formal có Dear… / Yours faithfully, không viết tắt (I'm → I am)", "Email informal thân mật, có hỏi lại bạn", "Dùng từ nối: Firstly, However, In addition, Therefore…", "Có ít nhất 1 câu phức (because, although, if, which…)", "Viết hoa đầu câu, chấm câu đầy đủ, không sai chính tả cơ bản", "Đưa ra đề xuất/giải pháp cụ thể ở email formal"].map((x) => `<label><input type="checkbox"> ${x}</label>`).join("")}
             </div>
-            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI chấm${savedAI ? " lúc nộp bài (xem lại không gửi bài đi nữa)" : ` (${esc(FA.ai.model())}): nội dung bài viết được gửi tới máy chủ AI đã cấu hình trong <code>ai-config.js</code>`}; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
+            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI chấm${savedAI ? " lúc nộp bài (xem lại không gửi bài đi nữa)" : ` (${esc(FA.ai.model())}): nội dung bài viết được gửi tới máy chủ AI`}; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
           const boxes = {};
           el.querySelectorAll("[data-spell]").forEach((b) => (boxes[b.dataset.spell] = b));
           const mountAll = () => keys.forEach((k) => {
@@ -914,6 +1185,7 @@
      ====================================================== */
   function runSpeaking(test, replay) {
     clearRun();
+    revokeSpeakUrls();
     const steps = [];
     test.p1.forEach((q, k) => steps.push({ part: 1, label: `Part 1 · Câu ${k + 1}`, q: q.q, s: q.s, time: 30 }));
     test.p2.questions.forEach((q, k) => steps.push({ part: 2, label: `Part 2 · Câu ${k + 1}`, q: q.q, s: q.s, time: 45, photo: test.p2.photo }));
@@ -925,10 +1197,38 @@
     const sttOn = !replay && !!(FA.speakAI && FA.speakAI.enabled()); // có AI + trình duyệt hỗ trợ nhận dạng giọng nói → ghi chữ để AI chấm
     const sh = examShell(`${test.title} — Speaking`, 0);
     sh.submit.textContent = "Kết thúc";
-    sh.submit.onclick = () => { if (confirm("Kết thúc bài Speaking và xem kết quả?")) finish(); };
+    sh.submit.onclick = async () => { if (await FA.confirm("Kết thúc bài Speaking và xem kết quả?", { title: "Kết thúc Speaking", okText: "Xem kết quả" })) finish(); };
 
-    const photoHTML = (p) => `<div class="photo"><div><div class="emo">${p.emo}</div><div class="cap">${esc(p.cap)}</div></div></div>`;
-    let stopTick = null, recorder = null, chunks = [];
+    const photoHTML = (p) => `<div class="photo"><div><div class="emo">${p.emo}</div><button type="button" class="btn btn-ghost btn-sm cap-btn">👁 Gợi ý ngữ cảnh</button><div class="cap hidden">${esc(p.cap)}</div></div></div>`;
+    let stopTick = null, recorder = null, chunks = [], meterRaf = 0, meterCtx = null;
+    function stopMeter() {
+      cancelAnimationFrame(meterRaf); meterRaf = 0;
+      if (meterCtx) { try { meterCtx.close(); } catch (e) {} meterCtx = null; }
+      const m = sh.stage && sh.stage.querySelector("#micMeter");
+      if (m) m.classList.add("hidden");
+    }
+    function startMeter() {
+      stopMeter();
+      const m = sh.stage.querySelector("#micMeter"), fill = sh.stage.querySelector("#micFill");
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!st.stream || !m || !fill || !Ctx) return;
+      try {
+        meterCtx = new Ctx();
+        const an = meterCtx.createAnalyser();
+        an.fftSize = 256;
+        meterCtx.createMediaStreamSource(st.stream).connect(an);
+        const buf = new Uint8Array(an.frequencyBinCount);
+        m.classList.remove("hidden");
+        const loop = () => {
+          an.getByteTimeDomainData(buf);
+          let sum = 0;
+          for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+          fill.style.width = Math.min(100, Math.round(Math.sqrt(sum / buf.length) * 380)) + "%";
+          meterRaf = requestAnimationFrame(loop);
+        };
+        loop();
+      } catch (e) {}
+    }
 
     async function getMic() {
       if (st.stream || !navigator.mediaDevices || !window.MediaRecorder) return;
@@ -938,6 +1238,7 @@
     /* nhận dạng giọng nói (Web Speech API) chạy song song với ghi âm — mỗi câu một bộ, kết quả vào st.tx[i] = {text, conf, secs} */
     let sr = null, srIdx = -1, srT0 = 0;
     const srDone = [];
+    const recDone = [];
     function startSR() {
       if (!sttOn || sr) return;
       sr = FA.speakAI.listen();
@@ -953,16 +1254,27 @@
       startSR();
       if (!st.stream) return;
       chunks = [];
+      let done;
+      recDone.push(new Promise((r) => (done = r)));
       try {
         const rec = (recorder = new MediaRecorder(st.stream));
         const myChunks = (chunks = []);
         rec.ondataavailable = (e) => e.data.size && myChunks.push(e.data);
         const idx = st.i;
-        rec.onstop = () => { st.recs[idx] = URL.createObjectURL(new Blob(myChunks, { type: rec.mimeType || "audio/webm" })); };
+        rec.onstop = () => {
+          if (myChunks.length) {
+            const u = URL.createObjectURL(new Blob(myChunks, { type: rec.mimeType || "audio/webm" }));
+            st.recs[idx] = u;
+            speakUrls.push(u);
+          }
+          done();
+        };
+        rec.onerror = () => done();
         rec.start();
-      } catch (e) { recorder = null; }
+        startMeter();
+      } catch (e) { done(); recorder = null; }
     }
-    function stopRec() { stopSR(); if (recorder && recorder.state !== "inactive") recorder.stop(); recorder = null; }
+    function stopRec() { stopSR(); stopMeter(); if (recorder && recorder.state !== "inactive") recorder.stop(); recorder = null; }
     cleanup.push(stopRec);
     if (replay) return finish(); // xem lại: bản ghi âm không được lưu, chỉ còn điểm tự chấm và bài mẫu
 
@@ -994,7 +1306,7 @@
           ${s.photos ? `<div class="photos-2">${s.photos.map(photoHTML).join("")}</div>` : ""}
           ${qHTML}
           <div class="speak-stage">
-            <div><div class="stage-label" id="stageLabel">Sẵn sàng</div><div class="big-timer" id="bigTimer">${FA.fmtTime(s.time)}</div></div>
+            <div><div class="stage-label" id="stageLabel">Sẵn sàng</div><div class="big-timer" id="bigTimer">${FA.fmtTime(s.time)}</div><div class="mic-meter hidden mt-1" id="micMeter" title="Mức âm lượng micro"><i id="micFill"></i></div></div>
             <div class="spacer"></div>
             <button class="btn btn-primary" id="goBtn">▶ Bắt đầu câu này</button>
             <button class="btn btn-outline hidden" id="doneBtn">Xong, câu tiếp →</button>
@@ -1003,6 +1315,7 @@
         </div>`;
       sh.stage.querySelector("#goBtn").onclick = start;
       sh.stage.querySelector("#doneBtn").onclick = next;
+      sh.stage.querySelectorAll(".cap-btn").forEach((b) => (b.onclick = () => { b.nextElementSibling.classList.remove("hidden"); b.remove(); }));
     }
     async function start() {
       const s = steps[st.i];
@@ -1039,8 +1352,8 @@
 
     async function finish() {
       stopRec();
-      await Promise.all(srDone); // chờ bộ nhận dạng giọng nói trả nốt kết quả cuối (mỗi câu tối đa ~1,5 giây)
-      await new Promise((r) => setTimeout(r, 250));
+      // chờ bộ nhận dạng giọng nói và MediaRecorder.onstop hoàn tất (giới hạn 1,5 giây cho recorder)
+      await Promise.all([Promise.all(srDone), Promise.race([Promise.all(recDone), new Promise((r) => setTimeout(r, 1500))])]);
       if (location.hash !== hash0) return; // người dùng đã rời trang
       {
         const recs = st.recs.slice();
@@ -1066,7 +1379,7 @@
           }
           if (go) {
             loading(`AI (${esc(FA.speakAI.model())}) đang chấm bài nói của bạn — có thể mất 10–40 giây…`);
-            try { ai = await FA.speakAI.grade(steps, tx); }
+            try { ai = await FA.speakAI.grade(steps, tx); if (FA.plan) FA.plan.reload(); }
             catch (e) { aiErr = (e && e.message) || "lỗi"; if (FA.plan) FA.plan.refundAI(); }
           }
           if (location.hash !== hash0) return;
@@ -1074,7 +1387,7 @@
         const aiPart = (k) => (ai && ai.parts && ai.parts[k] && typeof ai.parts[k].score === "number" ? ai.parts[k] : null);
         const aiNote = ai
           ? (savedAI ? "Điểm gợi ý do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Điểm gợi ý do AI (${esc(ai.model || FA.speakAI.model())}) chấm từ bản ghi chữ lời nói của bạn. ${esc(aiQuota)} `) + "AI chỉ chấm nội dung, ý, ngữ pháp, từ vựng, mạch lạc — KHÔNG chấm được phát âm (hãy tự nghe lại bản ghi). Bạn có thể kéo thanh để chỉnh điểm. "
-          : aiErr ? `⚠️ Không gọi được AI chấm (${esc(aiErr)}) nên bạn tự chấm bên dưới (lượt AI đã được hoàn lại). `
+          : aiErr ? `⚠️ Không gọi được AI chấm (${esc(aiErr)}) nên bạn tự chấm bên dưới${/hết lượt/i.test(aiErr) ? "" : " (lượt AI đã được hoàn lại)"}. `
           : aiQuota ? `ℹ️ ${esc(aiQuota)} ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}`
           : (!replay && FA.speakAI && FA.speakAI.enabled() && !hasText) ? "ℹ️ Không nhận dạng được lời nói nào nên chưa có AI chấm — hãy tự chấm bên dưới. "
           : (!replay && FA.ai && FA.ai.enabled() && FA.speakAI && !FA.speakAI.canListen()) ? "ℹ️ Trình duyệt này không hỗ trợ nhận dạng giọng nói (dùng Chrome hoặc Edge để có AI chấm Speaking). " : "";
@@ -1145,6 +1458,7 @@
   }
 
   function viewGym(wrongMode) {
+    view = "gym";
     const wrong = FA.store.get("wrongbook", []);
     app.innerHTML = `
       <div class="page"><div class="container narrow">
@@ -1165,12 +1479,13 @@
         ${wrong.map((w) => `<div class="card mb-2" style="padding:14px 16px"><div class="row"><span class="pill gray">${esc(w.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(w.id)}">Bỏ khỏi sổ</button></div>
           <div class="mt-1"><b>${esc(w.q)}</b></div><div style="font-size:.92rem;color:#166534">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
       body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(wrong).slice(0, 10), true, body);
-      body.querySelector("#clearAll").onclick = () => { if (confirm("Xóa toàn bộ Sổ câu sai?")) { FA.store.set("wrongbook", []); viewGym(true); } };
+      body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
       body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { FA.removeWrong(b.dataset.del); viewGym(true); }));
     }
   }
 
   function gymSession(items, fromWrong, body) {
+    view = "";
     let i = 0, correct = 0, chosen = null;
     const draw = () => {
       if (i >= items.length) {

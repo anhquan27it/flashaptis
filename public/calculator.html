@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -20,6 +21,10 @@
     <p class="page-sub">Nhập điểm 4 kỹ năng (0–50). Công cụ cho biết bậc từng kỹ năng, tổng điểm Overall và cần thêm bao nhiêu điểm để lên bậc tiếp theo.</p>
 
     <div class="card" id="calc"></div>
+    <div class="row mt-2">
+      <button class="btn btn-outline btn-sm" id="fromHist" type="button">📥 Lấy điểm gần nhất từ lịch sử thi</button>
+      <a class="btn btn-ghost btn-sm" href="exam.html#/progress">📊 Xem bảng tiến độ →</a>
+    </div>
 
     <div class="card mt-2">
       <div class="result-hero">
@@ -48,7 +53,7 @@
   <script>
     FA.renderShell("calculator");
     const SK = [["listening", "🎧 Listening"], ["reading", "📖 Reading"], ["speaking", "🎙️ Speaking"], ["writing", "✍️ Writing"]];
-    const saved = FA.store.get("calc", { listening: 30, reading: 34, speaking: 28, writing: 30 });
+    let saved = FA.store.get("calc", { listening: 30, reading: 34, speaking: 28, writing: 30 });
     const calc = document.getElementById("calc");
     calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" value="${saved[k]}" data-k="${k}"><input class="inp" type="number" min="0" max="50" value="${saved[k]}" data-n="${k}"><span class="lv" data-lv="${k}"></span></div>`).join("");
     function nextGap(skill, score) {
@@ -74,6 +79,32 @@
     }
     calc.querySelectorAll("[data-k]").forEach((r) => (r.oninput = () => { calc.querySelector(`[data-n="${r.dataset.k}"]`).value = r.value; update(); }));
     calc.querySelectorAll("[data-n]").forEach((n) => (n.oninput = () => { calc.querySelector(`[data-k="${n.dataset.n}"]`).value = n.value; update(); }));
+    document.getElementById("fromHist").onclick = () => {
+      const all = FA.store.get("attempts", {});
+      let filled = 0;
+      SK.forEach(([k]) => {
+        let best = null;
+        Object.keys(all).forEach((key) => {
+          if (key.indexOf(k + ":") !== 0) return;
+          const rec = (all[key] || [])[0];
+          if (rec && (!best || rec.at > best.at)) best = rec;
+        });
+        if (best) {
+          saved[k] = best.score;
+          calc.querySelector(`[data-k="${k}"]`).value = best.score;
+          calc.querySelector(`[data-n="${k}"]`).value = best.score;
+          filled++;
+        }
+      });
+      if (!filled) return FA.toast("Chưa có lượt làm bài nào cho 4 kỹ năng chính.");
+      update();
+      FA.toast(`Đã nạp điểm gần nhất của ${filled}/4 kỹ năng.`);
+    };
+    window.addEventListener("fa:synced", () => {
+      saved = FA.store.get("calc", saved);
+      SK.forEach(([k]) => { calc.querySelector(`[data-k="${k}"]`).value = saved[k]; calc.querySelector(`[data-n="${k}"]`).value = saved[k]; });
+      update();
+    });
     update();
     // bảng ngưỡng
     const levels = ["A1", "A2", "B1", "B2", "C"];

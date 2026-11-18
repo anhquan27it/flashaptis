@@ -2,6 +2,40 @@
 (function () {
   const FA = (window.FA = window.FA || {});
 
+  /* ---------- Lưu trữ cục bộ (an toàn khi bị chặn) ---------- */
+  const PREFIX = "flashaptis:";
+  FA.store = {
+    get(key, fallback) {
+      try {
+        const v = localStorage.getItem(PREFIX + key);
+        return v == null ? fallback : JSON.parse(v);
+      } catch (e) {
+        return fallback;
+      }
+    },
+    set(key, val) {
+      try {
+        localStorage.setItem(PREFIX + key, JSON.stringify(val));
+      } catch (e) {}
+    },
+  };
+
+  /* ---------- Giao diện Sáng / Tối (Dark Mode) ---------- */
+  const applyTheme = (t) => {
+    const dark = t === "dark";
+    if (typeof document !== "undefined" && document.documentElement) {
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    }
+    if (typeof document !== "undefined") {
+      document.querySelectorAll(".theme-btn").forEach((b) => {
+        b.textContent = dark ? "☀️" : "🌙";
+        b.title = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
+        b.setAttribute("aria-pressed", String(dark));
+      });
+    }
+  };
+  applyTheme(FA.store.get("theme", "light"));
+
   /* ---------- Header & footer ---------- */
   const NAV = [
     { href: "exam.html", label: "Thi thử", key: "exam" },
@@ -20,17 +54,51 @@
       <div class="container">
         <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
         <nav class="nav" aria-label="Điều hướng chính">
-          ${NAV.map((n) => `<a href="${n.href}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}">${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}">${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
         </nav>
         <div class="header-actions">
           <a class="btn btn-primary btn-sm header-cta" href="exam.html">Làm đề ngay</a>
+          <button class="theme-btn" type="button" aria-label="Đổi giao diện sáng/tối" aria-pressed="false">🌙</button>
           <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / menu tài khoản -->
           <button class="menu-btn" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
         </div>
       </div>`;
     document.body.prepend(header);
-    if (FA.cloud && FA.cloud.paint) FA.cloud.paint(); // vẽ ô tài khoản ngay (cloud.js dùng hồ sơ đã nhớ), tránh nháy khi chuyển trang
+    document.body.classList.add("has-shell");
+    applyTheme(FA.store.get("theme", "light"));
+    header.querySelector(".theme-btn").onclick = () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      FA.store.set("theme", next);
+      applyTheme(next);
+    };
     const menuBtn = header.querySelector(".menu-btn"), nav = header.querySelector(".nav");
+    const closeAll = () => {
+      nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
+      header.querySelectorAll(".acct.open").forEach((x) => x.classList.remove("open"));
+    };
+    // nếu đang ở exam.html thì chuyển tab Thi thử / Phòng gym ngay bằng hash (không tải lại trang)
+    const onExamPage = /(?:^|\/)exam(?:\.html)?$/i.test(String(location.pathname || ""));
+    if (onExamPage) {
+      header.querySelectorAll('a[href="exam.html"], a[href="exam.html#/gym"]').forEach((a) => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          closeAll();
+          const target = a.getAttribute("href") === "exam.html#/gym" ? "#/gym" : "#/";
+          if (location.hash !== target) location.hash = target;
+        });
+      });
+    }
+    // cập nhật active giữa "Thi thử" và "Phòng gym" khi đổi hash trong exam.html
+    if (active === "exam" || active === "gym") {
+      const syncNav = () => {
+        const cur = location.hash.indexOf("gym") > -1 ? "gym" : "exam";
+        header.querySelectorAll(".nav a[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === cur));
+        closeAll();
+      };
+      window.addEventListener("hashchange", syncNav);
+      syncNav();
+    }
+    if (FA.cloud && FA.cloud.paint) FA.cloud.paint(); // vẽ ô tài khoản ngay (cloud.js dùng hồ sơ đã nhớ), tránh nháy khi chuyển trang
     menuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const open = nav.classList.toggle("open");
@@ -38,10 +106,6 @@
       menuBtn.textContent = open ? "✕" : "☰";
     });
     // bấm ra ngoài / Esc → đóng menu điều hướng và menu tài khoản
-    const closeAll = () => {
-      nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
-      header.querySelectorAll(".acct.open").forEach((x) => x.classList.remove("open"));
-    };
     document.addEventListener("click", (e) => { if (!e.target.closest(".nav, .acct")) closeAll(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
 
@@ -63,24 +127,6 @@
         <span class="made-badge">Made by <b>FPT University</b></span>
       </div>`;
     document.body.append(footer);
-  };
-
-  /* ---------- Lưu trữ cục bộ (an toàn khi bị chặn) ---------- */
-  const PREFIX = "flashaptis:";
-  FA.store = {
-    get(key, fallback) {
-      try {
-        const v = localStorage.getItem(PREFIX + key);
-        return v == null ? fallback : JSON.parse(v);
-      } catch (e) {
-        return fallback;
-      }
-    },
-    set(key, val) {
-      try {
-        localStorage.setItem(PREFIX + key, JSON.stringify(val));
-      } catch (e) {}
-    },
   };
 
   /* Lịch sử làm bài */
@@ -114,7 +160,7 @@
     FA.store.set("wrongbook", FA.store.get("wrongbook", []).filter((x) => x.id !== id));
   };
 
-  /* ---------- Toast ---------- */
+  /* ---------- Toast & Hộp thoại xác nhận ---------- */
   let toastEl, toastT;
   FA.toast = function (msg) {
     if (!toastEl) {
@@ -126,6 +172,52 @@
     toastEl.classList.add("show");
     clearTimeout(toastT);
     toastT = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  };
+
+  function openDialog(cfg) {
+    return new Promise((resolve) => {
+      const ov = document.createElement("div");
+      ov.className = "auth-modal fa-modal";
+      const hasInput = cfg.kind === "prompt";
+      ov.innerHTML = `
+        <div class="auth-box" role="dialog" aria-modal="true" style="max-width:420px;padding:24px">
+          <h3 style="margin:0 0 8px;font-size:1.2rem">${FA.esc(cfg.title || (hasInput ? "Nhập thông tin" : "Xác nhận"))}</h3>
+          <p class="muted mb-2" style="font-size:.95rem;white-space:pre-line">${FA.esc(cfg.msg)}</p>
+          ${hasInput ? `<input class="inp mb-2" id="faDlgInp" value="${FA.esc(cfg.val || "")}" placeholder="${FA.esc(cfg.placeholder || "")}">` : ""}
+          <div class="row" style="justify-content:flex-end;margin-top:16px">
+            <button type="button" class="btn btn-outline btn-sm" id="faDlgNo">${FA.esc(cfg.cancelText || "Hủy")}</button>
+            <button type="button" class="btn ${cfg.danger ? "btn-red" : "btn-primary"} btn-sm" id="faDlgYes">${FA.esc(cfg.okText || "Đồng ý")}</button>
+          </div>
+        </div>`;
+      document.body.append(ov);
+      const inp = ov.querySelector("#faDlgInp"), yes = ov.querySelector("#faDlgYes"), no = ov.querySelector("#faDlgNo");
+      const close = (val) => { document.removeEventListener("keydown", onKey); ov.remove(); resolve(val); };
+      const submit = () => close(hasInput ? inp.value : true);
+      const onKey = (e) => {
+        if (e.key === "Escape") close(hasInput ? null : false);
+        else if (e.key === "Enter" && hasInput) { e.preventDefault(); submit(); }
+      };
+      document.addEventListener("keydown", onKey);
+      ov.addEventListener("click", (e) => { if (e.target === ov) close(hasInput ? null : false); });
+      no.onclick = () => close(hasInput ? null : false);
+      yes.onclick = submit;
+      setTimeout(() => (hasInput ? inp : yes).focus(), 0);
+    });
+  }
+  FA.confirm = (msg, opts) => openDialog(Object.assign({ kind: "confirm", msg }, opts || {}));
+  FA.prompt = (msg, val, opts) => openDialog(Object.assign({ kind: "prompt", msg, val }, opts || {}));
+
+  FA.copy = async function (text, btn) {
+    try { await navigator.clipboard.writeText(String(text)); }
+    catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = String(text); ta.style.cssText = "position:fixed;opacity:0";
+      document.body.append(ta); ta.select();
+      try { document.execCommand("copy"); } catch (err) {}
+      ta.remove();
+    }
+    FA.toast("Đã sao chép: " + text);
+    if (btn) { const old = btn.textContent; btn.textContent = "✓ Đã chép"; setTimeout(() => { btn.textContent = old; }, 1400); }
   };
 
   /* ---------- Tiện ích ---------- */
@@ -180,21 +272,33 @@
     if (typeof lines === "string") lines = [{ s: opts.gender || "f", t: lines }];
     const speakerIdx = {};
     let n = 0;
+    const totalChars = Math.max(1, lines.reduce((sum, ln) => sum + (ln.t ? ln.t.length : 0), 0));
+    let doneChars = 0;
+    const report = (pct) => { if (opts.onProgress) try { opts.onProgress(Math.max(0, Math.min(100, Math.round(pct)))); } catch (e) {} };
+    report(0);
     return new Promise((resolve) => {
       let i = 0;
       const next = () => {
         if (gen !== speakGen) return resolve(); // đã bị dừng
-        if (i >= lines.length) return resolve();
+        if (i >= lines.length) { report(100); return resolve(); }
         const ln = lines[i++];
         const u = new SpeechSynthesisUtterance(ln.t);
         const who = ln.who || ln.s;
         if (!(who in speakerIdx)) speakerIdx[who] = n++;
-        const v = pickVoice(ln.s, ln.s === "f" ? speakerIdx[who] : speakerIdx[who]);
+        const v = pickVoice(ln.s, speakerIdx[who]);
         if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-GB";
         u.rate = opts.rate || 0.95;
         u.pitch = ln.s === "m" ? 0.85 + (speakerIdx[who] % 2) * 0.15 : 1.05 + (speakerIdx[who] % 2) * 0.12;
-        u.onend = () => setTimeout(next, 350);
-        u.onerror = () => setTimeout(next, 50);
+        u.onboundary = (ev) => {
+          if (gen === speakGen && typeof ev.charIndex === "number") report(((doneChars + ev.charIndex) / totalChars) * 100);
+        };
+        const advance = (delay) => {
+          doneChars += ln.t ? ln.t.length : 0;
+          report((doneChars / totalChars) * 100);
+          setTimeout(next, delay);
+        };
+        u.onend = () => advance(350);
+        u.onerror = () => advance(50);
         speechSynthesis.speak(u);
       };
       next();

@@ -7,9 +7,10 @@ service cloud.firestore {
     function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
 
     // Dữ liệu học đồng bộ (cloud.js): mỗi người chỉ đọc/ghi của chính mình.
-    // Riêng users/{uid}/usage do Cloud Function ghi (đếm lượt AI phía server) → client không đụng được.
+    // Riêng users/{uid}/usage do Cloud Function ghi (đếm lượt AI phía server) → client chỉ được đọc.
     match /users/{uid}/{col}/{doc} {
-      allow read, delete: if isMe(uid) && col in ['attempts', 'kv'];
+      allow read: if isMe(uid) && col in ['attempts', 'kv', 'usage'];
+      allow delete: if isMe(uid) && col in ['attempts', 'kv'];
       allow create, update: if isMe(uid) && col in ['attempts', 'kv']
                             && request.resource.data.keys().hasOnly(['key', 'v', 'updatedAt'])
                             && request.resource.data.v is string
@@ -27,13 +28,10 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Lượt AI trong ngày (plan.js) — chặn phía trình duyệt, người dùng tự ghi của mình.
+    // Bộ đếm cũ — khóa ghi từ client để tránh tự đặt lại lượt AI; lượt thật nằm ở users/{uid}/usage/{day}.
     match /aiUsage/{uid} {
       allow read: if isMe(uid);
-      allow write: if isMe(uid)
-                   && request.resource.data.keys().hasOnly(['day', 'n'])
-                   && request.resource.data.day is string
-                   && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 100;
+      allow write: if false;
     }
 
     // Yêu cầu thanh toán: người dùng tạo yêu cầu "pending" của chính mình; admin xem tất cả và duyệt / từ chối.
@@ -43,6 +41,9 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.status == 'pending'
                     && request.resource.data.amount is int
+                    && request.resource.data.amount > 0
+                    && request.resource.data.code is string
+                    && request.resource.data.code.size() <= 20
                     && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'code', 'amount', 'status', 'createdAt']);
       allow update, delete: if isAdmin();
     }
