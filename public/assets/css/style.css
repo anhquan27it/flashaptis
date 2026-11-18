@@ -46,8 +46,8 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
-/* giữ chỗ cho header trong lúc script cuối body chưa chạy → tránh cả trang nhảy xuống 65px */
-body:not(.has-shell) { padding-top: 65px; }
+/* giữ chỗ cho header trong lúc script cuối body chưa chạy → tránh cả trang nhảy xuống 77px */
+body:not(.has-shell) { padding-top: 77px; }
 main { min-height: 72vh; }
 img { max-width: 100%; }
 a { color: var(--orange-600); text-decoration: none; }
@@ -69,11 +69,14 @@ button { font-family: inherit; }
   position: sticky; top: 0; z-index: 50;
   background: rgba(255, 251, 247, .97);
   border-bottom: 1px solid var(--line);
+  transition: box-shadow .2s, background-color .2s;
 }
-.site-header .container { display: flex; align-items: center; gap: 24px; height: 64px; }
+.site-header.scrolled { background: rgba(255, 251, 247, .99); box-shadow: 0 6px 24px -14px rgba(124, 45, 18, .28); }
+.site-header .container { display: flex; align-items: center; gap: 16px; height: 76px; }
 .logo {
   font-family: var(--font-head); font-weight: 700; font-size: 1.35rem;
   color: var(--ink); display: inline-flex; align-items: center; gap: 0; letter-spacing: -.02em;
+  flex-shrink: 0;
 }
 .logo:hover { text-decoration: none; }
 .logo .flash { color: var(--orange-500); }
@@ -82,30 +85,32 @@ button { font-family: inherit; }
   border-radius: 8px; background: linear-gradient(135deg, var(--orange-400), var(--orange-600));
   color: #fff; font-size: 15px; box-shadow: 0 4px 10px -4px var(--orange-500);
 }
-.site-header .container { gap: 12px; }
-.logo { flex-shrink: 0; }
-.nav { display: flex; align-items: center; gap: 0; margin: 0 auto; min-width: 0; }
+.site-header .logo { font-size: 1.44rem; }
+.site-header .logo .bolt { width: 30px; height: 30px; margin-right: 7px; border-radius: 9px; font-size: 16px; }
+.nav { display: flex; align-items: center; gap: 2px; margin: 0 auto; flex-shrink: 0; }
 .nav a {
-  color: var(--ink-2); font-weight: 500; font-size: .88rem; padding: 7px 8px; border-radius: 10px;
+  position: relative; color: var(--ink-2); font-weight: 500; font-size: .91rem; padding: 8px 9px; border-radius: 11px;
   white-space: nowrap; transition: background .15s, color .15s;
 }
-.nav a:hover, .nav a.active { background: var(--orange-50); color: var(--orange-700); text-decoration: none; }
-.nav a.active { font-weight: 600; }
+.nav a:hover { background: var(--orange-50); color: var(--orange-700); text-decoration: none; }
+.nav a.active { color: var(--orange-700); font-weight: 600; }
+.nav a.active::after { /* gạch chân trang hiện tại */
+  content: ""; position: absolute; left: 9px; right: 9px; bottom: 2px; height: 2.5px; border-radius: 2px; background: var(--orange-500);
+}
 .nav a.nav-pro { color: var(--orange-700); font-weight: 600; }
-.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.nav .nav-cta { display: none; } /* "Làm đề ngay" chỉ hiện trong menu mobile */
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .theme-btn {
-  display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+  display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-size: 16px;
   transition: background .15s, border-color .15s;
 }
 .theme-btn:hover { background: var(--orange-50); border-color: var(--orange-300); }
-.header-cta { height: 36px; padding: 0 14px; display: inline-flex; align-items: center; }
-.header-cta, .login-btn { white-space: nowrap; }
 /* nút Đăng nhập trên header (khi chưa đăng nhập) */
 .login-btn {
-  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px 0 12px; cursor: pointer;
-  border: 1.5px solid var(--orange-200); border-radius: 999px; background: var(--orange-50); color: var(--orange-700);
-  font: inherit; font-weight: 600; font-size: .92rem; line-height: 1;
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 13px; cursor: pointer;
+  white-space: nowrap; border: 1.5px solid var(--orange-200); border-radius: 999px; background: var(--orange-50); color: var(--orange-700);
+  font: inherit; font-weight: 600; font-size: .94rem; line-height: 1;
   transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .12s;
 }
 .login-btn svg { flex-shrink: 0; }
@@ -121,14 +126,14 @@ button { font-family: inherit; }
 /* menu tài khoản (cloud.js) */
 .acct { position: relative; }
 .acct-btn {
-  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 3px 10px 3px 3px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 3px 11px 3px 3px; cursor: pointer;
   border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); color: var(--ink-2); font: inherit;
   transition: border-color .15s, box-shadow .15s;
 }
 .acct-btn:hover, .acct.open .acct-btn { border-color: var(--orange-300); box-shadow: 0 0 0 3px rgba(249, 115, 22, .12); }
 .avatar {
-  width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: inline-grid; place-items: center;
-  background: linear-gradient(135deg, var(--orange-400), var(--orange-600)); color: #fff; font-weight: 700; font-size: .85rem;
+  width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: inline-grid; place-items: center;
+  background: linear-gradient(135deg, var(--orange-400), var(--orange-600)); color: #fff; font-weight: 700; font-size: .88rem;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar-lg { width: 44px; height: 44px; font-size: 1.1rem; }
@@ -220,23 +225,39 @@ button { font-family: inherit; }
 .auth-form .otp-inp::placeholder { color: var(--line-2); letter-spacing: .5em; }
 
 .menu-btn {
-  display: none; place-items: center; width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
-  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-size: 18px;
+  display: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-size: 20px; line-height: 1;
+  transition: background .15s, border-color .15s;
 }
-@media (max-width: 980px) {
+.menu-btn:hover, .menu-btn[aria-expanded="true"] { background: var(--orange-50); border-color: var(--orange-300); }
+@media (max-width: 1140px) {
   .menu-btn { display: inline-grid; }
   .header-actions { margin-left: auto; }
   .nav {
-    display: none; position: absolute; top: 64px; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch;
-    background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 16px 16px; box-shadow: var(--shadow);
+    display: none; position: absolute; top: 100%; left: 0; right: 0; margin: 0; flex-direction: column; align-items: stretch; gap: 2px;
+    background: var(--surface); border-bottom: 1px solid var(--line); padding: 12px 20px 20px;
+    box-shadow: 0 18px 30px -18px rgba(124, 45, 18, .35); max-height: calc(100vh - 76px); overflow-y: auto;
   }
-  .nav.open { display: flex; }
-  .nav a { padding: 11px 12px; font-size: .98rem; }
+  .nav.open { display: flex; animation: nav-down .16s ease-out; }
+  @keyframes nav-down { from { opacity: 0; transform: translateY(-6px); } }
+  .nav a { padding: 13px 14px; font-size: 1.05rem; }
+  .nav a.active { background: var(--orange-50); }
+  .nav a.active::after { left: 0; right: auto; top: 10px; bottom: 10px; width: 3px; height: auto; }
+  .nav .nav-cta { display: flex; justify-content: center; margin-top: 10px; padding: 14px; font-size: 1.02rem; color: #fff; }
+  .nav .nav-cta:hover { color: #fff; background: linear-gradient(180deg, var(--orange-500), var(--orange-600)); filter: brightness(.95); }
 }
 @media (max-width: 560px) {
-  .site-header .container { gap: 10px; }
-  .header-actions .header-cta { display: none; }
-  .acct-menu { position: fixed; left: 12px; right: 12px; top: 70px; width: auto; }
+  body:not(.has-shell) { padding-top: 65px; }
+  .site-header .container { height: 64px; gap: 10px; }
+  .site-header .logo { font-size: 1.32rem; }
+  .site-header .logo .bolt { width: 28px; height: 28px; margin-right: 6px; font-size: 16px; }
+  .nav { max-height: calc(100vh - 64px); padding: 10px 16px 18px; }
+  .theme-btn { width: 40px; height: 40px; }
+  .menu-btn { width: 42px; height: 42px; }
+  .login-btn { height: 40px; padding: 0 14px 0 11px; }
+  .acct-btn { height: 40px; }
+  .avatar { width: 32px; height: 32px; }
+  .acct-menu { position: fixed; left: 12px; right: 12px; top: 72px; width: auto; }
 }
 /* gói Free / Pro */
 .plan-badge:empty { display: none; }
@@ -671,11 +692,11 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
 /* ---------- Sticky exam bar, Split-view & Flag ---------- */
 .container.wide-exam { max-width: 1080px; }
 .exam-top {
-  position: sticky; top: 64px; z-index: 30; background: var(--bg);
+  position: sticky; top: 76px; z-index: 30; background: var(--bg);
   padding: 10px 0; margin: -10px 0 14px; border-bottom: 1px solid var(--line);
 }
 .split-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
-.split-2 .split-left { position: sticky; top: 134px; max-height: calc(100vh - 154px); overflow-y: auto; padding-right: 4px; }
+.split-2 .split-left { position: sticky; top: 146px; max-height: calc(100vh - 166px); overflow-y: auto; padding-right: 4px; }
 .review-split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 .review-split .sample { margin-top: 0; }
 @media (max-width: 960px) {
@@ -739,6 +760,7 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
   --shadow-lg: 0 24px 60px -20px rgba(0,0,0,.65);
 }
 :root[data-theme="dark"] .site-header { background: rgba(20, 17, 16, .97); }
+:root[data-theme="dark"] .site-header.scrolled { background: rgba(20, 17, 16, .99); box-shadow: 0 6px 24px -12px rgba(0, 0, 0, .65); }
 :root[data-theme="dark"] .ring::before,
 :root[data-theme="dark"] .ring-lg > div,
 :root[data-theme="dark"] .transcript,

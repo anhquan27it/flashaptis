@@ -40,7 +40,7 @@
   const NAV = [
     { href: "exam.html", label: "Thi thử", key: "exam" },
     { href: "flashcards.html", label: "Flashcard", key: "flashcards" },
-    { href: "exam.html#/gym", label: "Phòng gym", key: "gym" },
+    { href: "exam.html#/gym", label: "Ôn tập", key: "gym" },
     { href: "tips.html", label: "Lộ trình mẹo", key: "tips" },
     { href: "guide.html", label: "Cấu trúc đề", key: "guide" },
     { href: "calculator.html", label: "Tính điểm", key: "calculator" },
@@ -54,10 +54,10 @@
       <div class="container">
         <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
         <nav class="nav" aria-label="Điều hướng chính">
-          ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}">${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          <a class="btn btn-primary nav-cta" href="exam.html">Làm đề ngay ⚡</a><!-- chỉ hiện trong menu mobile -->
         </nav>
         <div class="header-actions">
-          <a class="btn btn-primary btn-sm header-cta" href="exam.html">Làm đề ngay</a>
           <button class="theme-btn" type="button" aria-label="Đổi giao diện sáng/tối" aria-pressed="false">🌙</button>
           <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / menu tài khoản -->
           <button class="menu-btn" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
@@ -76,7 +76,7 @@
       nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
       header.querySelectorAll(".acct.open").forEach((x) => x.classList.remove("open"));
     };
-    // nếu đang ở exam.html thì chuyển tab Thi thử / Phòng gym ngay bằng hash (không tải lại trang)
+    // nếu đang ở exam.html thì chuyển tab Thi thử / Ôn tập ngay bằng hash (không tải lại trang)
     const onExamPage = /(?:^|\/)exam(?:\.html)?$/i.test(String(location.pathname || ""));
     if (onExamPage) {
       header.querySelectorAll('a[href="exam.html"], a[href="exam.html#/gym"]').forEach((a) => {
@@ -88,11 +88,16 @@
         });
       });
     }
-    // cập nhật active giữa "Thi thử" và "Phòng gym" khi đổi hash trong exam.html
+    // cập nhật active giữa "Thi thử" và "Ôn tập" khi đổi hash trong exam.html
     if (active === "exam" || active === "gym") {
       const syncNav = () => {
         const cur = location.hash.indexOf("gym") > -1 ? "gym" : "exam";
-        header.querySelectorAll(".nav a[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === cur));
+        header.querySelectorAll(".nav a[data-nav]").forEach((a) => {
+          const isCur = a.dataset.nav === cur;
+          a.classList.toggle("active", isCur);
+          if (isCur) a.setAttribute("aria-current", "page");
+          else a.removeAttribute("aria-current");
+        });
         closeAll();
       };
       window.addEventListener("hashchange", syncNav);
@@ -108,6 +113,10 @@
     // bấm ra ngoài / Esc → đóng menu điều hướng và menu tài khoản
     document.addEventListener("click", (e) => { if (!e.target.closest(".nav, .acct")) closeAll(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
+    // cuộn xuống → header có bóng nhẹ để tách khỏi nội dung
+    const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 4);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
 
     const footer = document.createElement("footer");
     footer.className = "site-footer";

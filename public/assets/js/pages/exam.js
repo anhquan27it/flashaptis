@@ -2,7 +2,7 @@
    #/                     chọn kỹ năng
    #/{skill}              danh sách đề
    #/{skill}/{testId}     giới thiệu + làm bài + kết quả
-   #/gym, #/gym/wrong     phòng gym & sổ câu sai */
+   #/gym, #/gym/wrong     ôn tập & sổ câu sai */
 (function () {
   const FA = window.FA;
   const esc = FA.esc;
@@ -213,11 +213,11 @@
               <span class="go">Vào thi →</span>
             </a>`).join("")}
           <a class="card skill-card" href="#/gym">
-            <div class="icon">🏋️</div>
+            <div class="icon">📚</div>
             <span class="pill">Không bấm giờ</span>
-            <h3>Phòng gym</h3>
+            <h3>Ôn tập nhanh</h3>
             <p>Luyện nhanh 10 câu, chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào Sổ câu sai${wrongN ? ` (đang có <b>${wrongN}</b> câu)` : ""}.</p>
-            <span class="go">Vào tập →</span>
+            <span class="go">Bắt đầu ôn tập →</span>
           </a>
         </div>
       </div></div>`;
@@ -1466,7 +1466,7 @@
   const RUNNERS = { grammar: runGrammar, reading: runReading, listening: runListening, writing: runWriting, speaking: runSpeaking };
 
   /* ======================================================
-     PHÒNG GYM & SỔ CÂU SAI
+     ÔN TẬP & SỔ CÂU SAI
      ====================================================== */
   function gymPool(src) {
     const pool = [];
@@ -1483,8 +1483,8 @@
     const wrong = FA.store.get("wrongbook", []);
     app.innerHTML = `
       <div class="page"><div class="container narrow">
-        <div class="crumbs"><a href="#/">← Kỹ năng</a> / Phòng gym</div>
-        <h1 class="page-title">🏋️ Phòng gym</h1>
+        <div class="crumbs"><a href="#/">← Kỹ năng</a> / Ôn tập</div>
+        <h1 class="page-title">📚 Ôn tập</h1>
         <p class="page-sub">Chưa sẵn sàng làm cả đề? Luyện 10 câu không bấm giờ — chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào Sổ câu sai để ôn lại.</p>
         <div class="tabs"><a class="tab ${!wrongMode ? "active" : ""}" href="#/gym">Luyện nhanh</a><a class="tab ${wrongMode ? "active" : ""}" href="#/gym/wrong">Sổ câu sai (${wrong.length})</a></div>
         <div id="gymBody"></div>
@@ -1525,7 +1525,7 @@
           <div class="q-part">${esc(it.src)}</div>
           ${it.instr ? `<div class="q-instr">${esc(it.instr)}</div>` : ""}
           ${it.passage ? `<div class="passage">${it.passage}</div>` : ""}
-          ${it.script ? `<div class="audio-box"><button class="play-btn" id="gplay">▶</button><div class="info"><b>Nghe đoạn hội thoại</b><br>Phòng gym: nghe không giới hạn</div></div>` : ""}
+          ${it.script ? `<div class="audio-box"><button class="play-btn" id="gplay">▶</button><div class="info"><b>Nghe đoạn hội thoại</b><br>Ôn tập: nghe không giới hạn</div></div>` : ""}
           <div class="q-text">${esc(it.q)}</div>
           ${it.o.map((o, k) => `<button class="opt ${ans ? (k === it.a ? "correct" : k === chosen ? "wrong" : "") : ""}" data-k="${k}" ${ans ? "disabled" : ""}><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
           ${ans ? `<div class="explain"><b>${chosen === it.a ? "✅ Chính xác!" : "❌ Chưa đúng."}</b> ${esc(it.e)}</div>${it.script ? `<div class="transcript">${transcriptHTML(it.script)}</div>` : ""}` : ""}
