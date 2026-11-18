@@ -1061,7 +1061,7 @@
         <h3 class="mb-0">Đang chấm bài Writing…</h3>
         <div class="step-list">
           <div class="step-row" id="stepSpell">⏳ 1. Kiểm tra chính tả & ngữ pháp (Harper)…</div>
-          ${useAI ? `<div class="step-row" id="stepAI">⏳ 2. AI (${esc(FA.ai.model())}) chấm mức bám sát câu hỏi (10–40 giây)…</div>` : `<div class="step-row done">✓ 2. Chấm nội dung bám sát câu hỏi (từ khóa)</div>`}
+          ${useAI ? `<div class="step-row" id="stepAI">⏳ 2. AI (${esc(FA.ai.model("writing"))}) chấm mức bám sát câu hỏi (10–40 giây)…</div>` : `<div class="step-row done">✓ 2. Chấm nội dung bám sát câu hỏi (từ khóa)</div>`}
         </div>
       </div></div></div>`;
       let spellOk = false;
@@ -1120,7 +1120,7 @@
           (!spellOk ? "⚠️ Chưa trừ điểm chính tả/ngữ pháp vì không tải được bộ kiểm tra Harper (cần có mạng và mở web qua server http — xem mục “Chạy trên máy” trong README). "
             : (errs || gerrs) ? `Đã trừ điểm vì <b>${errs}</b> lỗi chính tả và <b>${gerrs}</b> lỗi ngữ pháp (Part 1: câu sai chính tả không được điểm). Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở phần xem lại, điểm sẽ tính lại. `
             : "Không có lỗi chính tả/ngữ pháp nào bị trừ điểm. ") +
-          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế${/hết lượt/i.test(aiErr) ? "" : " (lượt AI đã được hoàn lại)"}. ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model())}) chấm. ${esc(aiQuota)} `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : aiQuota ? `ℹ️ ${esc(aiQuota)} Nội dung được kiểm tra bằng từ khóa. ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}` : "") +
+          (useAI && !ai ? `⚠️ Không gọi được AI chấm nội dung (${esc(aiErr)}) nên dùng kiểm tra từ khóa thay thế${/hết lượt/i.test(aiErr) ? "" : " (lượt AI đã được hoàn lại)"}. ` : ai ? (savedAI ? "Nội dung do AI chấm lúc nộp bài (kết quả đã lưu, không gọi lại AI). " : `Nội dung do AI (${esc(FA.ai.model("writing"))}) chấm. ${esc(aiQuota)} `) : replay ? "Lượt này không có kết quả AI đã lưu nên nội dung được kiểm tra bằng từ khóa (không gọi lại AI). " : aiQuota ? `ℹ️ ${esc(aiQuota)} Nội dung được kiểm tra bằng từ khóa. ${FA.plan && !FA.plan.isPro() ? `<a href="pricing.html">Xem gói Pro</a>. ` : ""}` : "") +
           (offTopic ? `<b>${offTopic}</b> câu/bài chưa bám sát câu hỏi nên bị trừ điểm nội dung (xem lý do ở từng mục bên dưới). ` : "Nội dung các câu đều bám sát câu hỏi. ") +
           "Hãy so với bài mẫu và tự soát theo checklist.";
         return {
@@ -1159,7 +1159,7 @@
             <div class="q-card checklist"><div class="q-part">Checklist tự soát</div>
               ${["Trả lời đúng và đủ ý tất cả câu hỏi", "Đủ số từ yêu cầu ở mọi part", "Email formal có Dear… / Yours faithfully, không viết tắt (I'm → I am)", "Email informal thân mật, có hỏi lại bạn", "Dùng từ nối: Firstly, However, In addition, Therefore…", "Có ít nhất 1 câu phức (because, although, if, which…)", "Viết hoa đầu câu, chấm câu đầy đủ, không sai chính tả cơ bản", "Đưa ra đề xuất/giải pháp cụ thể ở email formal"].map((x) => `<label><input type="checkbox"> ${x}</label>`).join("")}
             </div>
-            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI chấm${savedAI ? " lúc nộp bài (xem lại không gửi bài đi nữa)" : ` (${esc(FA.ai.model())}): nội dung bài viết được gửi tới máy chủ AI`}; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
+            <p class="muted" style="font-size:.8rem">Kiểm tra chính tả & ngữ pháp bởi <a href="https://github.com/Automattic/harper" target="_blank" rel="noopener">Harper</a> (Apache-2.0). ${ai ? `Mức bám sát câu hỏi do AI chấm${savedAI ? " lúc nộp bài (xem lại không gửi bài đi nữa)" : ` (${esc(FA.ai.model("writing"))}): nội dung bài viết được gửi tới máy chủ AI`}; Harper vẫn chạy ngay trên máy bạn.` : "Mức bám sát câu hỏi do FlashAptis kiểm tra bằng từ khóa. Tất cả chạy ngay trên máy bạn — bài viết không bị gửi đi đâu."}</p>`;
           const boxes = {};
           el.querySelectorAll("[data-spell]").forEach((b) => (boxes[b.dataset.spell] = b));
           const mountAll = () => keys.forEach((k) => {

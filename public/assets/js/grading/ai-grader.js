@@ -7,6 +7,9 @@
   const FA = (window.FA = window.FA || {});
 
   const cfg = () => window.FA_AI || null;
+  /* Writing có thể dùng nhà cung cấp/key/model riêng: khối `writing: { endpoint, apiKey, model, … }` trong ai-config.js ghi đè lên cấu hình chung
+     (Speaking luôn dùng cấu hình chung). Key dự phòng KHÔNG thừa hưởng — key của nhà cung cấp này không dùng được ở nhà cung cấp kia. */
+  const wcfg = () => { const c = cfg(); return c && c.writing ? Object.assign({}, c, { fallbackApiKey: undefined, fallbackApiKeys: undefined }, c.writing) : c; };
   const localEnabled = () => { const c = cfg(); return !!(c && c.endpoint && c.apiKey && c.model); };
   /* có ai-config.js (dev, gọi thẳng) → dùng nó; không có thì dùng Cloud Function nếu đã bật + đã đăng nhập (FA.cloud, cloud.js) */
   const cloudEnabled = () => !localEnabled() && !!(FA.cloud && FA.cloud.aiReady());
@@ -113,7 +116,7 @@ Include exactly the ids you were given.`;
 
   /* Trả về { [id]: { score: 0..1, missing: string[], comment } } — mục nào AI không trả về hợp lệ thì bị bỏ (nơi gọi dùng kiểm tra từ khóa thay thế) */
   async function grade(T, texts) {
-    const c = cfg();
+    const c = wcfg();
     if (!enabled()) throw new Error("ai-disabled");
     const items = buildItems(T, texts);
     if (!items.length) return {};
@@ -156,5 +159,5 @@ Include exactly the ids you were given.`;
     }
   }
 
-  FA.ai = { enabled, grade, chatJSON, localEnabled, model: () => (localEnabled() ? cfg().model : FA.cloud ? FA.cloud.aiLabel() : "") };
+  FA.ai = { enabled, grade, chatJSON, localEnabled, model: (kind) => (localEnabled() ? (kind === "writing" ? wcfg() : cfg()).model : FA.cloud ? FA.cloud.aiLabel() : "") };
 })();
