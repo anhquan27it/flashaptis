@@ -7,7 +7,10 @@
   const FA = (window.FA = window.FA || {});
 
   const SR = () => window.SpeechRecognition || window.webkitSpeechRecognition || null;
-  const supported = () => !!SR();
+  /* Brave có webkitSpeechRecognition nhưng đã tắt dịch vụ nhận dạng của Google → lần nào cũng lỗi "network".
+     Coi như không hỗ trợ để báo người dùng dùng Chrome/Edge ngay từ đầu, thay vì nói hết bài mới báo lỗi. */
+  const isBrave = () => !!(window.navigator && window.navigator.brave);
+  const supported = () => !!SR() && !isBrave();
   const enabled = () => !!(FA.ai && FA.ai.localEnabled && FA.ai.localEnabled() && supported());
 
   const SYSTEM = `You are an examiner assistant for the Aptis ESOL Speaking test (British Council). You receive TRANSCRIPTS of spoken answers produced by automatic speech recognition (ASR), not audio.

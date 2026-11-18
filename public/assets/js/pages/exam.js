@@ -1389,7 +1389,7 @@
         let aiNote = "";
         if (sttUsed) {
           if (!trans.some((t) => FA.speakAI.words(t) >= 3)) {
-            aiNote = st.sttErr === "not-allowed" || st.sttErr === "service-not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói cần mạng nhưng bị lỗi kết nối nên AI chưa chấm được." : "Không nhận dạng được lời nói nào nên AI chưa chấm được.";
+            aiNote = st.sttErr === "not-allowed" || st.sttErr === "service-not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói bị lỗi kết nối nên AI chưa chấm được (kiểm tra mạng; trình duyệt như Brave, Opera, Cốc Cốc thường không hỗ trợ dịch vụ này — hãy dùng Chrome hoặc Edge)." : "Không nhận dạng được lời nói nào nên AI chưa chấm được.";
           } else {
             app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm Speaking…<br>AI (${esc(FA.ai.model())}) đang đọc bản nhận dạng giọng nói của bạn — có thể mất 30–90 giây.</p></div></div></div>`;
             let ok = true;
