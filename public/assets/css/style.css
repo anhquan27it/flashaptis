@@ -450,6 +450,23 @@ details.faq p { color: var(--ink-2); }
 .test-card h3 { margin: 10px 0 4px; }
 .test-card .meta { color: var(--muted); font-size: .9rem; }
 .test-card .last { font-size: .85rem; font-weight: 600; color: var(--orange-700); margin-top: 8px; }
+.test-card { display: flex; flex-direction: column; }
+.test-card .tc-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .85rem; margin-top: 10px; }
+.test-card .tc-status { font-weight: 700; font-size: .8rem; padding: 2px 9px; border-radius: 999px; }
+.test-card .tc-status.new { background: var(--surface-2); color: var(--muted); }
+.test-card .tc-status.doing { background: #fff4d6; color: #92400e; }
+.test-card .tc-status.done { background: var(--green-bg); color: #166534; }
+.test-card .tc-bar { margin-top: 8px; height: 6px; }
+.test-card .go { margin-top: auto; padding-top: 12px; font-weight: 600; font-size: .9rem; color: var(--orange-600); }
+.test-card.state-doing { border-color: #f5c46b; }
+.list-summary { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 18px 22px; }
+.list-summary .ls-main { flex: 1; min-width: 240px; }
+.list-summary .ls-num { font-family: var(--font-head); font-size: 1.6rem; color: var(--orange-600); }
+.tab .tab-n { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: rgba(0,0,0,.07); font-size: .8rem; }
+.tab.active .tab-n { background: rgba(255,255,255,.25); }
+:root[data-theme="dark"] .test-card .tc-status.doing { background: #3a2a0e; color: #fcd34d; }
+:root[data-theme="dark"] .test-card .tc-status.done { color: #86efac; }
+:root[data-theme="dark"] .test-card.state-doing { border-color: #7a5a1d; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
 .tab {
   padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface);
@@ -582,6 +599,13 @@ textarea.inp { min-height: 140px; resize: vertical; line-height: 1.6; }
 .photo .cap { font-size: .85rem; color: var(--ink-2); margin-top: 8px; font-style: italic; }
 .photo .cap-btn { margin-top: 10px; font-size: .82rem; background: rgba(255,255,255,.75); }
 .photos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+/* ảnh thật của đề (Speaking Part 2–3) */
+.photo.photo-img { padding: 0; min-height: 0; background: var(--surface-2); overflow: hidden; margin: 0; }
+.photo.photo-img img { display: block; width: 100%; max-height: 340px; object-fit: contain; }
+.photos-2 .photo.photo-img img { height: 230px; max-height: none; object-fit: cover; }
+.photo-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+.photo-thumbs img { height: 96px; border-radius: 10px; border: 1px solid var(--line); object-fit: cover; }
+@media (max-width: 560px) { .photos-2 .photo.photo-img img { height: 150px; } }
 .speak-stage { display: flex; align-items: center; gap: 18px; padding: 18px; border-radius: 16px; background: var(--surface-2); margin: 16px 0; flex-wrap: wrap; }
 .big-timer { font-family: var(--font-head); font-size: 2.4rem; font-weight: 700; color: var(--orange-600); font-variant-numeric: tabular-nums; min-width: 110px; }
 .stage-label { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }

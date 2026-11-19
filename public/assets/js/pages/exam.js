@@ -15,7 +15,7 @@
       desc: "Đủ 4 part: 13 câu ngắn, 4 người nói, hội thoại, 2 bài độc thoại. Mỗi đoạn nghe tối đa 2 lần, có transcript tô câu chốt." },
     grammar: { name: "Grammar & Vocabulary", short: "Grammar", icon: "🧩", data: window.FA_GRAMMAR, time: 25, meta: "50 câu trắc nghiệm · 25 phút",
       desc: "25 câu ngữ pháp + 25 câu từ vựng, chấm ngay. Sai câu nào hiện luôn giải thích vì sao." },
-    reading: { name: "Reading", icon: "📖", data: window.FA_READING, time: 35, meta: "5 part · 29 ý · 35 phút",
+    reading: { name: "Reading", icon: "📖", data: window.FA_READING, time: 35, meta: "4–5 part · 35 phút",
       desc: "Điền từ, sắp xếp câu, ghép ý kiến, chọn tiêu đề đoạn văn. Chấm ngay kèm giải thích." },
     writing: { name: "Writing", icon: "✍️", data: window.FA_WRITING, time: 50, meta: "4 part · 50 phút",
       desc: "Đủ 4 part như thi thật, đếm từ tự động. Nộp xong xem bài mẫu đặt cạnh bài mình và điểm ước lượng." },
@@ -66,6 +66,13 @@
 
   /* ---------- gói Free / Pro (FA.plan, plan.js) ---------- */
   const isLocked = (skill, test) => !!(FA.plan && FA.plan.locked(SKILLS[skill].data.indexOf(test)));
+  /* Làm bài (kể cả đề Free) bắt buộc đăng nhập để lưu tiến trình và đồng bộ giữa các thiết bị.
+     Không cấu hình Firebase (chạy local không có cloud) thì không chặn. Đang chờ Firebase xác nhận → màn "đang kiểm tra". */
+  const needLogin = () => !!(FA.cloud && FA.cloud.enabled() && !FA.cloud.cachedUser());
+  const authPending = () => !!(FA.cloud && FA.cloud.enabled() && !FA.cloud.authKnown() && !FA.cloud.cachedUser());
+  let authWaitTimedOut = false;
+  setTimeout(() => { authWaitTimedOut = true; if (!running && view === "login") route(); }, 6000);
+  if (FA.cloud) FA.cloud.onChange(() => { if (!running && (view === "login" || view === "list" || view === "hub")) route(); });
   let view = ""; // màn hình hiện tại — chỉ vẽ lại khi chưa vào bài / chưa ở màn kết quả
   if (FA.plan) FA.plan.onChange(() => { if (!running && (view === "list" || view === "locked" || view === "progress")) route(); });
   window.addEventListener("fa:synced", () => { if (!running && view) route(); });
@@ -88,8 +95,31 @@
     if (!parts[1]) return viewList(skill);
     const test = SKILLS[skill].data.find((t) => t.id === parts[1]);
     if (!test) return viewList(skill);
+    if (needLogin()) return viewLogin(skill, test);
     if (isLocked(skill, test)) return viewLocked(skill, test);
     viewIntro(skill, test);
+  }
+
+  /* chưa đăng nhập → phải đăng nhập mới được làm bài */
+  function viewLogin(skill, test) {
+    view = "login";
+    const S = SKILLS[skill];
+    const checking = authPending() && !authWaitTimedOut;
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        <div class="crumbs"><a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}</div>
+        <div class="card empty">
+          <div class="big">${checking ? "⏳" : "🔐"}</div>
+          <h2>${esc(test.title)} — ${esc(S.name)}</h2>
+          ${checking ? `<p>Đang kiểm tra đăng nhập…</p>` : `
+          <p>Hãy <b>đăng nhập</b> để làm bài. Tiến trình của bạn (đề nào đang làm dở, đề nào đã hoàn thành, điểm số) sẽ được lưu theo tài khoản và <b>đồng bộ khi bạn dùng thiết bị khác</b>.</p>
+          <p class="muted" style="font-size:.9rem">Đăng nhập bằng Google hoặc email — miễn phí, chỉ mất vài giây. Đề Free vẫn miễn phí.</p>
+          <div class="row" style="justify-content:center"><button class="btn btn-primary" id="loginBtn">Đăng nhập</button><button class="btn btn-outline" id="signupBtn">Tạo tài khoản</button><a class="btn btn-ghost" href="#/${skill}">← Chọn đề khác</a></div>`}
+        </div>
+      </div></div>`;
+    const lb = app.querySelector("#loginBtn"), sb = app.querySelector("#signupBtn");
+    if (lb) lb.onclick = () => FA.cloud.signIn("in");
+    if (sb) sb.onclick = () => FA.cloud.signIn("up");
   }
 
   /* đề Pro mà người dùng chưa có Pro */
@@ -192,7 +222,7 @@
       <div class="page"><div class="container">
         <span class="eyebrow">Thi thử Aptis</span>
         <h1 class="page-title">Chọn kỹ năng, làm luôn</h1>
-        <p class="page-sub">Không cần đăng ký. Mọi lượt làm bài được lưu ngay trên máy của bạn.</p>
+        <p class="page-sub">Đăng nhập (miễn phí) để làm bài — tiến trình và điểm số được lưu theo tài khoản, đồng bộ giữa các thiết bị.</p>
         ${hasProgress ? `
         <div class="card mb-2 row" style="padding:16px 20px;gap:16px">
           <div class="ring" style="--p:${Math.round((ov / 200) * 100)}" data-label="${ov}"></div>
@@ -207,7 +237,7 @@
           ${Object.entries(SKILLS).map(([k, s]) => `
             <a class="card skill-card" href="#/${k}">
               <div class="icon">${s.icon}</div>
-              <span class="pill ${k === "speaking" ? "hot" : "green"}">${s.data.length} đề</span>
+              <span class="pill green">${s.data.length} đề</span>${stats.bySkill[k].doneTests ? ` <span class="pill gray">✓ ${stats.bySkill[k].doneTests}/${s.data.length} đã làm</span>` : ""}
               <h3>${s.name}</h3>
               <p>${s.desc}</p>
               <span class="go">Vào thi →</span>
@@ -276,6 +306,18 @@
             </div>
           </div>
 
+          ${(() => {
+            const doing = [];
+            Object.entries(SKILLS).forEach(([k, s]) => DRAFT_SKILLS.includes(k) && s.data.forEach((t) => { const d = getDraft(k, t.id); if (d) doing.push({ k, s, t, d }); }));
+            doing.sort((x, y) => y.d.savedAt - x.d.savedAt);
+            return doing.length ? `<h2 class="mt-4">⏸ Bài đang làm dở (${doing.length})</h2>
+              <div class="tbl-wrap"><table class="tbl"><tr><th>Kỹ năng</th><th>Đề</th><th>Lưu lúc</th><th>Thời gian còn</th><th></th></tr>
+              ${doing.map((x) => `<tr><td>${x.s.icon} ${esc(short(x.k))}</td><td>${esc(x.t.title)}</td><td>${FA.fmtDate(x.d.savedAt)}</td><td>${FA.fmtTime(x.d.leftSec || 0)}</td>
+                <td>${isLocked(x.k, x.t) ? `<a class="pill pro" href="pricing.html">🔒 Pro</a>` : `<a class="btn btn-primary btn-sm" href="#/${x.k}/${esc(x.t.id)}">▶ Làm tiếp</a>`}</td></tr>`).join("")}
+              </table></div>
+              <p class="muted" style="font-size:.85rem">Bản nháp lưu trên máy này tối đa 24 giờ.</p>` : "";
+          })()}
+
           <h2 class="mt-4">Chi tiết theo kỹ năng</h2>
           <div class="grid grid-2">
             ${Object.entries(SKILLS).map(([k, s]) => {
@@ -284,6 +326,8 @@
               const trend = b.list.slice(0, 6).reverse();
               return `<div class="card" style="padding:18px">
                 <div class="row"><span style="font-size:1.3rem">${s.icon}</span><b>${esc(s.name)}</b><div class="spacer"></div><span class="pill ${b.doneTests ? "green" : "gray"}">${b.doneTests}/${b.totalTests} đề</span></div>
+                <div class="progress mt-1" style="height:6px" title="Đã hoàn thành ${b.doneTests}/${b.totalTests} đề"><i style="width:${b.totalTests ? Math.round((b.doneTests / b.totalTests) * 100) : 0}%"></i></div>
+                ${(() => { const n = DRAFT_SKILLS.includes(k) ? s.data.filter((t) => getDraft(k, t.id)).length : 0; return n ? `<div class="muted mt-1" style="font-size:.84rem">⏸ ${n} đề đang làm dở</div>` : ""; })()}
                 ${pick ? `
                   <div class="row mt-2" style="align-items:baseline">
                     <b style="font-family:var(--font-head);font-size:1.7rem;color:var(--orange-600)">${pick.score}</b><span class="muted">/50</span>
@@ -328,27 +372,78 @@
   /* ======================================================
      DANH SÁCH ĐỀ
      ====================================================== */
+  /* trạng thái một đề: chưa làm / đang làm dở (có bản nháp) / đã hoàn thành (có lượt nộp bài) */
+  const DRAFT_SKILLS = ["grammar", "reading", "listening", "writing"];
+  function testStatus(skill, t) {
+    const hist = FA.getAttempts(skill, t.id);
+    const draft = DRAFT_SKILLS.includes(skill) ? getDraft(skill, t.id) : null;
+    const best = hist.reduce((m, h) => (m == null || h.score > m ? h.score : m), null);
+    return { hist, draft, best, latest: hist[0] || null, state: draft ? "doing" : hist.length ? "done" : "new" };
+  }
+  const LOGIN_NOTE = `<div class="explain mb-2">🔐 Bạn cần <b>đăng nhập</b> để làm bài — tiến trình (đề đang làm dở, đã hoàn thành, điểm số) được lưu theo tài khoản và đồng bộ giữa các thiết bị. <a href="#" data-login="in">Đăng nhập</a> · <a href="#" data-login="up">Tạo tài khoản</a></div>`;
+  const LIST_FILTERS = [["all", "Tất cả"], ["new", "Chưa làm"], ["doing", "Đang làm dở"], ["done", "Đã hoàn thành"]];
+  const listFilterKey = (skill) => "flashaptis:listFilter:" + skill;
+
   function viewList(skill) {
     view = "list";
     const S = SKILLS[skill];
-    app.innerHTML = `
-      <div class="page"><div class="container narrow">
+    const rows = S.data.map((t, i) => Object.assign({ t, i, locked: isLocked(skill, t), pro: !!(FA.plan && i >= FA.PLAN.freeTests) }, testStatus(skill, t)));
+    const count = (st) => rows.filter((r) => st === "all" || r.state === st).length;
+    const done = rows.filter((r) => r.hist.length).length;
+    const bests = rows.filter((r) => r.best != null).map((r) => r.best);
+    const avg = bests.length ? Math.round(bests.reduce((x, y) => x + y, 0) / bests.length) : null;
+    const next = rows.find((r) => r.state === "doing" && !r.locked) || rows.find((r) => r.state === "new" && !r.locked);
+    let filter = "all";
+    try { filter = localStorage.getItem(listFilterKey(skill)) || "all"; } catch (e) {}
+    if (!LIST_FILTERS.some(([k]) => k === filter)) filter = "all";
+
+    const card = (r) => {
+      const t = r.t;
+      const badge = r.pro ? `<span class="pill pro">${r.locked ? "🔒 " : ""}⭐ Pro</span>` : t.hot ? `<span class="pill hot">🔥 Đề trọng điểm</span>` : `<span class="pill green">Miễn phí</span>`;
+      const status = r.state === "doing"
+        ? `<span class="tc-status doing">⏸ Đang làm dở</span><span class="muted">lưu lúc ${FA.fmtDate(r.draft.savedAt)}${r.hist.length ? ` · đã nộp ${r.hist.length} lần` : ""}</span>`
+        : r.state === "done"
+          ? `<span class="tc-status done">✓ Đã hoàn thành</span><span class="muted">cao nhất <b>${r.best}/50</b> · ${r.hist.length} lần · gần nhất ${FA.fmtDate(r.latest.at)}</span>`
+          : `<span class="tc-status new">○ Chưa làm</span>`;
+      const cta = r.locked ? "Nâng cấp Pro để làm" : r.state === "doing" ? "Làm tiếp →" : r.state === "done" ? "Làm lại / xem lịch sử →" : "Bắt đầu →";
+      return `<a class="card test-card state-${r.state}${r.locked ? " locked" : ""}" href="#/${skill}/${t.id}">
+        <div class="row" style="gap:6px">${badge}${r.latest && r.latest.cefr ? `<span class="pill gray">${esc(r.latest.cefr)}</span>` : ""}</div>
+        <h3>${esc(t.title)}</h3>
+        <div class="meta">${S.meta}</div>
+        <div class="tc-line">${status}</div>
+        ${r.best != null ? `<div class="progress tc-bar" title="Điểm cao nhất ${r.best}/50"><i style="width:${r.best * 2}%"></i></div>` : ""}
+        <div class="go">${cta}</div>
+      </a>`;
+    };
+
+    const draw = () => {
+      const shown = rows.filter((r) => filter === "all" || r.state === filter);
+      app.innerHTML = `
+      <div class="page"><div class="container">
         <div class="crumbs"><a href="#/">← Kỹ năng</a> / ${esc(S.name)}</div>
-        <h1 class="page-title">Chọn đề ${esc(short(skill))}</h1>
+        <h1 class="page-title">${S.icon} Chọn đề ${esc(short(skill))}</h1>
         <p class="page-sub">${S.desc}</p>
-        <div class="grid grid-2">
-          ${S.data.map((t, i) => {
-            const at = FA.getAttempts(skill, t.id)[0];
-            const pro = FA.plan && i >= FA.PLAN.freeTests, locked = isLocked(skill, t);
-            return `<a class="card test-card${locked ? " locked" : ""}" href="#/${skill}/${t.id}">
-              ${pro ? `<span class="pill pro">${locked ? "🔒 " : ""}⭐ Pro</span>` : t.hot ? `<span class="pill hot">🔥 Đề trọng điểm</span>` : `<span class="pill green">Miễn phí</span>`}
-              <h3>${esc(t.title)}</h3>
-              <div class="meta">${S.meta}</div>
-              <div class="last">${at ? `Lần gần nhất: ${at.score}/50 · ${FA.fmtDate(at.at)}` : `<span class="muted" style="font-weight:500">Chưa làm lần nào</span>`}</div>
-            </a>`;
-          }).join("")}
+        ${needLogin() ? LOGIN_NOTE : ""}
+        <div class="card list-summary">
+          <div class="ls-main">
+            <div class="row" style="align-items:baseline;gap:8px"><b class="ls-num">${done}/${rows.length}</b><span class="muted">đề đã hoàn thành</span></div>
+            <div class="progress mt-1"><i style="width:${rows.length ? Math.round((done / rows.length) * 100) : 0}%"></i></div>
+            <div class="muted mt-1" style="font-size:.88rem">${count("doing") ? `⏸ ${count("doing")} đề đang làm dở · ` : ""}${avg != null ? `Điểm cao nhất trung bình <b>${avg}/50</b>` : "Bạn chưa nộp đề nào ở kỹ năng này."}</div>
+          </div>
+          ${next ? `<a class="btn btn-primary" href="#/${skill}/${next.t.id}">${next.state === "doing" ? "▶ Làm tiếp" : "▶ Làm đề tiếp theo"}: ${esc(next.t.title.split(" — ")[0])}</a>` : ""}
         </div>
+        <div class="tabs mt-3" role="tablist">${LIST_FILTERS.map(([k, label]) => `<button class="tab ${filter === k ? "active" : ""}" data-f="${k}" role="tab" aria-selected="${filter === k}">${label} <span class="tab-n">${count(k)}</span></button>`).join("")}</div>
+        ${shown.length ? `<div class="grid grid-3">${shown.map(card).join("")}</div>`
+          : `<div class="card empty"><div class="big">${filter === "doing" ? "⏸" : filter === "done" ? "🏁" : "🎉"}</div><p>${filter === "doing" ? "Không có đề nào đang làm dở." : filter === "done" ? "Bạn chưa hoàn thành đề nào — bắt đầu một đề nhé!" : "Bạn đã làm hết các đề!"}</p></div>`}
       </div></div>`;
+      app.querySelectorAll("[data-login]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); FA.cloud.signIn(a.dataset.login); }));
+      app.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => {
+        filter = b.dataset.f;
+        try { localStorage.setItem(listFilterKey(skill), filter); } catch (e) {}
+        draw();
+      }));
+    };
+    draw();
   }
 
   /* ======================================================
@@ -620,12 +715,12 @@
         ${review ? `<div class="explain"><b>Thứ tự đúng:</b><br>${[p.first, ...p.sentences].map((s, i) => `${i + 1}. ${esc(s)}`).join("<br>")}<br><br>${esc(p.tip || "")}</div>` : ""}`;
     }
     if (p.type === "opinion") {
-      const left = `<div class="${review ? "people" : "split-left"}">${p.people.map((pp, i) => `<div class="person ${review ? "" : "mb-2"}"><b>${L[i]}. ${esc(pp.name)}</b><br>${esc(pp.text)}</div>`).join("")}</div>`;
+      const left = `<div class="${review ? "people" : "split-left"}">${p.people.map((pp, i) => `<div class="person ${review ? "" : "mb-2"}"><b>${pp.name ? `${L[i]}. ${esc(pp.name)}` : `Person ${L[i]}`}</b><br>${esc(pp.text)}</div>`).join("")}</div>`;
       const right = `<div>${p.questions.map((q, k) => {
         const ok = ans[k] === q.a;
         return `<div class="match-row ${review ? (ok ? "ok" : "bad") : ""}"><span>${k + 1}. ${esc(q.q)}</span>
-          <div><select class="sel" data-op="${k}" ${review ? "disabled" : ""}><option value="">Chọn người…</option>${p.people.map((pp, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(pp.name)}</option>`).join("")}</select>
-          ${review && !ok ? `<div class="fix">Đáp án: ${L[q.a]}. ${esc(p.people[q.a].name)}</div>` : ""}</div></div>`;
+          <div><select class="sel" data-op="${k}" ${review ? "disabled" : ""}><option value="">Chọn người…</option>${p.people.map((pp, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${pp.name ? `${L[i]}. ${esc(pp.name)}` : `Person ${L[i]}`}</option>`).join("")}</select>
+          ${review && !ok ? `<div class="fix">Đáp án: ${p.people[q.a].name ? `${L[q.a]}. ${esc(p.people[q.a].name)}` : `Person ${L[q.a]}`}</div>` : ""}${review && q.e ? `<div class="explain mt-1">${esc(q.e)}</div>` : ""}</div></div>`;
       }).join("")}</div>`;
       return review ? left + right : `<div class="split-2">${left}${right}</div>`;
     }
@@ -638,7 +733,7 @@
           <div class="row mb-2"><b>Đoạn ${k + 1}</b><div class="spacer"></div>
             <select class="sel" style="max-width:340px" data-hd="${k}" ${review ? "disabled" : ""}><option value="">Chọn tiêu đề…</option>${p.headings.map((h, i) => `<option value="${i}" ${ans[k] === i ? "selected" : ""}>${L[i]}. ${esc(h)}</option>`).join("")}</select></div>
           <div style="color:var(--ink-2)">${esc(pa.text)}</div>
-          ${review && !ok ? `<div class="fix mt-1">Đáp án: ${L[pa.a]}. ${esc(p.headings[pa.a])}</div>` : ""}
+          ${review && !ok ? `<div class="fix mt-1">Đáp án: ${L[pa.a]}. ${esc(p.headings[pa.a])}</div>` : ""}${review && pa.e ? `<div class="explain mt-1">${esc(pa.e)}</div>` : ""}
         </div>`;
       }).join("")}</div>`;
       return review ? left + right : `<div class="split-2">${left}${right}</div>`;
@@ -901,9 +996,9 @@
                 <div class="explain"><b>Giải thích:</b> ${esc(s.it.e)}</div><div class="transcript">${transcriptHTML(s.it.script)}</div>`;
             } else if (s.kind === "speakers") {
               inner = s.p.speakers.map((sp, k) => `<div class="match-row ${a[k] === sp.a ? "ok" : "bad"}"><div><b>Speaker ${"ABCD"[k]}</b> ${a[k] === sp.a ? "✅" : "❌"}<div class="transcript">${transcriptHTML(sp.script)}</div></div>
-                <div><select class="sel" disabled><option>${a[k] != null ? esc(s.p.options[a[k]]) : "(bỏ trống)"}</option></select>${a[k] !== sp.a ? `<div class="fix">Đáp án: ${esc(s.p.options[sp.a])}</div>` : ""}</div></div>`).join("");
+                <div><select class="sel" disabled><option>${a[k] != null ? esc(s.p.options[a[k]]) : "(bỏ trống)"}</option></select>${a[k] !== sp.a ? `<div class="fix">Đáp án: ${esc(s.p.options[sp.a])}</div>` : ""}${sp.e ? `<div class="explain mt-1">${esc(sp.e)}</div>` : ""}</div></div>`).join("");
             } else if (s.kind === "conv") {
-              inner = s.p.statements.map((x, k) => `<div class="match-row ${a[k] === x.a ? "ok" : "bad"}"><span>${k + 1}. ${esc(x.q)}</span><div><select class="sel" disabled><option>${esc(a[k] || "(bỏ trống)")}</option></select>${a[k] !== x.a ? `<div class="fix">Đáp án: ${x.a}</div>` : ""}</div></div>`).join("") +
+              inner = s.p.statements.map((x, k) => `<div class="match-row ${a[k] === x.a ? "ok" : "bad"}"><span>${k + 1}. ${esc(x.q)}</span><div><select class="sel" disabled><option>${esc(a[k] || "(bỏ trống)")}</option></select>${a[k] !== x.a ? `<div class="fix">Đáp án: ${x.a}</div>` : ""}${x.e ? `<div class="explain mt-1">${esc(x.e)}</div>` : ""}</div></div>`).join("") +
                 `<div class="transcript">${transcriptHTML(s.p.script)}</div>`;
             } else {
               inner = `<div class="muted">${esc(s.tk.topic)}</div>` + s.tk.questions.map((q, k) => `<div class="mt-2"><div class="q-text" style="font-size:1rem">${k + 1}. ${esc(q.q)} ${a[k] === q.a ? "✅" : "❌"}</div>
@@ -1190,14 +1285,16 @@
     test.p1.forEach((q, k) => steps.push({ part: 1, label: `Part 1 · Câu ${k + 1}`, q: q.q, s: q.s, time: 30 }));
     test.p2.questions.forEach((q, k) => steps.push({ part: 2, label: `Part 2 · Câu ${k + 1}`, q: q.q, s: q.s, time: 45, photo: test.p2.photo }));
     test.p3.questions.forEach((q, k) => steps.push({ part: 3, label: `Part 3 · Câu ${k + 1}`, q: q.q, s: q.s, time: 45, photos: test.p3.photos }));
-    steps.push({ part: 4, label: "Part 4", qs: test.p4.questions, s: test.p4.s, prep: 60, time: 120, photo: test.p4.photo });
+    steps.push({ part: 4, label: "Part 4", qs: test.p4.questions, s: test.p4.s, prep: 60, time: test.p4.time || 120, photo: test.p4.photo });
 
     const st = { i: 0, recs: [], stream: null, phase: "idle" };
     const sh = examShell(`${test.title} — Speaking`, 0);
     sh.submit.textContent = "Kết thúc";
     sh.submit.onclick = async () => { if (await FA.confirm("Kết thúc bài Speaking và xem kết quả?", { title: "Kết thúc Speaking", okText: "Xem kết quả" })) finish(); };
 
-    const photoHTML = (p) => `<div class="photo"><div><div class="emo">${p.emo}</div><button type="button" class="btn btn-ghost btn-sm cap-btn">👁 Gợi ý ngữ cảnh</button><div class="cap hidden">${esc(p.cap)}</div></div></div>`;
+    const photoHTML = (p) => p.img
+      ? `<figure class="photo photo-img"><img src="${esc(p.img)}" alt="${esc(p.cap)}" loading="lazy"></figure>`
+      : `<div class="photo"><div><div class="emo">${p.emo}</div><button type="button" class="btn btn-ghost btn-sm cap-btn">👁 Gợi ý ngữ cảnh</button><div class="cap hidden">${esc(p.cap)}</div></div></div>`;
     let stopTick = null, recorder = null, chunks = [], meterRaf = 0, meterCtx = null;
     function stopMeter() {
       cancelAnimationFrame(meterRaf); meterRaf = 0;
@@ -1448,6 +1545,7 @@
               ${PARTS.map((p, k) => `<div class="calc-row"><span><b>${p[0]}</b> · ${p[1]}</span><input type="range" min="0" max="5" value="${rates[k]}" data-r="${k}"><b class="lv" data-rv="${k}">${rates[k]}</b><span></span></div>`).join("")}
               <div class="row mt-2"><b>${ai ? "Điểm" : "Điểm tự chấm"}: <span id="selfRaw">${raw()}</span>/${FA.SPEAKING_MAX_RAW} → <span id="selfScore">${calc()}</span>/50</b> · <span id="selfCefr" class="pill">${FA.toCEFR("speaking", calc())}</span><div class="spacer"></div><button class="btn btn-primary btn-sm" id="saveRate">Lưu điểm</button></div></div>` +
               steps.map((s, i) => `<div class="q-card mb-2"><div class="q-part">${s.label}</div>
+                ${[].concat(s.photo || [], s.photos || []).some((ph) => ph.img) ? `<div class="photo-thumbs">${[].concat(s.photo || [], s.photos || []).filter((ph) => ph.img).map((ph) => `<img src="${esc(ph.img)}" alt="${esc(ph.cap)}" loading="lazy">`).join("")}</div>` : ""}
                 ${s.qs ? `<ol style="padding-left:20px">${s.qs.map((q) => `<li><b>${esc(q)}</b></li>`).join("")}</ol>` : `<div class="q-text">${esc(s.q)}</div>`}
                 ${recs[i] ? `<div class="sample-label" style="color:var(--orange-700)">Bản ghi của bạn</div><audio controls src="${recs[i]}" style="width:100%;margin:6px 0"></audio>` : `<div class="muted" style="font-size:.9rem">${replay ? "Bản ghi âm không được lưu lại sau khi rời trang." : "Không có bản ghi cho câu này."}</div>`}
                 ${trans[i] ? `<div class="sample-label" style="margin-top:6px">Máy nghe được bạn nói (nhận dạng giọng nói)</div><div class="muted" style="font-size:.92rem;margin-bottom:6px">${esc(trans[i])}</div>` : ""}

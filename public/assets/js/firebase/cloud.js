@@ -32,6 +32,7 @@
   const cloud = (FA.cloud = {
     enabled: () => !!(cfg && cfg.projectId),
     user: () => user,
+    authKnown: () => authKnown, // Firebase đã xác nhận xong trạng thái đăng nhập chưa
     cachedUser: () => (authKnown ? user : cached), // người dùng dùng để HIỂN THỊ (cache khi Firebase chưa xác nhận)
     db: () => db,
     onChange: (fn) => subs.push(fn),

@@ -99,22 +99,23 @@ test("FA_GRAMMAR: 50 câu/đề (25 grammar + 25 vocab), đáp án & giải thí
   }
 });
 
-test("FA_READING: đủ 5 part, chỗ trống/ghép nối/tiêu đề hợp lệ", () => {
+test("FA_READING: 4–5 part (1–2 bài sắp xếp), chỗ trống/ghép nối/tiêu đề hợp lệ", () => {
   for (const t of FA_READING) {
-    assert.deepEqual(Array.from(t.parts.map((p) => p.type)), ["gap", "order", "order", "opinion", "heading"], `${t.id}: sai cấu trúc 5 part`);
-    const [p1, p2, p3, p4, p5] = t.parts;
+    const types = t.parts.map((p) => p.type).join(",");
+    assert.ok(types === "gap,order,order,opinion,heading" || types === "gap,order,opinion,heading", `${t.id}: sai cấu trúc part (${types})`);
+    const p1 = t.parts[0], p4 = t.parts[t.parts.length - 2], p5 = t.parts[t.parts.length - 1];
     p1.gaps.forEach((g, k) => {
       assert.ok(p1.text.includes(`{${k}}`), `${t.id} Part 1: thiếu chỗ trống {${k}}`);
       assert.ok(Number.isInteger(g.a) && g.a >= 0 && g.a < g.o.length, `${t.id} Part 1 gap ${k}: a không hợp lệ`);
       assert.ok(g.e && g.e.trim(), `${t.id} Part 1 gap ${k}: thiếu giải thích`);
     });
-    for (const ord of [p2, p3]) {
-      assert.ok(ord.first && ord.sentences.length === 5, `${t.id} ${ord.title}: phải có 1 câu đầu + 5 câu sắp xếp`);
+    for (const ord of t.parts.filter((p) => p.type === "order")) {
+      assert.ok(ord.first && ord.sentences.length >= 4 && ord.sentences.length <= 5, `${t.id} ${ord.title}: phải có 1 câu đầu + 4–5 câu sắp xếp`);
     }
     assert.equal(p4.people.length, 4, `${t.id} Part 4: phải có 4 người`);
     assert.equal(p4.questions.length, 7, `${t.id} Part 4: phải có 7 câu hỏi`);
     p4.questions.forEach((q, k) => assert.ok(q.a >= 0 && q.a < p4.people.length, `${t.id} Part 4 câu ${k + 1}: a không hợp lệ`));
-    assert.ok(p5.headings.length > p5.paragraphs.length, `${t.id} Part 5: phải có tiêu đề thừa`);
+    assert.ok(p5.headings.length >= p5.paragraphs.length, `${t.id} Part 5: thiếu tiêu đề`);
     const usedHeadings = p5.paragraphs.map((p) => p.a);
     usedHeadings.forEach((a, k) => assert.ok(a >= 0 && a < p5.headings.length, `${t.id} Part 5 đoạn ${k + 1}: a không hợp lệ`));
     assert.equal(new Set(usedHeadings).size, p5.paragraphs.length, `${t.id} Part 5: có tiêu đề bị dùng trùng`);
@@ -194,7 +195,11 @@ test("FA_SPEAKING & FA_VOCAB: đầy đủ part/thẻ và không trùng từ tro
     assert.equal(t.p1.length, 3, `${t.id} p1: phải có 3 câu`);
     assert.ok(t.p2.photo && t.p2.photo.cap && t.p2.questions.length === 3, `${t.id} p2 không hợp lệ`);
     assert.ok(t.p3.photos.length === 2 && t.p3.questions.length === 3, `${t.id} p3 không hợp lệ`);
-    assert.ok(t.p4.photo && t.p4.questions.length === 3 && t.p4.s, `${t.id} p4 không hợp lệ`);
+    assert.ok(t.p4.questions.length >= 1 && t.p4.questions.length <= 4 && t.p4.s, `${t.id} p4 không hợp lệ`);
+    for (const ph of [t.p2.photo, ...t.p3.photos, t.p4.photo].filter(Boolean)) {
+      assert.ok(ph.cap && (ph.emo || ph.img), `${t.id}: ảnh thiếu cap/emo/img`);
+      if (ph.img) assert.ok(fs.existsSync(path.join(ROOT, "public", ph.img)), `${t.id}: không có file ảnh ${ph.img}`);
+    }
   }
   const deckIds = new Set();
   for (const d of FA_VOCAB) {
