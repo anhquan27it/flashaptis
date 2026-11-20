@@ -33,7 +33,7 @@
     return FA.roadmap.compute({
       goal: goalNow(), banks, openCount,
       attempts: FA.store.get("attempts", {}), fcKnown: FA.store.get("fc-known", {}), tipsDone: FA.store.get("tips-done", []),
-      vocabTotal: VOCAB_TOTAL, tipsTotal: TIPS_TOTAL, now: Date.now(),
+      vocabTotal: VOCAB_TOTAL, tipsTotal: TIPS_TOTAL, now: Date.now(), activity: FA.daily ? FA.daily.perDay() : undefined,
     });
   }
 
@@ -198,6 +198,7 @@
         </div>
       </div></div>`;
 
+    FA.roadmap.celebrateStages(r); // giai đoạn vừa xong (vd. nhờ flashcard/mẹo) → ăn mừng một lần
     app.querySelector("#goalForm").onsubmit = (e) => {
       e.preventDefault();
       const level = app.querySelector("#goalLevel").value;

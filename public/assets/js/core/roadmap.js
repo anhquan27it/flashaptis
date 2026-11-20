@@ -100,10 +100,13 @@
     const doneTasks = stages.reduce((n, s) => n + s.doneTasks, 0);
 
     /* --- hoạt động 14 ngày + chuỗi ngày học --- */
-    const perDay = {};
-    const bump = (ts) => { if (typeof ts === "number" && ts > 0) { const k = dayKey(ts); perDay[k] = (perDay[k] || 0) + 1; } };
-    Object.keys(attempts).forEach((k) => (attempts[k] || []).forEach((r) => bump(r.at)));
-    Object.keys(inp.fcKnown || {}).forEach((k) => bump(inp.fcKnown[k]));
+    // inp.activity = FA.daily.perDay() (điểm học theo ngày, cùng nguồn với chuỗi ngày trên header); không có thì tự suy ra
+    const perDay = inp.activity ? Object.assign({}, inp.activity) : {};
+    if (!inp.activity) {
+      const bump = (ts) => { if (typeof ts === "number" && ts > 0) { const k = dayKey(ts); perDay[k] = (perDay[k] || 0) + 1; } };
+      Object.keys(attempts).forEach((k) => (attempts[k] || []).forEach((r) => bump(r.at)));
+      Object.keys(inp.fcKnown || {}).forEach((k) => bump(inp.fcKnown[k]));
+    }
     const days = [];
     for (let i = 13; i >= 0; i--) { const t = now - i * DAY; days.push({ key: dayKey(t), ts: t, n: perDay[dayKey(t)] || 0 }); }
     let streak = 0;
@@ -137,5 +140,41 @@
     };
   }
 
-  FA.roadmap = { CORE, LEVELS, targets, compute };
+  /* tính lộ trình từ dữ liệu đang có trên trang (cần đủ 5 ngân hàng đề global) — null nếu trang không nạp đề */
+  function fromStore(now) {
+    const G = { listening: window.FA_LISTENING, reading: window.FA_READING, speaking: window.FA_SPEAKING, writing: window.FA_WRITING, grammar: window.FA_GRAMMAR };
+    if (Object.keys(G).some((k) => !Array.isArray(G[k]))) return null;
+    const banks = {}, openCount = {};
+    Object.keys(G).forEach((k) => {
+      banks[k] = G[k].map((t) => t.id);
+      openCount[k] = G[k].filter((t, i) => !(FA.plan && FA.plan.locked(i))).length;
+    });
+    return compute({
+      goal: Object.assign({ target: "B2", examDate: "" }, FA.store.get("roadmap", {})), banks, openCount,
+      attempts: FA.store.get("attempts", {}), fcKnown: FA.store.get("fc-known", {}), tipsDone: FA.store.get("tips-done", []),
+      vocabTotal: (window.FA_VOCAB || []).reduce((n, d) => n + d.cards.length, 0) || undefined, tipsTotal: 20,
+      activity: FA.daily ? FA.daily.perDay() : undefined, now: now || Date.now(),
+    });
+  }
+  /* giai đoạn vừa hoàn thành từ lần kiểm tra trước (lưu "roadmap-seen" trên máy). Lần đầu chỉ ghi nhận, không báo —
+     tránh ăn mừng lại những giai đoạn người dùng đã xong từ trước khi có tính năng này. Giai đoạn 4 gắn với bậc mục tiêu. */
+  const seenId = (s, r) => (s.id === "s4" ? "s4:" + r.target.level : s.id);
+  function newlyDone(r) {
+    r = r || fromStore();
+    if (!r) return [];
+    const doneIds = r.stages.filter((s) => s.done).map((s) => seenId(s, r));
+    const seen = FA.store.get("roadmap-seen", null);
+    if (!Array.isArray(seen)) { FA.store.set("roadmap-seen", doneIds); return []; }
+    const fresh = r.stages.filter((s) => s.done && seen.indexOf(seenId(s, r)) < 0);
+    if (fresh.length) FA.store.set("roadmap-seen", Array.from(new Set(seen.concat(doneIds))));
+    return fresh;
+  }
+  /* gọi trước khi ghi dữ liệu mới để lần đầu dùng tính năng vẫn có mốc so sánh */
+  function primeSeen() { if (!Array.isArray(FA.store.get("roadmap-seen", null))) newlyDone(); }
+  function celebrateStages(r) {
+    if (!FA.celebrate) return;
+    newlyDone(r).forEach((s) => FA.celebrate({ icon: s.icon, title: "Hoàn thành giai đoạn: " + s.title, sub: s.id === "s4" ? "Bạn đã chạm mục tiêu " + (r || fromStore()).target.level + " — tuyệt vời!" : "Giai đoạn tiếp theo đã mở trong Lộ trình học." }));
+  }
+
+  FA.roadmap = { CORE, LEVELS, targets, compute, fromStore, newlyDone, primeSeen, celebrateStages };
 })();

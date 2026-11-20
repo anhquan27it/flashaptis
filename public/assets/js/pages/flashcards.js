@@ -10,7 +10,30 @@
     if (v) k[deck + "|" + w] = Date.now(); else delete k[deck + "|" + w];
     FA.store.set("fc-known", k);
   };
-  const deckKnown = (d) => d.cards.filter((c) => isKnown(d.id, c.w)).length;
+  /* thẻ trong bộ "Từ khó của tôi" mang theo _d = bộ gốc → trạng thái thuộc/sao luôn gắn với bộ gốc */
+  const did = (deck, c) => c._d || deck.id;
+  const deckKnown = (d) => d.cards.filter((c) => isKnown(did(d, c), c.w)).length;
+  /* ⭐ từ khó: FA.store "fc-starred" {"bộ|từ": thời điểm gắn sao} (đồng bộ theo tài khoản qua cloud.js) */
+  const starred = () => FA.store.get("fc-starred", {});
+  const isStar = (deck, w) => !!starred()[deck + "|" + w];
+  const toggleStar = (deck, w) => {
+    const st = starred(), k = deck + "|" + w;
+    if (st[k]) delete st[k]; else st[k] = Date.now();
+    FA.store.set("fc-starred", st);
+    FA.toast(st[k] ? "⭐ Đã lưu vào “Từ khó của tôi”" : "Đã bỏ khỏi “Từ khó của tôi”");
+    return !!st[k];
+  };
+  const STAR_ID = "starred";
+  function starDeck() {
+    const st = starred(), cards = [];
+    Object.keys(st).sort((a, b) => st[b] - st[a]).forEach((k) => {
+      const i = k.indexOf("|"), d = DECKS.find((x) => x.id === k.slice(0, i));
+      const c = d && d.cards.find((x) => x.w === k.slice(i + 1));
+      if (c) cards.push(Object.assign({ _d: d.id, _dn: d.name }, c));
+    });
+    return { id: STAR_ID, name: "Từ khó của tôi", emoji: "⭐", cards, virtual: true };
+  }
+  const starBtn = (deck, c) => { const on = isStar(did(deck, c), c.w); return `<button type="button" class="star-btn${on ? " on" : ""}" aria-pressed="${on}" title="${on ? "Bỏ khỏi" : "Lưu vào"} Từ khó (phím S)">${on ? "★" : "☆"}</button>`; };
   let keyHandler = null;
   const setKeys = (fn) => {
     if (keyHandler) document.removeEventListener("keydown", keyHandler);
@@ -22,9 +45,10 @@
     setKeys(null);
     FA.stopSpeak();
     const [deckId, mode] = location.hash.replace(/^#\/?/, "").split("/");
-    const deck = DECKS.find((d) => d.id === deckId);
+    const deck = deckId === STAR_ID ? starDeck() : DECKS.find((d) => d.id === deckId);
     window.scrollTo(0, 0);
     if (!deck) return viewDecks();
+    if (!deck.cards.length) return viewStarEmpty();
     if (mode === "quiz") return viewQuiz(deck);
     viewStudy(deck);
   }
@@ -43,6 +67,17 @@
           <div class="ring" style="--p:${Math.round((k / total) * 100)}" data-label="${Math.round((k / total) * 100)}%"></div>
           <div><b style="font-family:var(--font-head);font-size:1.2rem">${k}/${total} từ đã thuộc</b><div class="muted">Tiến độ được lưu trên máy của bạn.</div></div>
         </div>
+        ${(() => {
+          const sd = starDeck(), n = sd.cards.length, kn = deckKnown(sd);
+          return `<div class="card star-deck mb-2">
+            <div class="emoji">⭐</div>
+            <div style="flex:1;min-width:200px">
+              <h3 class="mb-0">Từ khó của tôi</h3>
+              <div class="muted" style="font-size:.9rem">${n ? `${n} từ đã gắn sao · đã thuộc ${kn}` : "Bấm ☆ trên thẻ (hoặc phím S) khi học để gom các từ khó vào đây và ôn riêng."}</div>
+            </div>
+            ${n ? `<div class="row"><a class="btn btn-primary btn-sm" href="#${STAR_ID}">Ôn từ khó</a><a class="btn btn-outline btn-sm" href="#${STAR_ID}/quiz">Kiểm tra</a></div>` : ""}
+          </div>`;
+        })()}
         <div class="grid grid-4">
           ${DECKS.map((d) => {
             const n = deckKnown(d);
@@ -60,11 +95,11 @@
 
   /* ---------- chế độ học lật thẻ ---------- */
   function viewStudy(deck) {
-    let onlyNew = deck.cards.some((c) => !isKnown(deck.id, c.w)) && deckKnown(deck) > 0;
+    let onlyNew = deck.cards.some((c) => !isKnown(did(deck, c), c.w)) && deckKnown(deck) > 0;
     let reverse = false, showList = false, search = "", slide = false;
     let queue, flipped = false;
     const build = () => {
-      queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !isKnown(deck.id, c.w)));
+      queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !isKnown(did(deck, c), c.w)));
     };
     build();
 
@@ -76,14 +111,15 @@
         <input class="inp mb-2" id="fcSearch" value="${esc(search)}" placeholder="🔍 Tìm từ tiếng Anh hoặc nghĩa tiếng Việt…">
         <div class="fc-vocab-list">
           ${rows.length ? rows.map((c, idx) => {
-            const kn = isKnown(deck.id, c.w);
+            const kn = isKnown(did(deck, c), c.w);
             return `<div class="fc-vocab-row">
               <div style="min-width:0">
-                <div><b>${esc(c.w)}</b> ${c.p ? `<span class="muted" style="font-size:.86rem">${esc(c.p)}</span>` : ""} <span class="pill gray">${esc(c.t)}</span></div>
+                <div><b>${esc(c.w)}</b> ${c.p ? `<span class="muted" style="font-size:.86rem">${esc(c.p)}</span>` : ""} <span class="pill gray">${esc(c.t)}</span>${c._dn ? ` <span class="pill">${esc(c._dn)}</span>` : ""}</div>
                 <div style="color:var(--orange-700);font-weight:600;font-size:.94rem">${esc(c.m)}</div>
                 <div class="muted" style="font-size:.84rem;font-style:italic">“${esc(c.x)}”</div>
               </div>
               <div class="row" style="flex-shrink:0">
+                <button type="button" class="btn btn-ghost btn-sm star-toggle${isStar(did(deck, c), c.w) ? " on" : ""}" data-star="${idx}" title="Gắn sao từ khó">${isStar(did(deck, c), c.w) ? "★" : "☆"}</button>
                 <button type="button" class="btn btn-ghost btn-sm" data-say="${idx}" title="Nghe phát âm">🔊</button>
                 <button type="button" class="btn ${kn ? "btn-green" : "btn-outline"} btn-sm" data-kn="${idx}">${kn ? "✓ Thuộc" : "Đánh dấu"}</button>
               </div>
@@ -102,9 +138,14 @@
         const c = rows[+b.dataset.say];
         FA.speak(c.w + ". " + c.x, { gender: "f", rate: 0.9 }).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."));
       }));
+      app.querySelectorAll("[data-star]").forEach((b) => (b.onclick = () => {
+        const c = rows[+b.dataset.star];
+        toggleStar(did(deck, c), c.w);
+        drawList();
+      }));
       app.querySelectorAll("[data-kn]").forEach((b) => (b.onclick = () => {
         const c = rows[+b.dataset.kn];
-        setKnown(deck.id, c.w, !isKnown(deck.id, c.w));
+        setKnown(did(deck, c), c.w, !isKnown(did(deck, c), c.w));
         build();
         drawList();
       }));
@@ -118,7 +159,7 @@
       if (!queue.length) {
         setKeys(null);
         app.innerHTML = shell(`<div class="card empty"><div class="big">🎉</div><h2>Xong bộ thẻ!</h2><p>Bạn đã thuộc ${n}/${deck.cards.length} từ trong bộ “${esc(deck.name)}”.</p>
-          <div class="row" style="justify-content:center"><button class="btn btn-primary" id="restart">Học lại cả bộ</button><a class="btn btn-outline" href="#${deck.id}/quiz">Kiểm tra nhanh</a><a class="btn btn-ghost" href="#">Bộ khác</a></div></div>`);
+          <div class="row" style="justify-content:center"><button class="btn btn-primary" id="restart">Học lại cả bộ</button><a class="btn btn-outline" href="#${deck.id}/quiz">Kiểm tra nhanh</a>${!deck.virtual && starDeck().cards.length ? `<a class="btn btn-outline" href="#${STAR_ID}">⭐ Ôn từ khó (${starDeck().cards.length})</a>` : ""}<a class="btn btn-ghost" href="#">Bộ khác</a></div></div>`);
         app.querySelector("#restart").onclick = () => { onlyNew = false; build(); draw(); };
         bindTop();
         return;
@@ -129,25 +170,31 @@
       const back = reverse ? `<div class="fc-word" style="font-size:2rem">${esc(c.w)}</div>${c.p ? `<div class="fc-ipa">${esc(c.p)}</div>` : ""}<div class="fc-ex mt-2">“${esc(c.x)}”</div>`
         : `<div class="fc-mean">${esc(c.m)}</div><div class="fc-ex">“${esc(c.x)}”</div>`;
       app.innerHTML = shell(`
-        <div class="progress-meta" style="max-width:560px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ</span><span>${isKnown(deck.id, c.w) ? "✅ Đã thuộc" : ""}</span></div>
+        <div class="progress-meta" style="max-width:560px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ${c._dn ? ` · ${esc(c._dn)}` : ""}</span><span>${isKnown(did(deck, c), c.w) ? "✅ Đã thuộc" : ""}</span></div>
         <div class="fc-wrap">
           <div class="fc ${slide ? "fc-slide" : ""}" id="fc">
-            <div class="fc-face fc-front"><button class="speak-btn" title="Nghe phát âm">🔊</button>${front}<div class="fc-hint">Bấm vào thẻ hoặc phím <kbd>Space</kbd> để lật</div></div>
-            <div class="fc-face fc-back"><button class="speak-btn" title="Nghe phát âm">🔊</button>${back}<div class="fc-hint">Đã nhớ chưa?</div></div>
+            <div class="fc-face fc-front">${starBtn(deck, c)}<button class="speak-btn" title="Nghe phát âm">🔊</button>${front}<div class="fc-hint">Bấm vào thẻ hoặc phím <kbd>Space</kbd> để lật</div></div>
+            <div class="fc-face fc-back">${starBtn(deck, c)}<button class="speak-btn" title="Nghe phát âm">🔊</button>${back}<div class="fc-hint">Đã nhớ chưa?</div></div>
           </div>
         </div>
         <div class="fc-actions">
           <button class="btn btn-red" id="again">😵 Chưa nhớ <kbd>1</kbd></button>
           <button class="btn btn-outline" id="flip">🔄 Lật <kbd>Space</kbd></button>
           <button class="btn btn-green" id="got">✅ Đã thuộc <kbd>2</kbd></button>
-        </div>`);
+        </div>
+        <p class="muted center" style="font-size:.85rem">Từ này khó? Bấm <b>☆</b> trên thẻ hoặc phím <kbd>S</kbd> để lưu vào bộ “⭐ Từ khó của tôi”.</p>`);
       slide = false;
       const fc = app.querySelector("#fc");
       const flip = () => { flipped = !flipped; fc.classList.toggle("flipped", flipped); };
-      fc.onclick = (e) => { if (!e.target.closest(".speak-btn")) flip(); };
+      fc.onclick = (e) => { if (!e.target.closest(".speak-btn, .star-btn")) flip(); };
+      const star = () => {
+        const on = toggleStar(did(deck, c), c.w);
+        app.querySelectorAll(".star-btn").forEach((b) => { b.classList.toggle("on", on); b.textContent = on ? "★" : "☆"; b.setAttribute("aria-pressed", String(on)); b.title = (on ? "Bỏ khỏi" : "Lưu vào") + " Từ khó (phím S)"; });
+      };
+      app.querySelectorAll(".star-btn").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); star(); }));
       app.querySelectorAll(".speak-btn").forEach((b) => (b.onclick = () => FA.speak(c.w + ". " + c.x, { gender: "f", rate: 0.9 }).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."))));
-      const again = () => { setKnown(deck.id, c.w, false); queue.push(queue.shift()); slide = true; draw(); };
-      const got = () => { setKnown(deck.id, c.w, true); queue.shift(); slide = true; draw(); };
+      const again = () => { setKnown(did(deck, c), c.w, false); FA.daily.add(FA.daily.PTS.item); queue.push(queue.shift()); slide = true; draw(); };
+      const got = () => { setKnown(did(deck, c), c.w, true); FA.daily.add(FA.daily.PTS.item); queue.shift(); slide = true; draw(); };
       app.querySelector("#flip").onclick = flip;
       app.querySelector("#again").onclick = again;
       app.querySelector("#got").onclick = got;
@@ -156,6 +203,7 @@
         if (e.code === "Space") { e.preventDefault(); flip(); }
         else if (e.key === "1") again();
         else if (e.key === "2") got();
+        else if (e.key === "s" || e.key === "S") star();
       });
       bindTop();
     }
@@ -182,18 +230,30 @@
     draw();
   }
 
+  function viewStarEmpty() {
+    app.innerHTML = `<div class="page"><div class="container narrow">
+      <div class="crumbs"><a href="#">← Bộ thẻ</a> / Từ khó của tôi</div>
+      <div class="card empty"><div class="big">⭐</div><h2>Chưa có từ khó nào</h2>
+        <p>Khi học thẻ, gặp từ khó thì bấm <b>☆</b> ở góc thẻ (hoặc phím <kbd>S</kbd>) — từ đó sẽ được gom vào đây để bạn ôn riêng.</p>
+        <a class="btn btn-primary" href="#">Chọn bộ thẻ để học</a></div>
+    </div></div>`;
+  }
+
   /* ---------- kiểm tra nhanh (trắc nghiệm nghĩa) ---------- */
   function viewQuiz(deck) {
+    // bộ ít thẻ (vd. Từ khó mới gắn vài sao) thì lấy nghĩa nhiễu từ mọi bộ
+    const pool = deck.virtual || deck.cards.length < 4 ? DECKS.reduce((a, d) => a.concat(d.cards), []) : deck.cards;
     const qs = FA.shuffle(deck.cards).slice(0, 10).map((c) => {
-      const wrong = FA.shuffle(deck.cards.filter((x) => x.w !== c.w)).slice(0, 3).map((x) => x.m);
+      const wrong = FA.shuffle(Array.from(new Set(pool.filter((x) => x.w !== c.w && x.m !== c.m).map((x) => x.m)))).slice(0, 3);
       const o = FA.shuffle([c.m, ...wrong]);
       return { c, o, a: o.indexOf(c.m) };
     });
     let i = 0, score = 0, chosen = null;
     function draw() {
       if (i >= qs.length) {
-        app.innerHTML = wrap(`<div class="card center"><div class="ring-lg" style="--p:${score * 10};margin:0 auto"><div><b>${score}</b><span>/10</span></div></div>
-          <h2 class="mt-2">${score >= 8 ? "Tuyệt vời! ⚡" : score >= 5 ? "Khá lắm! 💪" : "Ôn thêm chút nhé! 📚"}</h2>
+        const pc = Math.round((score / qs.length) * 100);
+        app.innerHTML = wrap(`<div class="card center"><div class="ring-lg" style="--p:${pc};margin:0 auto"><div><b>${score}</b><span>/${qs.length}</span></div></div>
+          <h2 class="mt-2">${pc >= 80 ? "Tuyệt vời! ⚡" : pc >= 50 ? "Khá lắm! 💪" : "Ôn thêm chút nhé! 📚"}</h2>
           <div class="row" style="justify-content:center"><button class="btn btn-primary" id="redo">Làm lại</button><a class="btn btn-outline" href="#${deck.id}">Học thẻ</a><a class="btn btn-ghost" href="#">Bộ khác</a></div></div>`);
         app.querySelector("#redo").onclick = () => viewQuiz(deck);
         setKeys(null);
@@ -202,7 +262,7 @@
       const q = qs[i], ans = chosen != null;
       app.innerHTML = wrap(`
         <div class="progress"><i style="width:${(i / qs.length) * 100}%"></i></div>
-        <div class="progress-meta"><span>Câu ${i + 1}/10</span><span>Đúng ${score}</span></div>
+        <div class="progress-meta"><span>Câu ${i + 1}/${qs.length}</span><span>Đúng ${score}</span></div>
         <div class="q-card">
           <div class="q-part">Chọn nghĩa đúng</div>
           <div class="row"><div class="fc-word" style="font-size:2rem">${esc(q.c.w)}</div><button class="btn btn-ghost btn-sm" id="say">🔊</button></div>
@@ -210,15 +270,18 @@
           ${q.o.map((o, k) => `<button class="opt ${ans ? (k === q.a ? "correct" : k === chosen ? "wrong" : "") : ""}" data-k="${k}" ${ans ? "disabled" : ""}><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
           ${ans ? `<div class="explain">${chosen === q.a ? "✅ Chính xác!" : "❌ Chưa đúng."} <i>“${esc(q.c.x)}”</i></div>` : ""}
         </div>
-        ${ans ? `<div class="exam-nav"><span></span><button class="btn btn-primary" id="next">${i < 9 ? "Câu tiếp →" : "Xem kết quả"}</button></div>` : ""}`);
+        ${ans ? `<div class="exam-nav"><button class="btn btn-ghost btn-sm star-toggle${isStar(did(deck, q.c), q.c.w) ? " on" : ""}" id="qstar">${isStar(did(deck, q.c), q.c.w) ? "★ Đã lưu từ khó" : "☆ Lưu vào Từ khó"}</button><button class="btn btn-primary" id="next">${i < qs.length - 1 ? "Câu tiếp →" : "Xem kết quả"}</button></div>` : ""}`);
       app.querySelector("#say").onclick = () => FA.speak(q.c.w, { gender: "f" }).catch(() => {});
       const pick = (k) => {
         if (chosen != null) return;
         chosen = k;
-        if (k === q.a) { score++; setKnown(deck.id, q.c.w, true); } else setKnown(deck.id, q.c.w, false);
+        FA.daily.add(FA.daily.PTS.item);
+        if (k === q.a) { score++; setKnown(did(deck, q.c), q.c.w, true); } else setKnown(did(deck, q.c), q.c.w, false);
         draw();
       };
       app.querySelectorAll(".opt[data-k]").forEach((b) => (b.onclick = () => pick(+b.dataset.k)));
+      const qst = app.querySelector("#qstar");
+      if (qst) qst.onclick = () => { toggleStar(did(deck, q.c), q.c.w); draw(); };
       const nx = app.querySelector("#next");
       const go = () => { i++; chosen = null; draw(); };
       if (nx) nx.onclick = go;

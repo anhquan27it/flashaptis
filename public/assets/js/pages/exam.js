@@ -518,16 +518,49 @@
   /* ======================================================
      KẾT QUẢ (dùng chung)
      ====================================================== */
+  /* kỷ lục / bậc CEFR cao nhất trước lượt này của một kỹ năng */
+  const LV_RANK = ["A0", "A1", "A2", "B1", "B2", "C"];
+  function skillPrev(skill) {
+    const all = FA.store.get("attempts", {});
+    let n = 0, best = null, lv = -1;
+    SKILLS[skill].data.forEach((t) => (all[skill + ":" + t.id] || []).forEach((r) => {
+      n++;
+      if (best == null || r.score > best) best = r.score;
+      lv = Math.max(lv, LV_RANK.indexOf(FA.toCEFR(skill, r.score)));
+    }));
+    return { n, best, lv };
+  }
+  function celebrateResult(skill, score, prev) {
+    if (!FA.celebrate) return;
+    const nm = short(skill), lvl = FA.toCEFR(skill, score), rank = LV_RANK.indexOf(lvl);
+    if (!prev.n) FA.celebrate({ icon: SKILLS[skill].icon, title: `Bài ${nm} đầu tiên — ${score}/50!`, sub: "Đây là điểm xuất phát của bạn. Làm thêm đề để thấy mình tiến bộ.", confetti: false });
+    else if (FA.CEFR[skill] && rank > prev.lv && rank > 0) FA.celebrate({ icon: "⬆️", title: `Lên bậc ${lvl} ${nm}!`, sub: score > prev.best ? `Kỷ lục mới ${score}/50 (trước đây cao nhất ${prev.best}/50)` : `${score}/50 — lần đầu bạn đạt bậc này` });
+    else if (score > prev.best) FA.celebrate({ icon: "🏆", title: `Kỷ lục mới ${nm}: ${score}/50`, sub: `Hơn kỷ lục cũ ${score - prev.best} điểm (${prev.best}/50). Tiếp tục nhé!` });
+    if (FA.roadmap) FA.roadmap.celebrateStages();
+  }
+
   function renderResult(o) {
     // o: {skill, test, score, cefr, note, breakdown:[{label,got,total}], review(el)}
     running = false;
     view = "";
     FA.stopSpeak();
     // o.replay: đang xem lại một lượt đã làm → không lưu thêm lượt mới, o.attemptAt là lượt đó
+    let prevStats = null;
     if (!o.replay) {
+      prevStats = skillPrev(o.skill); // chụp lại trước khi lưu để biết có kỷ lục / lên bậc không
+      if (FA.roadmap) FA.roadmap.primeSeen();
       clearDraft(o.skill, o.test.id);
       o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans });
     }
+    /* ăn mừng khi điểm đã "chốt": trắc nghiệm chốt ngay; Writing còn chờ Harper/AI trừ điểm, Speaking tự chấm chờ người dùng kéo thanh
+       → đợi 2,5 giây sau lần cập nhật điểm cuối cùng, và chỉ báo một lần cho mỗi lượt nộp */
+    let celebT = null, celebrated = false;
+    const armCeleb = (ms) => {
+      if (!prevStats || celebrated) return;
+      clearTimeout(celebT);
+      celebT = setTimeout(() => { celebrated = true; celebrateResult(o.skill, o.score, prevStats); }, ms);
+    };
+    if (!o.selfScore) armCeleb(o.skill === "writing" ? 2500 : 900);
     const titleOf = (s) => (s >= 40 ? "Xuất sắc! 🎉" : s >= 26 ? "Làm tốt lắm! 💪" : "Cố lên, luyện thêm nhé! 🔥");
     const cefrHTML = (c) => (c ? `<span class="cefr-badge">${c}</span><span class="muted">bậc CEFR ước lượng</span>` : `<span class="muted">Grammar & Vocabulary không quy đổi CEFR riêng</span>`);
     const breakHTML = (bd) => (bd || []).map((b) => `
@@ -563,6 +596,7 @@
     // cập nhật điểm sau khi đã hiển thị (vd: Writing bị trừ điểm chính tả, hoặc người dùng bỏ qua một tên riêng)
     const update = (n) => {
       Object.assign(o, n);
+      armCeleb(2500);
       if (o.attemptAt) FA.updateAttempt(o.skill, o.test.id, o.attemptAt, Object.assign({ score: o.score, cefr: o.cefr }, n.ans ? { ans: n.ans } : {}));
       const q = (s) => app.querySelector(s);
       if (!q("#rRing")) return; // đã chuyển sang trang khác
@@ -1536,7 +1570,7 @@
         const calc = () => FA.speakingTo50(raw());
         const breakdown = () => PARTS.map((p, k) => ({ label: p[0], got: rates[k], total: 5 }));
         renderResult({
-          skill: "speaking", test, score: calc(), cefr: FA.toCEFR("speaking", calc()), replay: !!replay, attemptAt: replay && replay.at, ans: mkAns(),
+          skill: "speaking", test, score: calc(), cefr: FA.toCEFR("speaking", calc()), replay: !!replay, attemptAt: replay && replay.at, ans: mkAns(), selfScore: !ai,
           note: (ai
             ? `Điểm Speaking do AI (${esc(ai.model || "")}) chấm sẵn từ bản nhận dạng giọng nói của bạn: 4 part, mỗi part 0–5 điểm (tối đa 20), quy ra thang 50 (×2,5). AI không nghe được âm thanh nên <b>không chấm phát âm</b>, và nhận dạng giọng nói có thể nghe sai chữ — hãy nghe lại bản ghi và kéo thanh bên dưới để chỉnh nếu thấy chưa đúng.`
             : "Điểm Speaking là điểm TỰ CHẤM theo thang Aptis: 4 part, mỗi part 0–5 điểm (tối đa 20), web quy ra thang 50 (×2,5). Nghe lại bản ghi, so với bài mẫu rồi kéo thanh đánh giá bên dưới — điểm sẽ cập nhật.") + (aiNote ? `<br>${esc(aiNote)}` : ""),
@@ -1644,6 +1678,7 @@
       if (gp) gp.onclick = () => FA.speak(it.script).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."));
       body.querySelectorAll(".opt[data-k]").forEach((b) => (b.onclick = () => {
         chosen = +b.dataset.k;
+        FA.daily.add(FA.daily.PTS.item);
         if (chosen === it.a) { correct++; if (fromWrong) FA.removeWrong(it.id); }
         else FA.addWrong(it);
         draw();

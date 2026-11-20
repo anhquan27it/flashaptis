@@ -311,7 +311,7 @@ button { font-family: inherit; }
 .pill.hot { background: #fff1e6; color: var(--orange-700); border: 1px solid var(--orange-200); }
 
 /* ---------- Hero ---------- */
-.hero { position: relative; overflow: hidden; padding: 72px 0 56px; }
+.hero { position: relative; overflow: hidden; padding: 32px 0 56px; }
 .hero::before, .hero::after {
   content: ""; position: absolute; border-radius: 50%; filter: blur(70px); z-index: -1; opacity: .7;
 }
@@ -328,7 +328,7 @@ button { font-family: inherit; }
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font-weight: 500; font-size: .92rem;
 }
 .chip:hover { border-color: var(--orange-400); color: var(--orange-700); text-decoration: none; }
-@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } .hero { padding-top: 40px; } }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } .hero { padding-top: 22px; } }
 
 /* demo card in hero */
 .demo-card {
@@ -383,6 +383,15 @@ section.block { padding: 64px 0; }
 }
 a.card { color: inherit; display: block; transition: transform .15s, box-shadow .2s, border-color .2s; }
 a.card:hover { text-decoration: none; transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange-200); }
+/* thẻ dạng <button> (vd. các ô Ôn tập): trình duyệt không cho button thừa hưởng màu chữ và căn giữa nội dung theo chiều dọc
+   → ép dùng màu của trang (dark mode không bị chữ đen) và xếp nội dung từ trên xuống như a.card */
+button.card {
+  color: var(--ink); width: 100%; text-align: left; font: inherit;
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start;
+  transition: transform .15s, box-shadow .2s, border-color .2s;
+}
+button.card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--orange-200); }
+button.card .icon { align-self: flex-start; }
 .skill-card .icon {
   width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px;
   background: var(--orange-50); border: 1px solid var(--orange-100); margin-bottom: 14px;
@@ -882,3 +891,84 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
 :root[data-theme="dark"] .timer.warn { color: #f87171; }
 :root[data-theme="dark"] .test-card .tc-status.new { background: var(--surface-2); color: var(--ink-2); }
 :root[data-theme="dark"] .card { box-shadow: 0 1px 0 rgba(255, 255, 255, .03); }
+
+/* ---------- Chuỗi ngày học + mục tiêu hôm nay (header, FA.daily) ---------- */
+.streak { position: relative; }
+.streak-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 42px; padding: 3px 12px 3px 3px; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.streak-btn b { font-family: var(--font-head); font-size: .98rem; }
+.streak-btn:hover, .streak.open .streak-btn { border-color: var(--orange-300); box-shadow: 0 0 0 3px rgba(249, 115, 22, .12); }
+.streak-ring {
+  --p: 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: conic-gradient(var(--orange-500) calc(var(--p) * 1%), var(--orange-100) 0);
+}
+.streak-ring > span { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 15px; line-height: 1; }
+.streak.hit .streak-ring { background: conic-gradient(var(--green) 100%, var(--green) 0); }
+.streak.cold .streak-btn b { color: var(--muted); }
+.streak-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 10px); width: 300px; z-index: 60; padding: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); text-align: left;
+}
+.streak.open .streak-menu { display: block; animation: acct-in .14s ease-out; }
+.streak-goals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.streak-goals button {
+  display: grid; gap: 1px; padding: 7px 4px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface-2);
+  color: var(--ink-2); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+}
+.streak-goals button small { font-weight: 400; color: var(--muted); font-size: .74rem; }
+.streak-goals button.active { border-color: var(--orange-500); background: var(--orange-50); color: var(--orange-700); box-shadow: 0 0 0 2px rgba(249, 115, 22, .15); }
+@media (max-width: 560px) {
+  .streak-btn { height: 38px; padding-right: 9px; }
+  .streak-ring { width: 30px; height: 30px; }
+  .streak-ring > span { width: 23px; height: 23px; font-size: 13px; }
+  .streak-menu { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; }
+}
+
+/* ---------- Ăn mừng: banner + pháo giấy (FA.celebrate) ---------- */
+.celebrate {
+  position: fixed; left: 50%; top: 84px; z-index: 300; transform: translate(-50%, -24px) scale(.96); opacity: 0;
+  display: flex; align-items: center; gap: 14px; max-width: min(520px, calc(100vw - 32px)); padding: 14px 20px 14px 14px;
+  border-radius: 18px; background: var(--surface); border: 2px solid var(--orange-400); box-shadow: var(--shadow-lg);
+  cursor: pointer; transition: transform .35s cubic-bezier(.2, 1.4, .4, 1), opacity .25s;
+}
+.celebrate.show { transform: translate(-50%, 0) scale(1); opacity: 1; }
+.celebrate-icon {
+  width: 52px; height: 52px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 28px;
+  background: linear-gradient(135deg, var(--orange-100), var(--orange-50));
+}
+.celebrate b { display: block; font-family: var(--font-head); font-size: 1.08rem; color: var(--ink); }
+.celebrate span { display: block; font-size: .9rem; color: var(--ink-2); margin-top: 2px; }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 299; overflow: hidden; }
+.confetti i {
+  position: absolute; top: -20px; left: var(--x); width: var(--w); height: calc(var(--w) * 1.6); background: var(--c); border-radius: 2px;
+  animation: confetti-fall var(--t) cubic-bezier(.25, .6, .4, 1) var(--d) forwards; opacity: 0;
+}
+@keyframes confetti-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), 105vh) rotate(var(--r)); }
+}
+@media (prefers-reduced-motion: reduce) { .celebrate { transition: opacity .2s; } }
+
+/* ---------- Flashcard: gắn sao từ khó ---------- */
+.star-btn {
+  position: absolute; top: 14px; left: 14px; width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--muted); font-size: 20px; line-height: 1;
+  transition: transform .12s, color .15s, background .15s;
+}
+.star-btn:hover { color: #eab308; transform: scale(1.08); }
+.star-btn.on { color: #eab308; background: #fefce8; border-color: #facc15; }
+.star-btn.on { animation: star-pop .3s ease-out; }
+@keyframes star-pop { 0% { transform: scale(.7); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.star-toggle.on { color: #ca8a04; border-color: #facc15; }
+.star-deck { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-color: #facc15; background: linear-gradient(135deg, #fefce8, var(--surface)); }
+.star-deck .emoji { font-size: 34px; }
+:root[data-theme="dark"] .star-btn.on { background: #3a3210; border-color: #ca8a04; }
+:root[data-theme="dark"] .star-toggle.on { color: #fde047; border-color: #a16207; }
+:root[data-theme="dark"] .star-deck { border-color: #a16207; background: linear-gradient(135deg, #2c2610, var(--surface)); }
+:root[data-theme="dark"] .streak-ring { background: conic-gradient(var(--orange-500) calc(var(--p) * 1%), #54413a 0); }
+:root[data-theme="dark"] .streak.hit .streak-ring { background: conic-gradient(#22c55e 100%, #22c55e 0); }
+:root[data-theme="dark"] .celebrate-icon { background: linear-gradient(135deg, #4d3020, #2f2016); }

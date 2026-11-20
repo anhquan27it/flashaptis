@@ -10,7 +10,7 @@
   const cfg = window.FA_FIREBASE;
   const SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
   const PREFIX = "flashaptis:";
-  const KV_KEYS = ["wrongbook", "fc-known", "tips-done", "calc", "roadmap"]; // ngoài ra còn "speakRate:*"
+  const KV_KEYS = ["wrongbook", "fc-known", "fc-starred", "tips-done", "calc", "roadmap", "activity", "daily"]; // ngoài ra còn "speakRate:*"
   const isKV = (k) => KV_KEYS.indexOf(k) > -1 || k.indexOf("speakRate:") === 0;
 
   let auth = null, db = null, user = null, ready = false, applying = false, pushT = null;
@@ -88,7 +88,7 @@
     if (local && remote && typeof local === "object" && typeof remote === "object") {
       const out = Object.assign({}, remote, local);
       // nếu là bảng mốc thời gian (vd. fc-known) thì giữ mốc mới hơn giữa 2 thiết bị
-      if (key === "fc-known") {
+      if (key === "fc-known" || key === "activity") { // activity: điểm học theo ngày → lấy số lớn hơn
         Object.keys(remote).forEach((k) => {
           if (typeof remote[k] === "number" && typeof local[k] === "number") out[k] = Math.max(local[k], remote[k]);
         });

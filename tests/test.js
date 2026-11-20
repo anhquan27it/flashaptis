@@ -387,6 +387,56 @@ test("dashboard.js vẽ lộ trình, nhận mục tiêu đã lưu và không ch�
   assert.ok(!app3.innerHTML.includes("Các giai đoạn lộ trình"));
 });
 
+test("FA.daily: điểm học theo ngày, chuỗi ngày, mục tiêu ngày và ăn mừng khi vừa đạt", () => {
+  const s2 = createSandbox();
+  loadScripts(s2, ["public/assets/js/core/common.js"]);
+  const F2 = s2.FA, DAY = 86400000, NOW = new Date(2026, 5, 15, 12).getTime();
+  const cel = [];
+  F2.celebrate = (o) => cel.push(o);
+  assert.equal(F2.daily.goal(), 20); // mặc định
+  assert.equal(F2.daily.streak(NOW), 0);
+  // 3 ngày liên tiếp có học (hôm qua, hôm kia, 3 ngày trước), hôm nay chưa → chuỗi vẫn tính tới hôm qua
+  F2.store.set("activity", { [F2.dayKey(NOW - DAY)]: 5, [F2.dayKey(NOW - 2 * DAY)]: 3, [F2.dayKey(NOW - 3 * DAY)]: 1, [F2.dayKey(NOW - 5 * DAY)]: 9 });
+  assert.equal(F2.daily.streak(NOW), 3);
+  // học hôm nay: 19 điểm chưa đạt mục tiêu 20, thêm 1 → đạt, ăn mừng đúng một lần
+  F2.daily.add(19, NOW);
+  assert.equal(cel.length, 0);
+  assert.equal(F2.daily.add(1, NOW), 20);
+  assert.equal(cel.length, 1);
+  assert.ok(cel[0].title.includes("mục tiêu hôm nay"));
+  F2.daily.add(5, NOW);
+  assert.equal(cel.length, 1); // đã đạt rồi thì không báo lại
+  assert.equal(F2.daily.streak(NOW), 4);
+  // lượt làm bài cũ (trước khi có nhật ký) cũng được tính là ngày có học
+  F2.store.set("attempts", { "reading:r1": [{ score: 30, at: NOW - 4 * DAY }] });
+  assert.equal(F2.daily.streak(NOW), 6);
+  assert.equal(F2.daily.perDay()[F2.dayKey(NOW - 4 * DAY)], 10);
+  // đổi mục tiêu: chỉ nhận 10/20/40
+  F2.daily.setGoal(40);
+  assert.equal(F2.daily.goal(), 40);
+  F2.daily.setGoal(7);
+  assert.equal(F2.daily.goal(), 20);
+  // nộp bài qua saveAttempt cộng 10 điểm học
+  const before = F2.daily.today();
+  F2.saveAttempt("grammar", "g1", 30);
+  assert.equal(F2.daily.today(), Math.max(before + 10, 10));
+});
+
+test("FA.roadmap.newlyDone: lần đầu chỉ ghi nhận, sau đó báo đúng giai đoạn vừa xong một lần", () => {
+  const s2 = createSandbox();
+  loadScripts(s2, ["public/assets/js/core/common.js", "public/assets/js/core/roadmap.js", "public/data/grammar.js", "public/data/reading.js", "public/data/listening.js", "public/data/writing.js", "public/data/speaking.js"]);
+  const F2 = s2.FA;
+  F2.store.set("tips-done", [1, 2, 3, 4, 5]);
+  const fc = {}; for (let i = 0; i < 30; i++) fc["d|w" + i] = Date.now();
+  F2.store.set("fc-known", fc);
+  assert.equal(F2.roadmap.newlyDone().length, 0); // lần đầu: chưa có mốc → chỉ ghi nhận (giai đoạn 1 chưa xong vì thiếu Grammar)
+  F2.saveAttempt("grammar", s2.FA_GRAMMAR[0].id, 30);
+  const fresh = F2.roadmap.newlyDone();
+  assert.equal(fresh.length, 1);
+  assert.equal(fresh[0].id, "s1");
+  assert.equal(F2.roadmap.newlyDone().length, 0); // không báo lại
+});
+
 if (process.exitCode) {
   console.error("\nMột số kiểm thử thất bại!");
 } else {

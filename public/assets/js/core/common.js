@@ -60,6 +60,7 @@
         </nav>
         <div class="header-actions">
           <button class="theme-btn" type="button" aria-label="Đổi giao diện sáng/tối" aria-pressed="false">🌙</button>
+          <span class="streak-slot"></span><!-- FA.daily.paint(): chuỗi ngày học + mục tiêu hôm nay -->
           <span class="auth-slot"></span><!-- cloud.js điền nút Đăng nhập / menu tài khoản -->
           <button class="menu-btn" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
         </div>
@@ -104,6 +105,7 @@
       window.addEventListener("hashchange", syncNav);
       syncNav();
     }
+    if (FA.daily) FA.daily.paint();
     if (FA.cloud && FA.cloud.paint) FA.cloud.paint(); // vẽ ô tài khoản ngay (cloud.js dùng hồ sơ đã nhớ), tránh nháy khi chuyển trang
     menuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -112,7 +114,10 @@
       menuBtn.textContent = open ? "✕" : "☰";
     });
     // bấm ra ngoài / Esc → đóng menu điều hướng và menu tài khoản
-    document.addEventListener("click", (e) => { if (!e.target.closest(".nav, .acct")) closeAll(); });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".nav, .acct")) closeAll();
+      if (!e.target.closest(".streak")) header.querySelectorAll(".streak.open").forEach((x) => x.classList.remove("open"));
+    });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(); });
     // cuộn xuống → header có bóng nhẹ để tách khỏi nội dung
     const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 4);
@@ -149,6 +154,7 @@
     all[k].unshift(rec);
     all[k] = all[k].slice(0, 10);
     FA.store.set("attempts", all);
+    if (FA.daily) FA.daily.add(FA.daily.PTS.test);
     return rec.at; // mã định danh lượt làm bài
   };
   FA.updateAttempt = function (skill, testId, at, patch) {
@@ -216,6 +222,144 @@
   }
   FA.confirm = (msg, opts) => openDialog(Object.assign({ kind: "confirm", msg }, opts || {}));
   FA.prompt = (msg, val, opts) => openDialog(Object.assign({ kind: "prompt", msg, val }, opts || {}));
+
+  /* ---------- Ăn mừng (kỷ lục mới, lên bậc, xong giai đoạn, đạt mục tiêu ngày) ----------
+     FA.celebrate({icon, title, sub, confetti}) — hiện lần lượt từng banner (không chồng nhau), bấm để đóng.
+     Hệ điều hành bật "giảm chuyển động" thì bỏ pháo giấy, chỉ hiện banner. */
+  const celebQueue = [];
+  let celebBusy = false;
+  const reduceMotion = () => { try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { return false; } };
+  function confetti() {
+    const box = document.createElement("div");
+    box.className = "confetti";
+    box.setAttribute("aria-hidden", "true");
+    const colors = ["#f97316", "#fb923c", "#facc15", "#22c55e", "#3b82f6", "#ec4899", "#a855f7"];
+    let html = "";
+    for (let i = 0; i < 90; i++) {
+      html += `<i style="--x:${Math.round(Math.random() * 100)}vw;--dx:${Math.round(Math.random() * 160 - 80)}px;--d:${(Math.random() * 0.5).toFixed(2)}s;--t:${(2.2 + Math.random() * 1.4).toFixed(2)}s;--r:${Math.round(Math.random() * 720 - 360)}deg;--c:${colors[i % colors.length]};--w:${6 + Math.round(Math.random() * 6)}px"></i>`;
+    }
+    box.innerHTML = html;
+    document.body.append(box);
+    setTimeout(() => box.remove(), 4200);
+  }
+  function nextCeleb() {
+    if (celebBusy || !celebQueue.length) return;
+    celebBusy = true;
+    const o = celebQueue.shift();
+    try {
+      if (o.confetti !== false && !reduceMotion()) confetti();
+      const el = document.createElement("div");
+      el.className = "celebrate";
+      el.setAttribute("role", "status");
+      el.innerHTML = `<div class="celebrate-icon">${FA.esc(o.icon || "🎉")}</div><div><b>${FA.esc(o.title)}</b>${o.sub ? `<span>${FA.esc(o.sub)}</span>` : ""}</div>`;
+      document.body.append(el);
+      requestAnimationFrame(() => el.classList.add("show"));
+      let done = false;
+      const close = () => {
+        if (done) return;
+        done = true;
+        el.classList.remove("show");
+        setTimeout(() => { el.remove(); celebBusy = false; nextCeleb(); }, 350);
+      };
+      el.onclick = close;
+      setTimeout(close, o.ms || 3600);
+    } catch (e) { celebBusy = false; }
+  }
+  FA.celebrate = function (o) { celebQueue.push(o || {}); nextCeleb(); };
+
+  /* ---------- Mục tiêu ngày + chuỗi ngày học (hiện trên header) ----------
+     "Điểm học" trong ngày: nộp 1 đề = 10, trả lời 1 câu Ôn tập / 1 thẻ flashcard / 1 câu kiểm tra từ vựng = 1.
+     Nhật ký theo ngày lưu ở FA.store "activity" {"YYYY-MM-DD": điểm}; ngày chưa có nhật ký (trước khi có tính năng này)
+     thì suy ra từ lượt làm bài và flashcard đã thuộc. Chuỗi = số ngày liên tiếp có học, tính tới hôm nay (hôm nay chưa học thì tới hôm qua). */
+  const pad2 = (n) => String(n).padStart(2, "0");
+  FA.dayKey = (ts) => { const d = new Date(ts); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); };
+  const DAY_MS = 86400000;
+  const GOALS = [[10, "Nhẹ nhàng"], [20, "Vừa phải"], [40, "Chăm chỉ"]];
+  function perDay() {
+    const out = Object.assign({}, FA.store.get("activity", {}));
+    const derived = {};
+    const bump = (ts, n) => { if (typeof ts === "number" && ts > 0) { const k = FA.dayKey(ts); derived[k] = (derived[k] || 0) + n; } };
+    const all = FA.store.get("attempts", {});
+    Object.keys(all).forEach((k) => (all[k] || []).forEach((r) => bump(r && r.at, 10)));
+    const fc = FA.store.get("fc-known", {});
+    Object.keys(fc).forEach((k) => bump(fc[k], 1));
+    Object.keys(derived).forEach((k) => { out[k] = Math.max(out[k] || 0, derived[k]); });
+    return out;
+  }
+  function streakOf(map, now) {
+    let n = 0;
+    for (let i = map[FA.dayKey(now)] ? 0 : 1; i < 3650; i++) { if (map[FA.dayKey(now - i * DAY_MS)]) n++; else break; }
+    return n;
+  }
+  function bestStreakOf(map) {
+    const days = Object.keys(map).filter((k) => map[k] > 0).sort();
+    let best = 0, run = 0, prev = null;
+    days.forEach((k) => {
+      const t = new Date(k + "T12:00:00").getTime();
+      run = prev != null && Math.round((t - prev) / DAY_MS) === 1 ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = t;
+    });
+    return best;
+  }
+  FA.daily = {
+    PTS: { test: 10, item: 1 },
+    GOALS,
+    goal() { const g = (FA.store.get("daily", {}) || {}).goal; return GOALS.some(([v]) => v === g) ? g : 20; },
+    setGoal(g) { const d = FA.store.get("daily", {}) || {}; d.goal = g; FA.store.set("daily", d); FA.daily.paint(); },
+    perDay,
+    today(now) { return perDay()[FA.dayKey(now || Date.now())] || 0; },
+    streak(now) { return streakOf(perDay(), now || Date.now()); },
+    bestStreak() { return bestStreakOf(perDay()); },
+    add(n, now) {
+      now = now || Date.now();
+      const key = FA.dayKey(now), goal = FA.daily.goal();
+      const before = FA.daily.today(now);
+      const log = FA.store.get("activity", {});
+      log[key] = (log[key] || 0) + (n || 1);
+      const cut = FA.dayKey(now - 400 * DAY_MS); // giữ khoảng 13 tháng gần nhất
+      Object.keys(log).forEach((k) => { if (k < cut) delete log[k]; });
+      FA.store.set("activity", log);
+      const after = FA.daily.today(now);
+      if (before < goal && after >= goal) {
+        FA.celebrate({ icon: "🎯", title: "Hoàn thành mục tiêu hôm nay!", sub: `${after}/${goal} điểm học · chuỗi ${streakOf(perDay(), now)} ngày 🔥` });
+      }
+      FA.daily.paint();
+      return after;
+    },
+    paint() {
+      if (typeof document === "undefined" || !document.querySelectorAll) return;
+      const slots = document.querySelectorAll(".streak-slot");
+      if (!slots || !slots.length) return;
+      const now = Date.now(), map = perDay();
+      const st = streakOf(map, now), best = Math.max(st, bestStreakOf(map));
+      const today = map[FA.dayKey(now)] || 0, goal = FA.daily.goal();
+      const pct = Math.min(100, Math.round((today / goal) * 100));
+      const hit = today >= goal;
+      slots.forEach((slot) => {
+        const wasOpen = !!slot.querySelector(".streak.open");
+        slot.innerHTML = `
+          <div class="streak${wasOpen ? " open" : ""}${hit ? " hit" : ""}${st ? "" : " cold"}">
+            <button class="streak-btn" type="button" aria-haspopup="dialog" aria-expanded="${wasOpen}" title="Chuỗi ${st} ngày · hôm nay ${today}/${goal} điểm học">
+              <span class="streak-ring" style="--p:${pct}"><span>${st ? "🔥" : "💤"}</span></span><b>${st}</b>
+            </button>
+            <div class="streak-menu" role="dialog" aria-label="Mục tiêu hôm nay">
+              <div class="row" style="gap:8px"><b style="font-family:var(--font-head);font-size:1.05rem">🔥 Chuỗi ${st} ngày</b><div class="spacer"></div><span class="muted" style="font-size:.82rem">Kỷ lục ${best} ngày</span></div>
+              <div class="mt-1" style="font-size:.92rem">Hôm nay: <b>${today}/${goal}</b> điểm học ${hit ? "✅" : ""}</div>
+              <div class="progress mt-1"><i style="width:${pct}%"></i></div>
+              <div class="muted mt-1" style="font-size:.8rem">${hit ? "Tuyệt! Giữ nhịp này mỗi ngày nhé." : st ? "Học tiếp hôm nay để giữ chuỗi!" : "Học một chút hôm nay để bắt đầu chuỗi mới."}<br>Nộp 1 đề = 10 · 1 câu ôn tập / 1 thẻ flashcard = 1</div>
+              <div class="streak-goals mt-2">${GOALS.map(([v, lb]) => `<button type="button" class="${v === goal ? "active" : ""}" data-goal="${v}">${lb}<small>${v}/ngày</small></button>`).join("")}</div>
+              <div class="row mt-2" style="gap:6px"><a class="btn btn-primary btn-sm" href="exam.html#/gym">Ôn nhanh 10 câu</a><a class="btn btn-ghost btn-sm" href="dashboard.html">Lộ trình →</a></div>
+            </div>
+          </div>`;
+        const box = slot.querySelector(".streak"), btn = slot.querySelector(".streak-btn");
+        btn.onclick = (e) => { e.stopPropagation(); const o = box.classList.toggle("open"); btn.setAttribute("aria-expanded", String(o)); };
+        slot.querySelectorAll("[data-goal]").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); FA.daily.setGoal(+b.dataset.goal); }));
+      });
+    },
+  };
+  if (typeof window !== "undefined" && window.addEventListener) window.addEventListener("fa:synced", () => FA.daily.paint());
+
 
   FA.copy = async function (text, btn) {
     try { await navigator.clipboard.writeText(String(text)); }
