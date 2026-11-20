@@ -535,6 +535,97 @@
     },
   };
 
+  /* ---------- Báo lỗi câu hỏi / đề (Firestore: reports/{id}, admin xem ở admin.html) ----------
+     FA.reportBtn({skill, testId, testTitle, ref}) → chuỗi HTML nút "⚠️ Báo lỗi"; bấm nút (delegate data-report) → hộp thoại.
+     ref: vị trí trong đề ("Câu 12", "Part 2 · Câu 1"…). Mỗi câu chỉ báo 1 lần/ngày trên một máy (chống spam). */
+  FA.REPORT_CATS = [["answer", "Đáp án sai"], ["text", "Câu hỏi / chính tả sai"], ["audio", "Âm thanh lỗi"], ["image", "Hình ảnh lỗi"], ["explain", "Giải thích sai / khó hiểu"], ["other", "Khác"]];
+  FA.reportBtn = function (ctx, label) {
+    return `<button type="button" class="rep-btn" data-report="${FA.esc(JSON.stringify(ctx || {}))}" title="Báo lỗi câu này cho FlashAptis">⚠️ ${FA.esc(label || "Báo lỗi")}</button>`;
+  };
+  FA.report = function (ctx) {
+    ctx = ctx || {};
+    const cut = (s, n) => String(s == null ? "" : s).slice(0, n);
+    const ref = cut(ctx.ref, 200);
+    const dedupeKey = [ctx.skill, ctx.testId, ref].join("|");
+    const sentLog = FA.store.get("report-sent", {}) || {};
+    const ov = document.createElement("div");
+    ov.className = "auth-modal fa-modal";
+    ov.innerHTML = `
+      <div class="auth-box rep-box" role="dialog" aria-modal="true" aria-label="Báo lỗi" style="max-width:460px;padding:22px">
+        <h3 style="margin:0 0 4px;font-size:1.15rem">⚠️ Báo lỗi câu này</h3>
+        <p class="muted mb-2" style="font-size:.88rem">${FA.esc([ctx.testTitle, ref].filter(Boolean).join(" · ") || "Trang hiện tại")}</p>
+        <div class="rep-cats">${FA.REPORT_CATS.map(([k, n], i) => `<label><input type="radio" name="repCat" value="${k}" ${i === 0 ? "checked" : ""}> ${n}</label>`).join("")}</div>
+        <textarea class="inp mt-2" id="repMsg" maxlength="500" style="min-height:90px" placeholder="Mô tả ngắn: sai ở đâu, đáp án đúng nên là gì… (không bắt buộc)"></textarea>
+        <div class="rep-err hidden" id="repErr"></div>
+        <div class="row" style="justify-content:flex-end;margin-top:14px">
+          <button type="button" class="btn btn-outline btn-sm" id="repNo">Hủy</button>
+          <button type="button" class="btn btn-primary btn-sm" id="repYes">Gửi báo lỗi</button>
+        </div>
+      </div>`;
+    document.body.append(ov);
+    const $ = (s) => ov.querySelector(s);
+    const close = () => { document.removeEventListener("keydown", onKey); ov.remove(); };
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    document.addEventListener("keydown", onKey);
+    ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
+    $("#repNo").onclick = close;
+    setTimeout(() => $("#repMsg").focus(), 0);
+    if (sentLog[dedupeKey] === FA.dayKey(Date.now())) {
+      $("#repErr").classList.remove("hidden");
+      $("#repErr").innerHTML = "Bạn đã báo lỗi câu này hôm nay rồi — cảm ơn bạn! Gửi thêm nếu có thông tin mới.";
+    }
+    $("#repYes").onclick = async () => {
+      const btn = $("#repYes");
+      const cat = (ov.querySelector('input[name="repCat"]:checked') || {}).value || "other";
+      const u = FA.cloud && FA.cloud.user && FA.cloud.user();
+      const doc = {
+        uid: u ? u.uid : "", email: cut(u && u.email, 120), name: cut(u && u.displayName, 80),
+        skill: cut(ctx.skill, 20), testId: cut(ctx.testId, 20), testTitle: cut(ctx.testTitle, 120), ref,
+        cat, msg: cut($("#repMsg").value.trim(), 500), page: cut(location.pathname.split("/").pop() + location.hash, 200),
+        status: "open", createdAt: Date.now(),
+      };
+      btn.disabled = true; btn.textContent = "Đang gửi…";
+      const done = () => {
+        sentLog[dedupeKey] = FA.dayKey(Date.now());
+        Object.keys(sentLog).forEach((k) => { if (sentLog[k] !== FA.dayKey(Date.now())) delete sentLog[k]; }); // chỉ giữ của hôm nay
+        FA.store.set("report-sent", sentLog);
+        close();
+        FA.toast("Đã gửi báo lỗi — cảm ơn bạn! Bọn mình sẽ sửa sớm.");
+      };
+      try {
+        const db = FA.cloud && FA.cloud.enabled() && FA.cloud.db && FA.cloud.db();
+        if (!db || !u) {
+          // chạy local không có Firebase / chưa đăng nhập → lưu tạm trên máy để không mất
+          const local = FA.store.get("reports-local", []);
+          local.unshift(doc);
+          FA.store.set("reports-local", local.slice(0, 50));
+          if (FA.cloud && FA.cloud.enabled() && !u) throw new Error("login");
+          return done();
+        }
+        await db.collection("reports").add(doc);
+        done();
+      } catch (e) {
+        btn.disabled = false; btn.textContent = "Gửi lại";
+        const C = FA.CONTACT || {};
+        $("#repErr").classList.remove("hidden");
+        $("#repErr").innerHTML = (e && e.message === "login" ? "Bạn cần đăng nhập để gửi báo lỗi." : "Chưa gửi được báo lỗi (lỗi kết nối hoặc quyền truy cập).") +
+          (C.messenger ? ` Bạn có thể <a href="${C.messenger}" target="_blank" rel="noopener">nhắn qua Messenger</a> kèm vị trí câu: <b>${FA.esc([ctx.testTitle, ref].filter(Boolean).join(" · "))}</b>.` : "");
+      }
+    };
+  };
+  if (typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("click", (e) => {
+      const b = e.target.closest && e.target.closest("[data-report]");
+      if (!b) return;
+      e.preventDefault();
+      e.stopPropagation();
+      let ctx = {};
+      try { ctx = JSON.parse(b.getAttribute("data-report") || "{}"); } catch (err) {}
+      if (typeof FA.reportCtx === "function") ctx = FA.reportCtx(ctx, b) || ctx; // trang (exam.js) bổ sung vị trí câu đang làm
+      FA.report(ctx);
+    });
+  }
+
   /* ---------- Hiệu ứng chuyển tab / chuyển màn cho mượt ----------
      - Đổi trang (menu header): CSS @view-transition (Chrome/Edge), xem style.css.
      - Đổi màn trong SPA (hash: exam, flashcards): cho #app mờ dần vào.

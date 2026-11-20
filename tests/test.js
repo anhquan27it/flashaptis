@@ -69,11 +69,12 @@ loadScripts(sb, [
   "public/data/writing-rel.js",
   "public/data/speaking.js",
   "public/data/vocab.js",
+  "public/data/mock.js",
   "public/assets/js/grading/relevance.js",
   "public/assets/js/grading/speaking-grader.js",
 ]);
 
-const { FA, FA_GRAMMAR, FA_READING, FA_LISTENING, FA_WRITING, FA_SPEAKING, FA_VOCAB } = sb;
+const { FA, FA_GRAMMAR, FA_READING, FA_LISTENING, FA_WRITING, FA_SPEAKING, FA_VOCAB, FA_MOCK } = sb;
 
 console.log("1. Kiểm tra ngân hàng đề:");
 
@@ -213,6 +214,24 @@ test("FA_SPEAKING & FA_VOCAB: đầy đủ part/thẻ và không trùng từ tro
       words.add(c.w);
     }
   }
+});
+
+
+test("FA_MOCK (Full Test): mỗi bộ tham chiếu đủ 5 đề lẻ có thật, id bộ không trùng, có ít nhất 1 bộ Free", () => {
+  assert.ok(Array.isArray(FA_MOCK) && FA_MOCK.length >= 2, "cần ít nhất 2 bộ Full Test");
+  assert.equal(new Set(FA_MOCK.map((m) => m.id)).size, FA_MOCK.length, "id Full Test bị trùng");
+  const banks = { grammar: FA_GRAMMAR, listening: FA_LISTENING, reading: FA_READING, writing: FA_WRITING, speaking: FA_SPEAKING };
+  let free = 0;
+  for (const m of FA_MOCK) {
+    let allFree = true;
+    for (const k of Object.keys(banks)) {
+      const idx = banks[k].findIndex((x) => x.id === m.parts[k]);
+      assert.ok(idx >= 0, m.id + ": không có đề " + k + " " + m.parts[k]);
+      if (idx >= 2) allFree = false; // FA.PLAN.freeTests = 2
+    }
+    if (allFree) free++;
+  }
+  assert.ok(free >= 1, "nên có ít nhất 1 Full Test làm được với gói Free");
 });
 
 console.log("\n2. Kiểm tra hàm quy đổi CEFR & chấm nội dung:");

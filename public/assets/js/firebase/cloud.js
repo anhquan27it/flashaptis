@@ -10,7 +10,7 @@
   const cfg = window.FA_FIREBASE;
   const SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
   const PREFIX = "flashaptis:";
-  const KV_KEYS = ["wrongbook", "fc-known", "fc-starred", "tips-done", "calc", "roadmap", "activity", "daily"]; // ngoài ra còn "speakRate:*"
+  const KV_KEYS = ["wrongbook", "fc-known", "fc-starred", "tips-done", "calc", "roadmap", "activity", "daily", "mock"]; // ngoài ra còn "speakRate:*"
   const isKV = (k) => KV_KEYS.indexOf(k) > -1 || k.indexOf("speakRate:") === 0;
 
   let auth = null, db = null, user = null, ready = false, applying = false, pushT = null;
@@ -84,6 +84,16 @@
         if (!seen[id]) { seen[id] = 1; out.push(x); }
       });
       return key === "wrongbook" ? out.slice(0, 300) : out;
+    }
+    if (key === "mock" && local && remote && typeof local === "object" && typeof remote === "object") {
+      // lịch sử Full Test {idBộ: [lượt]} → gộp các lượt của cả 2 thiết bị theo mốc at, giữ 10 lượt mới nhất
+      const out = {};
+      Object.keys(Object.assign({}, remote, local)).forEach((id) => {
+        const seen = {}, list = [];
+        [].concat(local[id] || [], remote[id] || []).forEach((r) => { if (r && !seen[r.at]) { seen[r.at] = 1; list.push(r); } });
+        out[id] = list.sort((x, y) => y.at - x.at).slice(0, 10);
+      });
+      return out;
     }
     if (local && remote && typeof local === "object" && typeof remote === "object") {
       const out = Object.assign({}, remote, local);

@@ -14,7 +14,8 @@
     price: 50000,                      // VNĐ cho mỗi lần gia hạn
     days: 30,                          // số ngày Pro mỗi lần thanh toán
     // Tài khoản nhận tiền — dùng để tạo mã VietQR (img.vietqr.io). id: mã ngân hàng (vd. MB, VCB, TCB, ACB, BIDV, VPB, TPB) hoặc mã BIN.
-    bank: { id: "MB", accountNo: "0000000000", accountName: "TEN CHU TAI KHOAN" },
+    // name: tên hiển thị trên trang Bảng giá (không bắt buộc, mặc định dùng id)
+    bank: { id: "BIDV", accountNo: "8872127598", accountName: "DOAN THAI DUONG", name: "BIDV – PGD Nguyễn Đình Chiểu" },
   });
 
   const subs = [];

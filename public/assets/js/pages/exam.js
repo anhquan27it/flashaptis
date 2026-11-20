@@ -2,7 +2,10 @@
    #/                     chọn kỹ năng
    #/{skill}              danh sách đề
    #/{skill}/{testId}     giới thiệu + làm bài + kết quả
-   #/gym, #/gym/wrong     ôn tập & sổ câu sai */
+   #/gym, #/gym/wrong     ôn tập & sổ câu sai
+   #/mock                 danh sách Full Test
+   #/mock/{id}            giới thiệu Full Test (mở phòng thi ở cửa sổ mới)
+   #/mock/{id}/run        phòng thi Full Test: 5 phần liền mạch, toàn màn hình, đếm vi phạm rời màn hình */
 (function () {
   const FA = window.FA;
   const esc = FA.esc;
@@ -40,6 +43,8 @@
   let running = false;
   let lastHash = location.hash;
   let ignoreHash = false;
+  let mockRun = null; // Full Test đang diễn ra (kể cả lúc chuyển giữa 2 phần, khi running = false)
+  let curTest = null; // {skill, test} đang làm — để nút "Báo lỗi" biết vị trí
   function clearRun() {
     cleanup.forEach((f) => { try { f(); } catch (e) {} });
     cleanup = [];
@@ -47,15 +52,17 @@
     running = false;
   }
   window.addEventListener("beforeunload", (e) => {
-    if (running) { e.preventDefault(); e.returnValue = ""; }
+    if (running || mockRun) { e.preventDefault(); e.returnValue = ""; }
   });
   window.addEventListener("hashchange", async () => {
     if (ignoreHash) { ignoreHash = false; return; }
-    if (running) {
+    if (running || mockRun) {
       const target = location.hash;
       if (location.hash !== lastHash) { ignoreHash = true; location.hash = lastHash; }
-      if (await FA.confirm("Bạn đang làm bài. Thoát ra sẽ mất bài làm hiện tại. Vẫn thoát?", { title: "Thoát bài thi?", okText: "Vẫn thoát", cancelText: "Làm tiếp", danger: true })) {
+      const msg = mockRun ? "Bạn đang thi Full Test. Thoát ra sẽ kết thúc bài thi — các phần chưa làm tính 0 điểm. Vẫn thoát?" : "Bạn đang làm bài. Thoát ra sẽ mất bài làm hiện tại. Vẫn thoát?";
+      if (await FA.confirm(msg, { title: mockRun ? "Bỏ Full Test?" : "Thoát bài thi?", okText: "Vẫn thoát", cancelText: "Làm tiếp", danger: true })) {
         ignoreHash = false;
+        if (mockRun) mockEnd("aborted", false);
         clearRun();
         if (location.hash !== target) location.hash = target; else route();
       }
@@ -75,7 +82,8 @@
   if (FA.cloud) FA.cloud.onChange(() => { if (!running && (view === "login" || view === "list" || view === "hub")) route(); });
   let view = ""; // màn hình hiện tại — chỉ vẽ lại khi chưa vào bài / chưa ở màn kết quả
   if (FA.plan) FA.plan.onChange(() => { if (!running && (view === "list" || view === "locked" || view === "progress")) route(); });
-  window.addEventListener("fa:synced", () => { if (!running && view) route(); });
+  // đồng bộ xong → vẽ lại màn danh sách; KHÔNG vẽ lại khi đang thi Full Test, phòng chờ hay màn kết quả Full Test (sẽ mất bài)
+  window.addEventListener("fa:synced", () => { if (!running && !mockRun && view && !/^mock(Room|Result|Break)$/.test(view)) route(); });
 
   let speakUrls = [];
   function revokeSpeakUrls() { speakUrls.forEach((u) => { try { URL.revokeObjectURL(u); } catch (e) {} }); speakUrls = []; }
@@ -90,6 +98,13 @@
     if (!parts.length) return viewHub();
     if (parts[0] === "progress") return viewProgress();
     if (parts[0] === "gym") return needLogin() ? viewLogin(null, null) : parts[1] === "wrong" ? viewGym(true) : viewGym(false);
+    if (parts[0] === "mock") {
+      const m = parts[1] && MOCKS.find((x) => x.id === parts[1]);
+      if (!m) return viewMockList();
+      if (needLogin()) return viewLogin(null, null, m.title);
+      if (mockLocked(m)) return viewMockLocked(m);
+      return parts[2] === "run" ? viewMockRoom(m) : viewMockIntro(m);
+    }
     const skill = parts[0];
     if (!SKILLS[skill]) return viewHub();
     if (!parts[1]) return viewList(skill);
@@ -102,17 +117,18 @@
 
   /* chưa đăng nhập → phải đăng nhập mới được làm bài */
   /* skill/test = null → màn Ôn tập nhanh (#/gym) cũng phải đăng nhập */
-  function viewLogin(skill, test) {
+  function viewLogin(skill, test, label) {
     view = "login";
     const S = skill ? SKILLS[skill] : null;
     const back = skill ? `#/${skill}` : "#/";
     const checking = authPending() && !authWaitTimedOut;
+    const name = label || "Ôn tập nhanh";
     app.innerHTML = `
       <div class="page"><div class="container narrow">
-        <div class="crumbs">${skill ? `<a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}` : `<a href="#/">← Kỹ năng</a> / Ôn tập nhanh`}</div>
+        <div class="crumbs">${skill ? `<a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}` : `<a href="#/">← Kỹ năng</a> / ${esc(name)}`}</div>
         <div class="card empty">
           <div class="big">${checking ? "⏳" : "🔐"}</div>
-          <h2>${skill ? `${esc(test.title)} — ${esc(S.name)}` : "Ôn tập nhanh"}</h2>
+          <h2>${skill ? `${esc(test.title)} — ${esc(S.name)}` : esc(name)}</h2>
           ${checking ? `<p>Đang kiểm tra đăng nhập…</p>` : `
           <p>Hãy <b>đăng nhập</b> để làm bài. Tiến trình của bạn (đề nào đang làm dở, đề nào đã hoàn thành, điểm số) sẽ được lưu theo tài khoản và <b>đồng bộ khi bạn dùng thiết bị khác</b>.</p>
           <p class="muted" style="font-size:.9rem">Đăng nhập bằng Google hoặc email — miễn phí, chỉ mất vài giây. Đề Free vẫn miễn phí.</p>
@@ -164,19 +180,25 @@
   function examShell(title, timeMin) {
     app.innerHTML = `
       <div class="page"><div class="container narrow" id="examContainer">
+        ${mockRun ? mockStripHTML() : ""}
         <div class="exam-top row">
           <div><div class="crumbs mb-0">${esc(title)}</div></div>
           <div class="spacer"></div>
           <div class="exam-bar">
             ${timeMin ? `<div class="timer" id="timer">--:--</div>` : ""}
+            ${FA.reportBtn({ live: true }, "Báo lỗi")}
             <button class="btn btn-primary btn-sm" id="submitBtn">Nộp bài</button>
-            <button class="btn btn-ghost btn-sm" id="exitBtn">Thoát</button>
+            <button class="btn btn-ghost btn-sm" id="exitBtn">${mockRun ? "Bỏ thi" : "Thoát"}</button>
           </div>
         </div>
         <div id="stage"></div>
       </div></div>`;
     running = true;
-    app.querySelector("#exitBtn").onclick = () => {
+    app.querySelector("#exitBtn").onclick = async () => {
+      if (mockRun) {
+        if (await FA.confirm("Kết thúc Full Test ngay? Phần đang làm và các phần chưa làm tính 0 điểm.", { title: "Bỏ Full Test?", okText: "Kết thúc", cancelText: "Làm tiếp", danger: true })) { clearRun(); mockEnd("aborted"); }
+        return;
+      }
       const seg = location.hash.replace(/^#\/?/, "").split("/")[0];
       location.hash = "#/" + (seg || "");
     };
@@ -235,6 +257,15 @@
           <a class="btn btn-outline btn-sm" href="#/progress">📊 Xem bảng tiến độ →</a>
         </div>` : `
         <div class="mb-2"><a class="btn btn-outline btn-sm" href="#/progress">📊 Bảng tiến độ & lịch sử làm bài →</a></div>`}
+        <a class="card mock-cta mb-2" href="#/mock">
+          <div class="mock-cta-ic">🏁</div>
+          <div style="flex:1;min-width:220px">
+            <span class="pill">Mới · ${MOCKS.length} đề</span>
+            <h3 class="mb-0 mt-1">Full Test — thi thử trọn bộ như thi thật</h3>
+            <p class="mb-0 muted">Grammar → Listening → Reading → Writing → Speaking liền mạch, bấm giờ từng phần, phòng thi toàn màn hình. Cuối bài ra điểm Overall /200 và bậc CEFR.</p>
+          </div>
+          <span class="go">Vào Full Test →</span>
+        </a>
         <div class="grid grid-3">
           ${Object.entries(SKILLS).map(([k, s]) => `
             <a class="card skill-card" href="#/${k}">
@@ -469,6 +500,7 @@
   function saveDraft(skill, id, data) { FA.store.set(draftKey(skill, id), Object.assign({}, data, { savedAt: Date.now() })); }
   function clearDraft(skill, id) { try { localStorage.removeItem("flashaptis:" + draftKey(skill, id)); } catch (e) {} }
   function makeAutoSave(skill, id, payloadFn, leftFn) {
+    if (mockRun) return { flush() {}, schedule() {} }; // Full Test không lưu nháp vào đề lẻ (tránh "bài làm dở" lạc chỗ)
     let t = null;
     const flush = () => {
       clearTimeout(t); t = null;
@@ -544,6 +576,7 @@
     running = false;
     view = "";
     FA.stopSpeak();
+    if (mockRun && !o.replay) return mockCollect(o); // Full Test: lưu lượt rồi sang phần kế tiếp, kết quả xem ở cuối
     // o.replay: đang xem lại một lượt đã làm → không lưu thêm lượt mới, o.attemptAt là lượt đó
     let prevStats = null;
     if (!o.replay) {
@@ -607,8 +640,35 @@
       q("#rNote").innerHTML = o.note || "";
       q("#rBreak").innerHTML = breakHTML(o.breakdown);
     };
-    o.review(app.querySelector("#review"), update);
+    const rv = app.querySelector("#review");
+    watchReports(rv, o.skill, o.test);
+    o.review(rv, update);
   }
+
+  /* gắn nút "⚠️ Báo lỗi" vào từng thẻ câu hỏi ở phần xem lại (kể cả khi phần xem lại vẽ lại, vd. đổi tab lọc) */
+  function watchReports(el, skill, test) {
+    const add = () => el.querySelectorAll(".q-card").forEach((c) => {
+      if (c.querySelector(":scope > .rep-btn") || c.classList.contains("checklist") || c.querySelector('input[type="range"]')) return;
+      const part = c.querySelector(".q-part");
+      if (!part) return;
+      const ref = part.textContent.replace(/[✅❌]/g, "").replace(/\s+/g, " ").trim();
+      c.classList.add("has-rep");
+      c.insertAdjacentHTML("afterbegin", FA.reportBtn({ skill, testId: test.id, testTitle: test.title + " — " + SKILLS[skill].name, ref }));
+    });
+    add();
+    if (window.MutationObserver) {
+      let pending = false;
+      new MutationObserver(() => { if (!pending) { pending = true; setTimeout(() => { pending = false; add(); }, 0); } }).observe(el, { childList: true, subtree: true });
+    }
+  }
+  /* nút "Báo lỗi" trên thanh phòng thi → lấy vị trí đang làm (part / câu hiện tại) */
+  FA.reportCtx = (ctx) => {
+    if (!ctx.live || !curTest) return ctx;
+    const stage = document.getElementById("stage");
+    const part = stage && stage.querySelector(".q-part"), meta = stage && stage.querySelector(".progress-meta span");
+    const ref = [meta && meta.textContent, part && part.textContent].filter(Boolean).map((s) => s.replace(/\s+/g, " ").trim()).join(" · ");
+    return { skill: curTest.skill, testId: curTest.test.id, testTitle: curTest.test.title + " — " + SKILLS[curTest.skill].name, ref: ref + " (đang làm bài)" };
+  };
 
   /* ======================================================
      GRAMMAR & VOCABULARY
@@ -1606,7 +1666,9 @@
     }
   }
 
-  const RUNNERS = { grammar: runGrammar, reading: runReading, listening: runListening, writing: runWriting, speaking: runSpeaking };
+  const RUNNERS = {};
+  Object.entries({ grammar: runGrammar, reading: runReading, listening: runListening, writing: runWriting, speaking: runSpeaking })
+    .forEach(([k, fn]) => (RUNNERS[k] = (test, ...rest) => { curTest = { skill: k, test }; return fn(test, ...rest); }));
 
   /* ======================================================
      ÔN TẬP & SỔ CÂU SAI
@@ -1648,6 +1710,15 @@
     }
   }
 
+  /* vị trí câu trong đề gốc từ id của câu ôn tập: g3-q12 → Câu 13; r1-p0-g2 → Part 1 · chỗ trống 3; l2-p0-i4 → Câu 5 */
+  function gymRef(it) {
+    const id = String(it.id), q = String(it.q || "").slice(0, 80);
+    let m;
+    if ((m = id.match(/-q(\d+)$/))) return `Câu ${+m[1] + 1}: ${q}`;
+    if ((m = id.match(/-p(\d+)-g(\d+)$/))) return `Part ${+m[1] + 1} · chỗ trống (${+m[2] + 1})`;
+    if ((m = id.match(/-p(\d+)-i(\d+)$/))) return `Câu ${+m[2] + 1}: ${q}`;
+    return q;
+  }
   function gymSession(items, fromWrong, body) {
     view = "";
     let i = 0, correct = 0, chosen = null;
@@ -1671,7 +1742,8 @@
           ${it.script ? `<div class="audio-box"><button class="play-btn" id="gplay">▶</button><div class="info"><b>Nghe đoạn hội thoại</b><br>Ôn tập: nghe không giới hạn</div></div>` : ""}
           <div class="q-text">${esc(it.q)}</div>
           ${it.o.map((o, k) => `<button class="opt ${ans ? (k === it.a ? "correct" : k === chosen ? "wrong" : "") : ""}" data-k="${k}" ${ans ? "disabled" : ""}><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
-          ${ans ? `<div class="explain"><b>${chosen === it.a ? "✅ Chính xác!" : "❌ Chưa đúng."}</b> ${esc(it.e)}</div>${it.script ? `<div class="transcript">${transcriptHTML(it.script)}</div>` : ""}` : ""}
+          ${ans ? `<div class="explain"><b>${chosen === it.a ? "✅ Chính xác!" : "❌ Chưa đúng."}</b> ${esc(it.e)}</div>${it.script ? `<div class="transcript">${transcriptHTML(it.script)}</div>` : ""}
+          <div class="row mt-1"><div class="spacer"></div>${FA.reportBtn({ skill: (it.src.split("·")[0] || "").trim().toLowerCase(), testId: String(it.id).split("-")[0], testTitle: it.src, ref: gymRef(it) }, "Báo lỗi câu này")}</div>` : ""}
         </div>
         ${ans ? `<div class="exam-nav"><span></span><button class="btn btn-primary" id="gnext">${i < items.length - 1 ? "Câu tiếp →" : "Xem kết quả"}</button></div>` : ""}`;
       const gp = body.querySelector("#gplay");
@@ -1688,6 +1760,408 @@
     };
     draw();
   }
+
+  /* ======================================================
+     FULL TEST — thi trọn bộ 5 phần, có giờ, phòng thi khóa
+     Mỗi phần chạy bằng đúng runner của đề lẻ (giờ riêng từng phần như thi thật); renderResult thấy mockRun
+     → lưu lượt vào lịch sử đề lẻ rồi gọi mockCollect thay vì hiện kết quả. Cuối cùng: Overall = L+R+S+W (/200).
+     "Khóa trình duyệt" chỉ là răn đe ở mức web cho phép: toàn màn hình + đếm lần rời màn hình (đổi tab, mất tiêu điểm,
+     thoát toàn màn hình) + chặn chuột phải / sao chép / dán / phím DevTools. Không chặn được điện thoại thứ hai
+     hay Alt+Tab ở mức hệ điều hành — chỉ phát hiện và ghi lại. ====================================================== */
+  const MOCK_ORDER = ["grammar", "listening", "reading", "writing", "speaking"];
+  const mockTest = (m, k) => SKILLS[k].data.find((t) => t.id === m.parts[k]);
+  const MOCKS = (window.FA_MOCK || []).filter((m) => m && m.parts && MOCK_ORDER.every((k) => mockTest(m, k)));
+  const mockLocked = (m) => MOCK_ORDER.some((k) => isLocked(k, mockTest(m, k))); // khóa nếu có đề thành phần là đề Pro
+  const MOCK_MAX_STRIKES = 3;
+  const MOCK_MIN = MOCK_ORDER.reduce((n, k) => n + SKILLS[k].time, 0);
+  const MOCK_STATUS = { done: "✅ Hoàn thành", aborted: "⏹ Kết thúc sớm", terminated: "⛔ Bị dừng (rời màn hình)" };
+  const mockHist = (id) => ((FA.store.get("mock", {}) || {})[id] || []).slice().sort((a, b) => b.at - a.at);
+  function saveMockRec(id, rec) {
+    const all = FA.store.get("mock", {}) || {};
+    const list = (all[id] || []).filter((r) => r.at !== rec.at);
+    list.unshift(Object.assign({}, rec));
+    all[id] = list.sort((a, b) => b.at - a.at).slice(0, 10);
+    FA.store.set("mock", all);
+  }
+  function mockRecord(run, status) {
+    const scores = {};
+    MOCK_ORDER.forEach((k) => (scores[k] = run.os[k] ? run.os[k].score : null));
+    const overall = CORE_SKILLS.reduce((n, k) => n + (scores[k] || 0), 0);
+    return { at: run.at, finishedAt: Date.now(), status, strikes: run.strikes || 0, scores, overall, cefr: FA.toCEFR("overall", overall) };
+  }
+  // tab mở phòng thi cập nhật lịch sử → tab gốc (đang ở trang giới thiệu) vẽ lại
+  window.addEventListener("storage", (e) => {
+    if (e.key === "flashaptis:mock" && !running && !mockRun && (view === "mockIntro" || view === "mockList")) route();
+  });
+
+  function mockStripHTML() {
+    const r = mockRun;
+    return `<div class="mock-strip">
+      <b class="mock-name">🏁 ${esc(r.m.title)}</b>
+      <div class="mock-steps">${MOCK_ORDER.map((k, i) => `<span class="${i < r.idx ? "done" : i === r.idx ? "cur" : ""}">${i < r.idx ? "✓" : i + 1}. ${esc(short(k))}</span>`).join("")}</div>
+      <span class="mock-warn ${r.strikes ? "on" : ""}" id="mockStrikes" title="Số lần rời màn hình thi — tới ${MOCK_MAX_STRIKES} lần bài thi tự nộp">⚠️ ${r.strikes}/${MOCK_MAX_STRIKES}</span>
+    </div>`;
+  }
+
+  function viewMockList() {
+    view = "mockList";
+    app.innerHTML = `
+      <div class="page"><div class="container">
+        <div class="crumbs"><a href="#/">← Kỹ năng</a> / Full Test</div>
+        <span class="eyebrow">Thi thử trọn bộ</span>
+        <h1 class="page-title">🏁 Full Test Aptis</h1>
+        <p class="page-sub">Làm liền 5 phần như ngày thi thật: Grammar & Vocabulary → Listening → Reading → Writing → Speaking (khoảng ${MOCK_MIN} phút). Mỗi phần bấm giờ riêng, nộp xong tự sang phần kế. Phòng thi mở ở tab mới, toàn màn hình, rời màn hình bị ghi lại. Cuối bài ra điểm <b>Overall /200</b> và bậc CEFR.</p>
+        ${needLogin() ? LOGIN_NOTE : ""}
+        <div class="grid grid-2">
+          ${MOCKS.map((m) => {
+            const h = mockHist(m.id), best = h.filter((r) => r.status === "done").sort((a, b) => b.overall - a.overall)[0], locked = mockLocked(m);
+            return `<a class="card skill-card" href="#/mock/${m.id}">
+              <div class="icon">${locked ? "🔒" : "🏁"}</div>
+              ${locked ? `<span class="pill">PRO</span>` : `<span class="pill green">Free</span>`} ${h.length ? `<span class="pill gray">Đã thi ${h.length} lần</span>` : ""}
+              <h3>${esc(m.title)}</h3>
+              <p>${esc(m.desc || "")}</p>
+              ${best ? `<p class="mb-0"><b>Cao nhất: ${best.overall}/200 · ${esc(best.cefr)}</b></p>` : ""}
+              <span class="go">${locked ? "Xem chi tiết →" : "Vào thi →"}</span>
+            </a>`;
+          }).join("")}
+        </div>
+      </div></div>`;
+    bindLoginLinks();
+  }
+  function bindLoginLinks() {
+    app.querySelectorAll("[data-login]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); FA.cloud.signIn(a.dataset.login); }));
+  }
+
+  function viewMockLocked(m) {
+    view = "locked";
+    const P = FA.PLAN, checking = FA.plan && !FA.plan.loaded();
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        <div class="crumbs"><a href="#/mock">← Full Test</a> / ${esc(m.title)}</div>
+        <div class="card empty">
+          <div class="big">${checking ? "⏳" : "🔒"}</div>
+          <h2>${esc(m.title)}</h2>
+          ${checking ? `<p>Đang kiểm tra gói tài khoản…</p>` : `
+          <p>Full Test này ghép từ các đề dành cho gói <b>Pro</b>.</p>
+          <p>Pro: toàn bộ đề lẻ + mọi Full Test + AI chấm Writing ${P.aiPerDay.pro} lượt/ngày — chỉ ${FA.plan.fmtVND(P.price)}/${P.days} ngày.</p>
+          <div class="row" style="justify-content:center"><a class="btn btn-primary" href="pricing.html">Nâng cấp Pro</a><a class="btn btn-ghost" href="#/mock">Chọn Full Test khác</a></div>`}
+        </div>
+      </div></div>`;
+  }
+
+  const MOCK_RULES = [
+    "Làm liền 5 phần theo thứ tự <b>Grammar & Vocabulary → Listening → Reading → Writing → Speaking</b>; mỗi phần có đồng hồ riêng, hết giờ tự nộp. Nộp phần nào là khóa phần đó (không quay lại được).",
+    "Phòng thi mở ở <b>tab mới, toàn màn hình</b>. Thanh menu, nút hỗ trợ, chuột phải, sao chép/dán và phím mở công cụ nhà phát triển bị tắt.",
+    `Mỗi lần <b>rời khỏi màn hình thi</b> (đổi tab, bấm sang ứng dụng khác, thoát toàn màn hình) bị tính 1 lần vi phạm. Đến <b>lần thứ ${MOCK_MAX_STRIKES}</b> bài thi tự nộp phần đang làm và kết thúc — các phần chưa làm tính 0 điểm.`,
+    "Phần Speaking cần <b>micro</b> — hãy kiểm tra micro trước khi vào phòng thi. Nên đeo tai nghe cho phần Listening.",
+    "Kết quả: điểm từng phần (/50), <b>Overall = Listening + Reading + Speaking + Writing (/200)</b> và bậc CEFR. Grammar & Vocabulary tính riêng như thi thật.",
+  ];
+
+  function viewMockIntro(m) {
+    view = "mockIntro";
+    const hist = mockHist(m.id);
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        <div class="crumbs"><a href="#/mock">← Full Test</a> / ${esc(m.title)}</div>
+        <h1 class="page-title">🏁 ${esc(m.title)}</h1>
+        <p class="page-sub">${esc(m.desc || "")} Tổng thời gian khoảng <b>${MOCK_MIN} phút</b> — hãy chọn lúc rảnh, chỗ yên tĩnh.</p>
+        <div class="card mb-2"><div class="tbl-wrap"><table class="tbl"><tr><th>#</th><th>Phần thi</th><th>Đề</th><th>Thời gian</th></tr>
+          ${MOCK_ORDER.map((k, i) => `<tr><td>${i + 1}</td><td>${SKILLS[k].icon} ${esc(SKILLS[k].name)}</td><td>${esc(mockTest(m, k).title)}</td><td>${k === "speaking" ? "≈ 12 phút (máy tự chuyển câu)" : SKILLS[k].time + " phút"}</td></tr>`).join("")}
+        </table></div></div>
+        <div class="card intro-box"><ul>${MOCK_RULES.map((x) => `<li>${x}</li>`).join("")}</ul></div>
+        <div class="row mt-3">
+          <button class="btn btn-primary btn-lg" id="openRoom">🚀 Mở phòng thi</button>
+          <a class="btn btn-ghost" href="#/mock">← Chọn Full Test khác</a>
+        </div>
+        <div id="roomNote"></div>
+        ${hist.length ? `<div class="mt-4"><h3>Lịch sử Full Test</h3><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Overall</th><th>L · R · S · W</th><th>Grammar</th><th>Trạng thái</th></tr>
+          ${hist.map((r) => `<tr><td>${FA.fmtDate(r.at)}</td><td><b>${r.overall}</b>/200 · ${esc(r.cefr)}</td><td>${CORE_SKILLS.map((k) => (r.scores[k] == null ? "–" : r.scores[k])).join(" · ")}</td><td>${r.scores.grammar == null ? "–" : r.scores.grammar + "/50"}</td><td>${MOCK_STATUS[r.status] || esc(r.status)}${r.strikes ? `<br><span class="muted" style="font-size:.85rem">⚠️ ${r.strikes} lần rời màn hình</span>` : ""}</td></tr>`).join("")}
+        </table></div><p class="muted" style="font-size:.85rem">Muốn xem lại bài làm từng phần: vào đề lẻ tương ứng → Lịch sử làm bài → Xem lại.</p></div>` : ""}
+      </div></div>`;
+    app.querySelector("#openRoom").onclick = () => {
+      const url = location.pathname + location.search + "#/mock/" + m.id + "/run";
+      let w = null;
+      try { w = window.open(url, "flashaptis-mock-" + m.id); } catch (e) {}
+      if (!w) { location.hash = "#/mock/" + m.id + "/run"; return; } // trình duyệt chặn mở tab → vào phòng thi ngay tại tab này
+      app.querySelector("#roomNote").innerHTML = `<div class="explain mt-2">🪟 Phòng thi đã mở ở <b>tab mới</b>. Làm bài ở tab đó — tab này sẽ tự cập nhật lịch sử khi bạn thi xong.</div>`;
+    };
+  }
+
+  /* phòng chờ: kiểm tra micro, đồng ý nội quy → vào toàn màn hình và bắt đầu phần 1 */
+  function viewMockRoom(m) {
+    view = "mockRoom";
+    const fsOK = lock.fsOK();
+    const micOK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        <div class="card mock-room">
+          <span class="eyebrow">Phòng thi</span>
+          <h1 class="page-title mb-1">🏁 ${esc(m.title)}</h1>
+          <p class="muted">5 phần · khoảng ${MOCK_MIN} phút · tối đa ${MOCK_MAX_STRIKES - 1} lần cảnh báo rời màn hình.</p>
+          <ul class="mock-check">
+            <li id="ckMic">${micOK ? `🎙️ Micro: <button type="button" class="btn btn-outline btn-sm" id="micBtn">Kiểm tra micro</button> <span id="micSt" class="muted"></span>` : `⚠️ Trình duyệt không hỗ trợ ghi âm — phần Speaking vẫn làm được nhưng không ghi âm (nên dùng Chrome/Edge).`}</li>
+            <li>${fsOK ? "🖥️ Phòng thi sẽ chuyển sang <b>toàn màn hình</b>. Đừng bấm Esc hay chuyển tab." : "⚠️ Trình duyệt này không hỗ trợ toàn màn hình — vẫn thi được, nhưng mọi lần chuyển tab/ứng dụng đều bị ghi lại."}</li>
+            <li>🎧 Bật loa/tai nghe cho phần Listening.</li>
+          </ul>
+          <div class="card intro-box mt-2"><ul>${MOCK_RULES.map((x) => `<li>${x}</li>`).join("")}</ul></div>
+          <label class="mock-agree"><input type="checkbox" id="agree"> Tôi đã đọc nội quy và tự làm bài, không tra cứu tài liệu hay dùng AI.</label>
+          <div class="row mt-2">
+            <button class="btn btn-primary btn-lg" id="enterBtn" disabled>Vào phòng thi & bắt đầu</button>
+            <a class="btn btn-ghost" href="#/mock/${m.id}">Hủy</a>
+          </div>
+        </div>
+      </div></div>`;
+    const mb = app.querySelector("#micBtn");
+    if (mb) mb.onclick = async () => {
+      const stEl = app.querySelector("#micSt");
+      stEl.textContent = "Đang xin quyền…";
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        s.getTracks().forEach((t) => t.stop());
+        stEl.innerHTML = `<span class="txt-ok">✓ Micro hoạt động</span>`;
+      } catch (e) { stEl.textContent = "✗ Chưa có quyền micro — bấm biểu tượng 🔒 trên thanh địa chỉ để cho phép, rồi thử lại."; }
+    };
+    const agree = app.querySelector("#agree"), enter = app.querySelector("#enterBtn");
+    agree.onchange = () => (enter.disabled = !agree.checked);
+    enter.onclick = () => {
+      if (mockLocked(m) || needLogin()) return route();
+      mockRun = { m, idx: 0, os: {}, strikes: 0, at: Date.now(), terminated: false, inBreak: false };
+      document.body.classList.add("mock-on");
+      lock.start(); // trong cùng cú bấm → được phép bật toàn màn hình
+      mockSection(0);
+    };
+  }
+
+  function mockSection(i) {
+    if (!mockRun) return;
+    mockRun.idx = i;
+    mockRun.inBreak = false;
+    lock.grace(2500); // xin quyền micro / chuyển màn có thể làm cửa sổ mất tiêu điểm trong chốc lát
+    window.scrollTo(0, 0);
+    const k = MOCK_ORDER[i];
+    RUNNERS[k](mockTest(mockRun.m, k));
+  }
+
+  /* một phần vừa nộp (renderResult gọi tới) */
+  function mockCollect(o) {
+    const run = mockRun;
+    clearDraft(o.skill, o.test.id);
+    o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans, mock: run.m.id });
+    run.os[o.skill] = o;
+    const next = run.idx + 1;
+    if (run.terminated) return mockEnd("terminated");
+    if (next >= MOCK_ORDER.length) return mockEnd("done");
+    mockBreak(next);
+  }
+
+  /* màn chuyển phần: cú bấm "Bắt đầu" là thao tác người dùng mới → bật lại toàn màn hình / giọng đọc / micro hợp lệ */
+  function mockBreak(i) {
+    view = "mockBreak";
+    mockRun.idx = i;
+    mockRun.inBreak = true;
+    const k = MOCK_ORDER[i], S = SKILLS[k], prev = MOCK_ORDER[i - 1];
+    app.innerHTML = `
+      <div class="page"><div class="container narrow">
+        ${mockStripHTML()}
+        <div class="card empty mock-break">
+          <div class="big">${S.icon}</div>
+          <p class="txt-ok mb-1">✓ Đã nộp phần ${esc(SKILLS[prev].name)}</p>
+          <h2>Phần ${i + 1}/${MOCK_ORDER.length}: ${esc(S.name)}</h2>
+          <p class="muted">${esc(S.meta)}${k === "speaking" ? " · máy đọc câu hỏi và tự chuyển câu" : ""}</p>
+          <p style="font-size:.92rem">Hít thở, sẵn sàng thì bấm bắt đầu — đồng hồ phần này chỉ chạy khi bạn bấm.</p>
+          <button class="btn btn-primary btn-lg" id="goNext">Bắt đầu phần ${esc(short(k))} →</button>
+        </div>
+      </div></div>`;
+    window.scrollTo(0, 0);
+    app.querySelector("#goNext").onclick = () => { lock.enterFS(); mockSection(i); };
+  }
+
+  /* vi phạm lần cuối → tự nộp phần đang làm (bỏ qua hộp xác nhận) rồi kết thúc */
+  function mockTerminate() {
+    const run = mockRun;
+    if (!run || run.terminated) return;
+    run.terminated = true;
+    if (running) {
+      const b = document.getElementById("submitBtn");
+      const c = FA.confirm;
+      FA.confirm = () => Promise.resolve(true); // các nút Nộp bài gọi FA.confirm ngay đầu hàm → trả "đồng ý" luôn
+      try { if (b) b.click(); else { clearRun(); mockEnd("terminated"); } } finally { FA.confirm = c; }
+      FA.toast(`Bạn đã rời màn hình thi ${MOCK_MAX_STRIKES} lần — bài thi đã tự nộp.`);
+    } else if (run.inBreak) mockEnd("terminated");
+    // đang chấm (Writing/Speaking chờ AI) → mockCollect sẽ kết thúc khi chấm xong
+  }
+
+  function mockEnd(status, render) {
+    const run = mockRun;
+    if (!run) return;
+    mockRun = null;
+    running = false;
+    lock.stop();
+    document.body.classList.remove("mock-on");
+    FA.stopSpeak();
+    const rec = mockRecord(run, status);
+    saveMockRec(run.m.id, rec);
+    if (render === false) return;
+    viewMockResult(run, rec);
+    if (status === "done" && FA.celebrate) FA.celebrate({ icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.` });
+  }
+
+  function viewMockResult(run, rec) {
+    view = "mockResult";
+    const m = run.m;
+    const lvl = (k, s) => (s == null ? "" : FA.CEFR[k] ? FA.toCEFR(k, s) : "");
+    const summary = () => `
+      <div class="result-hero">
+        <div class="ring-lg" style="--p:${Math.round((rec.overall / 200) * 100)}"><div><b>${rec.overall}</b><span>/200</span></div></div>
+        <div style="flex:1">
+          <span class="eyebrow">Kết quả Full Test · ${esc(m.title)}</span>
+          <h2 class="mb-0">${rec.status === "done" ? "Hoàn thành bài thi! 🎉" : rec.status === "terminated" ? "Bài thi bị dừng" : "Bài thi kết thúc sớm"}</h2>
+          <div class="row mt-1"><span class="cefr-badge">${esc(rec.cefr)}</span><span class="muted">bậc CEFR Overall ước lượng (Listening + Reading + Speaking + Writing)</span></div>
+          <div class="mock-scores">${MOCK_ORDER.map((k) => `<div class="${k === "grammar" ? "g" : ""}"><span>${SKILLS[k].icon} ${esc(short(k))}</span><b>${rec.scores[k] == null ? "–" : rec.scores[k]}<small>/50</small></b><em>${rec.scores[k] == null ? "chưa làm" : k === "grammar" ? "không cộng Overall" : esc(lvl(k, rec.scores[k]))}</em></div>`).join("")}</div>
+          ${rec.status === "terminated" ? `<div class="explain mt-1">⛔ Bạn đã rời màn hình thi ${rec.strikes} lần nên bài thi tự nộp và dừng. Các phần chưa làm tính 0 điểm.</div>` : rec.status === "aborted" ? `<div class="explain mt-1">⏹ Bạn đã kết thúc sớm — các phần chưa làm tính 0 điểm.</div>` : ""}
+          ${rec.strikes && rec.status !== "terminated" ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">⚠️ Ghi nhận ${rec.strikes} lần rời màn hình trong lúc thi.</p>` : ""}
+          ${run.os.speaking ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">🎙️ Điểm Speaking ${run.os.speaking.selfScore ? "đang là điểm tự chấm mặc định" : "do AI chấm sẵn"} — mở tab Speaking bên dưới, nghe lại bản ghi, chỉnh thanh điểm rồi bấm <b>Lưu điểm</b>: Overall tự cập nhật.</p>` : ""}
+        </div>
+      </div>`;
+    const done = MOCK_ORDER.filter((k) => run.os[k]);
+    app.innerHTML = `
+      <div class="page"><div class="container narrow" id="mockRes">
+        <div class="crumbs"><a href="#/mock">← Full Test</a> / ${esc(m.title)} / Kết quả</div>
+        <div class="card" id="mockSum">${summary()}
+          <div class="row mt-3">
+            ${window.opener ? `<button class="btn btn-primary" id="closeWin">Đóng phòng thi</button>` : ""}
+            <a class="btn ${window.opener ? "btn-outline" : "btn-primary"}" href="#/mock/${m.id}">Về trang ${esc(m.title)}</a>
+            <a class="btn btn-ghost" href="#/mock">Full Test khác</a>
+          </div>
+        </div>
+        ${done.length ? `<h2 class="mt-4">Xem lại bài làm từng phần</h2>
+        <div class="tabs" id="mockTabs">${done.map((k, i) => `<button class="tab ${i === 0 ? "active" : ""}" data-mt="${k}">${SKILLS[k].icon} ${esc(short(k))} · ${run.os[k].score}/50</button>`).join("")}</div>
+        <div id="mockPanels">${done.map((k, i) => `<div data-mp="${k}" ${i ? "hidden" : ""}><div class="card mb-2" data-mnote="${k}"></div><div data-mrev="${k}"></div></div>`).join("")}</div>` : ""}
+      </div></div>`;
+    window.scrollTo(0, 0);
+    const cw = app.querySelector("#closeWin");
+    if (cw) cw.onclick = () => window.close();
+    const noteHTML = (o) => `<b>${esc(SKILLS[o.skill].name)}: ${o.score}/50</b>${o.cefr ? ` · <span class="pill">${esc(o.cefr)}</span>` : ""}
+      <p class="muted mt-1 mb-0" style="font-size:.88rem">${o.note || ""}</p>
+      <div class="breakdown">${(o.breakdown || []).map((b) => `<div class="bar-row"><span>${esc(b.label)}</span><div class="progress"><i style="width:${b.total ? Math.round((b.got / b.total) * 100) : 0}%"></i></div><b>${b.got}/${b.total}</b></div>`).join("")}</div>`;
+    const mounted = {};
+    const mount = (k) => {
+      if (mounted[k]) return;
+      mounted[k] = true;
+      const o = run.os[k];
+      const noteEl = app.querySelector(`[data-mnote="${k}"]`), rv = app.querySelector(`[data-mrev="${k}"]`);
+      noteEl.innerHTML = noteHTML(o);
+      const update = (n) => {
+        Object.assign(o, n);
+        if (o.attemptAt) FA.updateAttempt(o.skill, o.test.id, o.attemptAt, Object.assign({ score: o.score, cefr: o.cefr }, n.ans ? { ans: n.ans } : {}));
+        const r2 = mockRecord(run, rec.status);
+        Object.assign(rec, { scores: r2.scores, overall: r2.overall, cefr: r2.cefr });
+        saveMockRec(m.id, rec);
+        const sum = app.querySelector("#mockSum .result-hero");
+        if (sum) sum.outerHTML = summary();
+        noteEl.innerHTML = noteHTML(o);
+        const tb = app.querySelector(`[data-mt="${k}"]`);
+        if (tb) tb.textContent = `${SKILLS[k].icon} ${short(k)} · ${o.score}/50`;
+      };
+      watchReports(rv, k, o.test);
+      o.review(rv, update);
+    };
+    if (done.length) mount(done[0]);
+    app.querySelectorAll("[data-mt]").forEach((b) => (b.onclick = () => {
+      app.querySelectorAll("[data-mt]").forEach((x) => x.classList.toggle("active", x === b));
+      app.querySelectorAll("[data-mp]").forEach((p) => (p.hidden = p.dataset.mp !== b.dataset.mt));
+      mount(b.dataset.mt);
+    }));
+  }
+
+  /* ---------- khóa phòng thi ---------- */
+  const lock = {
+    on: false, graceUntil: 0, blurT: 0, ov: null,
+    fsOK() { const d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen); },
+    inFS() { return !!(document.fullscreenElement || document.webkitFullscreenElement); },
+    enterFS() {
+      if (!lock.fsOK() || lock.inFS()) return;
+      const d = document.documentElement;
+      try { const p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    },
+    exitFS() {
+      if (!lock.inFS()) return;
+      try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    },
+    grace(ms) { lock.graceUntil = Math.max(lock.graceUntil, Date.now() + ms); },
+    start() {
+      lock.on = true;
+      lock.grace(2000);
+      document.addEventListener("visibilitychange", lock.onVis);
+      window.addEventListener("blur", lock.onBlur);
+      window.addEventListener("focus", lock.onFocus);
+      document.addEventListener("fullscreenchange", lock.onFS);
+      document.addEventListener("webkitfullscreenchange", lock.onFS);
+      window.addEventListener("keydown", lock.onKey, true);
+      ["copy", "cut", "paste", "contextmenu", "drop"].forEach((t) => document.addEventListener(t, lock.onClip, true));
+      lock.enterFS();
+    },
+    stop() {
+      lock.on = false;
+      clearTimeout(lock.blurT);
+      document.removeEventListener("visibilitychange", lock.onVis);
+      window.removeEventListener("blur", lock.onBlur);
+      window.removeEventListener("focus", lock.onFocus);
+      document.removeEventListener("fullscreenchange", lock.onFS);
+      document.removeEventListener("webkitfullscreenchange", lock.onFS);
+      window.removeEventListener("keydown", lock.onKey, true);
+      ["copy", "cut", "paste", "contextmenu", "drop"].forEach((t) => document.removeEventListener(t, lock.onClip, true));
+      if (lock.ov) { lock.ov.remove(); lock.ov = null; }
+      lock.exitFS();
+    },
+    onVis() { if (document.visibilityState === "hidden") lock.strike("Bạn đã chuyển sang tab hoặc ứng dụng khác."); },
+    onBlur() {
+      clearTimeout(lock.blurT);
+      lock.blurT = setTimeout(() => {
+        const a = document.activeElement;
+        if (a && (a.tagName === "SELECT" || a.tagName === "IFRAME")) return; // hộp chọn đáp án đang mở
+        if (!document.hasFocus()) lock.strike("Cửa sổ bài thi bị mất tiêu điểm — bạn đã bấm sang cửa sổ hoặc ứng dụng khác.");
+      }, 1500);
+    },
+    onFocus() { clearTimeout(lock.blurT); },
+    onFS() { if (lock.on && lock.fsOK() && !lock.inFS()) lock.strike("Bạn đã thoát chế độ toàn màn hình."); },
+    onKey(e) {
+      const k = (e.key || "").toLowerCase(), mod = e.ctrlKey || e.metaKey;
+      const bad = k === "f12" || (mod && e.shiftKey && ["i", "j", "c", "k"].includes(k)) || (mod && !e.shiftKey && ["u", "s", "p", "c", "x", "v"].includes(k));
+      if (!bad) return;
+      e.preventDefault();
+      e.stopPropagation();
+      FA.toast("Phím tắt này bị khóa trong phòng thi.");
+    },
+    onClip(e) {
+      if (e.type === "drop" && !(e.target && e.target.matches && e.target.matches("input, textarea"))) return; // kéo thả sắp xếp câu (Reading) vẫn dùng được
+      e.preventDefault();
+      if (e.type === "paste" || e.type === "drop") FA.toast("Không được dán văn bản trong phòng thi.");
+      else if (e.type !== "contextmenu") FA.toast("Không được sao chép nội dung đề trong phòng thi.");
+    },
+    strike(reason) {
+      const run = mockRun;
+      if (!lock.on || !run || run.terminated || lock.ov || Date.now() < lock.graceUntil) return;
+      run.strikes++;
+      const b = document.getElementById("mockStrikes");
+      if (b) { b.textContent = `⚠️ ${run.strikes}/${MOCK_MAX_STRIKES}`; b.classList.add("on"); }
+      if (run.strikes >= MOCK_MAX_STRIKES) return mockTerminate();
+      const left = MOCK_MAX_STRIKES - run.strikes;
+      const ov = (lock.ov = document.createElement("div"));
+      ov.className = "lock-ov";
+      ov.innerHTML = `<div class="lock-box" role="alertdialog" aria-modal="true">
+        <div class="big">⚠️</div>
+        <h2>Cảnh báo ${run.strikes}/${MOCK_MAX_STRIKES}: bạn đã rời màn hình thi</h2>
+        <p>${esc(reason)}</p>
+        <p><b>${left === 1 ? "Lần vi phạm tiếp theo bài thi sẽ tự nộp và kết thúc." : `Còn ${left} lần nữa bài thi sẽ tự nộp và kết thúc.`}</b> Đồng hồ vẫn đang chạy.</p>
+        <button class="btn btn-primary btn-lg" type="button">Quay lại bài thi</button>
+      </div>`;
+      document.body.append(ov);
+      const btn = ov.querySelector("button");
+      btn.onclick = () => { ov.remove(); lock.ov = null; lock.grace(1500); lock.enterFS(); };
+      setTimeout(() => btn.focus(), 0);
+    },
+  };
 
   route();
 })();

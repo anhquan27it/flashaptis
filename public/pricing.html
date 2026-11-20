@@ -90,7 +90,7 @@
           <img src="${esc(plan.qrUrl())}" alt="Mã QR chuyển khoản ${esc(plan.fmtVND(P.price))}" width="240" height="240">
           <div>
             <dl>
-              <dt>Ngân hàng</dt><dd>${esc(P.bank.id)}</dd>
+              <dt>Ngân hàng</dt><dd>${esc(P.bank.name || P.bank.id)}</dd>
               <dt>Số tài khoản</dt><dd>${esc(P.bank.accountNo)} <button type="button" class="copy-btn" data-copy="${esc(P.bank.accountNo)}">📋 Sao chép</button></dd>
               <dt>Chủ tài khoản</dt><dd>${esc(P.bank.accountName)}</dd>
               <dt>Số tiền</dt><dd>${plan.fmtVND(P.price)}</dd>

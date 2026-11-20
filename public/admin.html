@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Quản trị thanh toán — FlashAptis</title>
+  <title>Quản trị — FlashAptis</title>
   <meta name="theme-color" content="#f97316">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23f97316'/><text x='50' y='70' font-size='62' text-anchor='middle'>⚡</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,9 +17,11 @@
 <body>
   <main class="page"><div class="container">
     <span class="eyebrow">Quản trị</span>
-    <h1 class="page-title">💳 Duyệt thanh toán Pro</h1>
-    <p class="page-sub">Đối chiếu app ngân hàng: số tiền và nội dung chuyển khoản (<code>FLASHAPTIS FA…</code>) phải khớp với mã của yêu cầu. Duyệt → tài khoản được cộng thêm số ngày Pro.</p>
+    <h1 class="page-title">🛠️ Quản trị</h1>
+    <div class="tabs"><a class="tab active" href="#pay" data-at="pay">💳 Thanh toán Pro</a><a class="tab" href="#reports" data-at="reports">🐞 Báo lỗi đề <span class="tab-n" id="repN">…</span></a></div>
+    <p class="page-sub" id="paySub">Đối chiếu app ngân hàng: số tiền và nội dung chuyển khoản (<code>FLASHAPTIS FA…</code>) phải khớp với mã của yêu cầu. Duyệt → tài khoản được cộng thêm số ngày Pro.</p>
     <div id="adm"></div>
+    <div id="reps" hidden></div>
   </div></main>
 
   <script src="assets/js/core/common.js"></script>
@@ -114,6 +116,76 @@
     }
     plan.onChange(draw);
     draw();
+
+    /* ---------- Báo lỗi đề (collection reports — người học gửi từ nút ⚠️ Báo lỗi ở trang thi) ---------- */
+    const CAT = Object.fromEntries(FA.REPORT_CATS);
+    const SK = { grammar: "Grammar", reading: "Reading", listening: "Listening", writing: "Writing", speaking: "Speaking" };
+    const RST = { open: "🟠 Chưa xử lý", fixed: "✅ Đã sửa", ignored: "⚪ Bỏ qua" };
+    const repBox = document.getElementById("reps");
+    let repFilter = "open";
+    async function drawReports() {
+      const repN = document.getElementById("repN");
+      if (!plan.loaded() || !plan.user() || !plan.isAdmin()) { repBox.innerHTML = el.innerHTML; repN.textContent = "–"; return; }
+      repBox.innerHTML = `<div class="card"><p class="muted mb-0">Đang tải báo lỗi…</p></div>`;
+      const reps = [];
+      try {
+        const snap = await FA.cloud.db().collection("reports").orderBy("createdAt", "desc").limit(200).get();
+        snap.forEach((d) => reps.push(Object.assign({ id: d.id }, d.data())));
+      } catch (e) {
+        repBox.innerHTML = `<div class="card"><h3>Chưa đọc được báo lỗi</h3><p class="muted mb-0">${esc((e && e.message) || "")} — nếu là lỗi quyền (permission-denied), hãy deploy luật Firestore mới: <code>firebase deploy --only firestore</code>.</p></div>`;
+        repN.textContent = "!";
+        return;
+      }
+      const open = reps.filter((r) => r.status === "open");
+      repN.textContent = open.length;
+      const list = repFilter === "open" ? open : reps;
+      const keyOf = (r) => [r.skill, r.testId, r.ref].join("|");
+      const cnt = {}; // câu nào bị nhiều người báo
+      open.forEach((r) => (cnt[keyOf(r)] = (cnt[keyOf(r)] || 0) + 1));
+      const row = (r) => {
+        const n = cnt[keyOf(r)] || 0;
+        return `<tr>
+          <td>${FA.fmtDate(r.createdAt)}<br><span class="muted" style="font-size:.82rem">${RST[r.status] || esc(r.status)}</span></td>
+          <td><b>${esc(r.testTitle || (SK[r.skill] || r.skill) + " " + r.testId)}</b> <code>${esc(r.testId)}</code><br>${esc(r.ref || "")}${n > 1 && r.status === "open" ? ` <span class="pill">${n} báo cáo</span>` : ""}</td>
+          <td><b>${esc(CAT[r.cat] || r.cat)}</b>${r.msg ? `<br><span style="white-space:pre-line">${esc(r.msg)}</span>` : ""}</td>
+          <td>${esc(r.name || "—")}<br><span class="muted" style="font-size:.82rem">${esc(r.email || "")}</span></td>
+          <td><div class="row" style="gap:6px">
+            ${SK[r.skill] && r.testId ? `<a class="btn btn-outline btn-sm" href="exam.html#/${encodeURIComponent(r.skill)}/${encodeURIComponent(r.testId)}" target="_blank" rel="noopener">Mở đề</a>` : ""}
+            ${r.status === "open"
+              ? `<button class="btn btn-green btn-sm" data-rs="fixed" data-id="${esc(r.id)}">Đã sửa</button><button class="btn btn-ghost btn-sm" data-rs="ignored" data-id="${esc(r.id)}">Bỏ qua</button>`
+              : `<button class="btn btn-ghost btn-sm" data-rs="open" data-id="${esc(r.id)}">Mở lại</button>`}
+            <button class="btn btn-red btn-sm" data-rdel="${esc(r.id)}">Xóa</button></div></td></tr>`;
+      };
+      repBox.innerHTML = `
+        <div class="card">
+          <div class="row mb-2"><h3 class="mb-0">Báo lỗi từ người học</h3><div class="spacer"></div>
+            <div class="tabs mb-0"><button class="tab ${repFilter === "open" ? "active" : ""}" data-rf="open">Chưa xử lý (${open.length})</button><button class="tab ${repFilter === "all" ? "active" : ""}" data-rf="all">Tất cả (${reps.length})</button></div></div>
+          <p class="muted" style="font-size:.88rem">Sửa nội dung trong <code>public/data/*.js</code> theo mã đề (vd. <code>g3</code>, <code>l2</code>), deploy, rồi bấm “Đã sửa”. “Mở đề” mở đề đó trên web để kiểm tra.</p>
+          ${list.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Đề · vị trí</th><th>Lỗi</th><th>Người gửi</th><th></th></tr>${list.map(row).join("")}</table></div>`
+            : `<p class="muted mb-0">${repFilter === "open" ? "Không có báo lỗi nào đang chờ. 🎉" : "Chưa có báo lỗi nào."}</p>`}
+        </div>`;
+      repBox.querySelectorAll("[data-rf]").forEach((b) => (b.onclick = () => { repFilter = b.dataset.rf; drawReports(); }));
+      repBox.querySelectorAll("[data-rs]").forEach((b) => (b.onclick = async () => {
+        b.disabled = true;
+        try { await FA.cloud.db().collection("reports").doc(b.dataset.id).update({ status: b.dataset.rs, doneAt: Date.now(), by: plan.user().uid }); drawReports(); }
+        catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); b.disabled = false; }
+      }));
+      repBox.querySelectorAll("[data-rdel]").forEach((b) => (b.onclick = async () => {
+        if (!(await FA.confirm("Xóa hẳn báo lỗi này?", { title: "Xóa báo lỗi", okText: "Xóa", danger: true }))) return;
+        try { await FA.cloud.db().collection("reports").doc(b.dataset.rdel).delete(); drawReports(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      }));
+    }
+    plan.onChange(drawReports);
+    drawReports();
+
+    /* tab Thanh toán / Báo lỗi (theo #hash để tải lại vẫn đúng tab) */
+    function showTab() {
+      const rep = location.hash === "#reports";
+      document.querySelectorAll("[data-at]").forEach((a) => a.classList.toggle("active", (a.dataset.at === "reports") === rep));
+      el.hidden = rep; repBox.hidden = !rep; document.getElementById("paySub").hidden = rep;
+    }
+    window.addEventListener("hashchange", showTab);
+    showTab();
   </script>
 </body>
 </html>
