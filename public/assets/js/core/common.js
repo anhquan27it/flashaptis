@@ -266,7 +266,10 @@
       setTimeout(close, o.ms || 3600);
     } catch (e) { celebBusy = false; }
   }
-  FA.celebrate = function (o) { celebQueue.push(o || {}); nextCeleb(); };
+  FA.celebrate = function (o) {
+    if (typeof document !== "undefined" && document.body && document.body.classList && document.body.classList.contains("mock-on")) return; // đang trong phòng thi Full Test: không làm phân tâm
+    celebQueue.push(o || {}); nextCeleb();
+  };
 
   /* ---------- Mục tiêu ngày + chuỗi ngày học (hiện trên header) ----------
      "Điểm học" trong ngày: nộp 1 đề = 10, trả lời 1 câu Ôn tập / 1 thẻ flashcard / 1 câu kiểm tra từ vựng = 1.
