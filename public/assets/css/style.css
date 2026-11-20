@@ -1193,3 +1193,23 @@ body.mock-on { background: var(--bg); }
   .streak-btn b { display: none; }
   .streak-btn { padding-right: 2px; }
 }
+@media (max-width: 560px) {
+  .container { padding-left: 16px; padding-right: 16px; }
+  .page { padding: 20px 0 48px; }
+  h1, .page-title { font-size: 1.65rem; }
+  .hero h1 { font-size: 2.05rem; }
+  h2 { font-size: 1.3rem; }
+  .page-sub { font-size: .95rem; margin-bottom: 18px; }
+  /* dãy tab: 1 hàng vuốt ngang thay vì xuống 3 dòng */
+  .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-left: -16px; margin-right: -16px; padding: 2px 16px 4px; margin-bottom: 16px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; white-space: nowrap; padding: 8px 14px; font-size: .9rem; }
+  /* flashcard: thấy trọn thẻ + 3 nút trong một màn hình */
+  .fc { height: 300px; }
+  .fc-face { padding: 22px 18px 40px; border-radius: 20px; }
+  .fc-word { font-size: 2.1rem; }
+  .fc-actions { gap: 8px; margin-top: 12px; }
+  .fc-actions kbd { display: none; } /* điện thoại không có phím tắt */
+  .fc-hint kbd, .fc-hint { font-size: .74rem; }
+  .crumbs { font-size: .85rem; margin-bottom: 6px; }
+}
