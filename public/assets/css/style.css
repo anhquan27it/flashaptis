@@ -1213,3 +1213,15 @@ body.mock-on { background: var(--bg); }
   .fc-hint kbd, .fc-hint { font-size: .74rem; }
   .crumbs { font-size: .85rem; margin-bottom: 6px; }
 }
+@media (max-width: 560px) {
+  /* thanh phòng thi: 1 hàng, "Báo lỗi" chỉ còn biểu tượng */
+  .exam-top { gap: 8px; }
+  .exam-bar { gap: 6px; flex-wrap: nowrap; }
+  .exam-bar .btn { white-space: nowrap; padding: 8px 12px; }
+  .exam-bar .rep-btn { padding: 0; width: 36px; height: 36px; display: inline-grid; place-items: center; font-size: 15px; }
+  .exam-bar .rep-lb { display: none; }
+  .timer { padding: 6px 10px; font-size: .95rem; }
+  /* đang làm bài: ẩn nút Hỗ trợ để không đè nút "Tiếp →" / "Nộp bài" */
+  body:has(#examContainer) .help-fab { display: none; }
+  .exam-nav .btn { padding: 11px 18px; }
+}

@@ -75,6 +75,11 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 - **Đừng sửa tay** `data/vocab/*` và `vocab-index.js`: sửa Excel gốc (`Từ vựng chủ đề/*.xlsx`, `EXCEL/*TongHop*.xlsx` sheet "Tất cả từ") rồi chạy `npm run build:vocab` ([tools/build-vocab.js](tools/build-vocab.js), cần Python 3 — đọc xlsx bằng thư viện chuẩn qua `tools/xlsx-to-json.py`). Thêm chủ đề mới phải khai báo id/tên/emoji trong `TOPIC_META`; loại từ mới thêm vào bảng `POS`. Script dừng nếu thiếu ô / trùng từ. Hai thư mục nguồn nằm ngoài `public/` nên không bị deploy; riêng `EXCEL/` nằm trong `.gitignore` (chỉ có trên máy chủ dự án) — không đưa tên/nguồn bên thứ ba của file này vào code hay dữ liệu web.
 - flashcards.js: `route()` tải file bộ trước khi vẽ (màn "Đang tải…", bộ Từ khó tải các bộ có từ gắn sao); danh sách bộ đếm "đã thuộc" theo tiền tố khóa `fc-known` (không cần tải bộ); ô tra nhanh lần đầu tải toàn bộ (~2,5 MB). Đọc `fc-known` một lần mỗi lần vẽ — đừng gọi `isKnown` trong vòng lặp hàng nghìn thẻ; danh sách từ vẽ tối đa 300 dòng; link `#bộ/list/từ` mở danh sách lọc sẵn. Trang chủ đếm tổng từ qua `vocab-index.js`.
 
+### Giao diện điện thoại
+- Header ở ≤ 560px phải vừa một hàng: logo · chuỗi ngày · avatar (ẩn huy hiệu FREE/PRO + mũi tên) · ☰; nút sáng/tối chuyển vào menu ☰ (`.nav-theme`). Trước đây cụm nút phải rộng ~293px làm trang rộng 457px trên iPhone 393px → cả trang bị thu nhỏ, lệch. `html, body { overflow-x: clip }` ở ≤ 560px là lưới an toàn, đừng dựa vào nó để che lỗi tràn.
+- Dãy `.tabs` thành 1 hàng vuốt ngang; flashcard thấp hơn để thấy trọn thẻ + 3 nút; đang làm bài (`#examContainer`) thì ẩn nút Hỗ trợ để không đè "Tiếp →".
+- Kiểm tra: đo tràn ngang ở 393/360/320px (Edge headless không cho cửa sổ < ~500px → đặt trang vào `iframe` đúng bề rộng rồi đo `getBoundingClientRect`), giả lập trạng thái đã đăng nhập vì nút tài khoản rộng hơn nút Đăng nhập.
+
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
 - Đáp án trắc nghiệm bị **xáo thứ tự mỗi lần tải trang** → `ans` phải lưu **văn bản** lựa chọn, không lưu chỉ số (xem `optText` / `optIdx`).

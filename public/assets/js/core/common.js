@@ -542,7 +542,7 @@
      ref: vị trí trong đề ("Câu 12", "Part 2 · Câu 1"…). Mỗi câu chỉ báo 1 lần/ngày trên một máy (chống spam). */
   FA.REPORT_CATS = [["answer", "Đáp án sai"], ["text", "Câu hỏi / chính tả sai"], ["audio", "Âm thanh lỗi"], ["image", "Hình ảnh lỗi"], ["explain", "Giải thích sai / khó hiểu"], ["other", "Khác"]];
   FA.reportBtn = function (ctx, label) {
-    return `<button type="button" class="rep-btn" data-report="${FA.esc(JSON.stringify(ctx || {}))}" title="Báo lỗi câu này cho FlashAptis">⚠️ ${FA.esc(label || "Báo lỗi")}</button>`;
+    return `<button type="button" class="rep-btn" data-report="${FA.esc(JSON.stringify(ctx || {}))}" title="Báo lỗi câu này cho FlashAptis">⚠️<span class="rep-lb"> ${FA.esc(label || "Báo lỗi")}</span></button>`;
   };
   FA.report = function (ctx) {
     ctx = ctx || {};
