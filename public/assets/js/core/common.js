@@ -32,6 +32,11 @@
         b.title = dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối";
         b.setAttribute("aria-pressed", String(dark));
       });
+      // nút đổi giao diện trong menu ☰ (điện thoại — header không đủ chỗ cho nút tròn)
+      document.querySelectorAll(".nav-theme").forEach((b) => {
+        b.textContent = dark ? "☀️ Giao diện sáng" : "🌙 Giao diện tối";
+        b.setAttribute("aria-pressed", String(dark));
+      });
     }
   };
   applyTheme(FA.store.get("theme", "light"));
@@ -56,6 +61,7 @@
         <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="70" height="70" alt="" decoding="async"><span class="logo-text"><span class="flash">Flash</span>Aptis</span></a>
         <nav class="nav" aria-label="Điều hướng chính">
           ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          <button type="button" class="nav-theme" aria-pressed="false">🌙 Giao diện tối</button><!-- chỉ hiện trong menu điện thoại -->
           <a class="btn btn-primary nav-cta" href="exam.html">Làm đề ngay ⚡</a><!-- chỉ hiện trong menu mobile -->
         </nav>
         <div class="header-actions">
@@ -68,11 +74,11 @@
     document.body.prepend(header);
     document.body.classList.add("has-shell");
     applyTheme(FA.store.get("theme", "light"));
-    header.querySelector(".theme-btn").onclick = () => {
+    header.querySelectorAll(".theme-btn, .nav-theme").forEach((b) => (b.onclick = () => {
       const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
       FA.store.set("theme", next);
       applyTheme(next);
-    };
+    }));
     const menuBtn = header.querySelector(".menu-btn"), nav = header.querySelector(".nav");
     const closeAll = () => {
       nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
