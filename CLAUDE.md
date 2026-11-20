@@ -55,6 +55,8 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 - **`FA.celebrate({icon,title,sub,confetti})`** (common.js): banner + pháo giấy, xếp hàng từng cái; tôn trọng prefers-reduced-motion. Gọi khi: vừa đạt mục tiêu ngày; kết quả bài thi (`celebrateResult` trong exam.js — bài đầu tiên của kỹ năng, lên bậc CEFR, kỷ lục mới; chụp `skillPrev` **trước** `saveAttempt`, chờ điểm chốt: trắc nghiệm 0,9s, Writing 2,5s sau lần `update` cuối, Speaking tự chấm (`selfScore`) chỉ sau khi người dùng chỉnh điểm); xong giai đoạn lộ trình (`FA.roadmap.celebrateStages` so với `roadmap-seen` lưu trên máy — lần đầu chỉ ghi nhận; giai đoạn 4 gắn theo bậc mục tiêu). exam.html nạp thêm `roadmap.js` cho việc này.
 - **Flashcard ⭐ từ khó**: nút ☆ góc thẻ / phím S / trong danh sách từ / sau mỗi câu kiểm tra → `fc-starred` {"bộ|từ": ts}. Bộ ảo `#starred` "Từ khó của tôi" (thẻ mang `_d` = bộ gốc nên trạng thái thuộc/sao vẫn gắn với bộ gốc); kiểm tra bộ ít thẻ lấy nghĩa nhiễu từ mọi bộ.
 
+- **Hiệu ứng chuyển trang/tab**: đổi trang dùng CSS `@view-transition` (Chrome/Edge; header có `view-transition-name` nên đứng yên); đổi hash và bấm `.tab` gọi `FA.fxIn(el)` (common.js) để chạy lại animation `.fx-in` — chỉ là CSS, không đụng logic trang; tắt khi prefers-reduced-motion.
+
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
 - Đáp án trắc nghiệm bị **xáo thứ tự mỗi lần tải trang** → `ans` phải lưu **văn bản** lựa chọn, không lưu chỉ số (xem `optText` / `optIdx`).

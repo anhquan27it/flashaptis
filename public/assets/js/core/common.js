@@ -486,4 +486,31 @@
   // Speaking: 4 part × 0–5 = tối đa 20 → thang 50
   FA.SPEAKING_MAX_RAW = 20;
   FA.speakingTo50 = (raw) => Math.round((raw / FA.SPEAKING_MAX_RAW) * 50);
+
+  /* ---------- Hiệu ứng chuyển tab / chuyển màn cho mượt ----------
+     - Đổi trang (menu header): CSS @view-transition (Chrome/Edge), xem style.css.
+     - Đổi màn trong SPA (hash: exam, flashcards): cho #app mờ dần vào.
+     - Bấm nút .tab (lọc, Anh→Việt…): phần nội dung ngay sau dãy tab mờ dần vào.
+     Chỉ chạy lại animation CSS (class .fx-in) nên không đụng logic trang; tắt khi prefers-reduced-motion. */
+  FA.fxIn = function (el) {
+    if (!el || !el.classList) return;
+    el.classList.remove("fx-in");
+    void el.offsetWidth; // ép trình duyệt chạy lại animation
+    el.classList.add("fx-in");
+  };
+  window.addEventListener("hashchange", () => FA.fxIn(document.getElementById("app")));
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest && e.target.closest(".tab");
+    if (!tab || tab.tagName === "A") return; // <a href="#..."> đã có hiệu ứng hashchange
+    const bar = tab.closest(".tabs");
+    // handler của trang đã chạy xong (bubble) → nếu cả màn vẽ lại thì lấy dãy tab mới
+    setTimeout(() => {
+      const root = document.getElementById("app") || document.querySelector("main");
+      const tabs = bar && bar.isConnected ? bar : root && root.querySelector(".tabs");
+      if (!tabs) return;
+      let n = tabs.nextElementSibling, any = false;
+      for (; n; n = n.nextElementSibling) { FA.fxIn(n); any = true; }
+      if (!any && tabs.parentElement) FA.fxIn(tabs.parentElement.nextElementSibling);
+    }, 0);
+  });
 })();

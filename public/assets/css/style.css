@@ -972,3 +972,24 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
 :root[data-theme="dark"] .streak-ring { background: conic-gradient(var(--orange-500) calc(var(--p) * 1%), #54413a 0); }
 :root[data-theme="dark"] .streak.hit .streak-ring { background: conic-gradient(#22c55e 100%, #22c55e 0); }
 :root[data-theme="dark"] .celebrate-icon { background: linear-gradient(135deg, #4d3020, #2f2016); }
+
+/* ---------- Chuyển trang / chuyển tab mượt ---------- */
+/* Đổi trang qua menu: trình duyệt hỗ trợ View Transitions (Chrome/Edge 126+) sẽ mờ chéo, header đứng yên */
+@view-transition { navigation: auto; }
+.site-header { view-transition-name: site-header; }
+::view-transition-old(root) { animation: vt-out .16s ease-in both; }
+::view-transition-new(root) { animation: vt-in .28s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+/* Đổi màn trong trang (hash) và bấm tab: nội dung mờ dần vào (FA.fxIn trong common.js) */
+.fx-in { animation: fx-in .3s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes fx-in { from { opacity: 0; transform: translateY(6px); } }
+.tab { transition: background-color .2s, border-color .2s, color .2s, box-shadow .2s, transform .12s; }
+.tab:hover:not(.active) { border-color: var(--orange-300); color: var(--orange-700); }
+.tab:active { transform: scale(.96); }
+.tab.active { box-shadow: 0 4px 12px -4px rgba(249, 115, 22, .55); }
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  .fx-in, ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  .tab { transition: none; }
+}
