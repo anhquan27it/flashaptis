@@ -908,7 +908,7 @@ window.FA_SPEAKING = [
     "p2": {
       "photo": {
         "img": "assets/img/speaking/s15-1.jpg",
-        "cap": "A father helping his young son in a yellow helmet learn to ride a red bike on a path in a sunny park."
+        "cap": "A father helping his young son in a yellow helmet learn to ride a small blue bike on a path in a sunny park."
       },
       "questions": [
         {
@@ -1226,11 +1226,11 @@ window.FA_SPEAKING = [
           "s": "Both pictures are about music. In the first picture, a young woman is sitting cross-legged on a sofa at home. She is wearing white headphones and a striped top, and she is raising her arms with her eyes closed, so she is clearly enjoying her favourite song. In the second picture, a woman in an elegant black dress is singing into a microphone at a live show, and there are some musicians playing guitars behind her. The first one shows a private moment, while the second one is a public performance."
         },
         {
-          "q": "The ways to enjoy music in these 2 pictures?",
+          "q": "What are the different ways of enjoying music in these two pictures?",
           "s": "In the first picture, the woman is enjoying music alone at home through her headphones. This way is cheap and convenient, and she can choose any song she likes and listen whenever she wants. In the second picture, people enjoy music by watching a live performance. This is more exciting, because you can see the singer and the band in person and share the atmosphere with other fans. Personally, I listen at home every day, but I go to a live concert once or twice a year."
         },
         {
-          "q": "Benefits of listening to music?",
+          "q": "What are the benefits of listening to music?",
           "s": "Listening to music has many benefits. First of all, it helps people relax and reduces stress after a long day. Music can also change our mood: when I feel sad, a cheerful song makes me feel better immediately. In addition, it can help us concentrate, for example I often listen to calm music without lyrics when I study. Finally, listening to English songs is a fun way to improve your vocabulary and pronunciation."
         }
       ]
@@ -1297,11 +1297,11 @@ window.FA_SPEAKING = [
           "s": "Both pictures show people gardening. In the first picture, a young woman with long dark hair is kneeling in a greenhouse full of tomato plants. She is picking ripe red tomatoes and putting them into a basket, which is already quite full. In the second picture, a father and his little son are planting yellow flowers in the garden in front of their house. There is a watering can and a wheelbarrow near them. The first picture is about growing food, while the second one is about growing flowers and spending family time together."
         },
         {
-          "q": "Growing a garden has many wonderful benefits?",
+          "q": "Do you agree that growing a garden has many wonderful benefits?",
           "s": "Yes, I strongly agree. Firstly, gardening is a good way to relax, because working with plants takes your mind away from work and stress. Secondly, it is good physical exercise, as you have to dig, carry water and bend down a lot. If you grow vegetables, you can also eat fresh and safe food without chemicals. Finally, like in the second picture, gardening is a great activity for families, because parents can teach children to take care of nature."
         },
         {
-          "q": "Growing vegetables and flowers is appealing for many reasons?",
+          "q": "Why do you think growing vegetables and flowers is appealing to many people?",
           "s": "I think it is appealing for many people. Many people in Vietnam worry about food safety, so they like growing their own vegetables, even on a small balcony. It also saves some money. Growing flowers, on the other hand, makes the house look beautiful and brings a nice smell. Besides, it is very satisfying to watch something grow from a tiny seed. My mother grows herbs and roses on our roof, and she says it is the happiest part of her day."
         }
       ]

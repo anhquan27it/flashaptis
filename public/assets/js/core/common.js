@@ -38,6 +38,7 @@
 
   /* ---------- Header & footer ---------- */
   const NAV = [
+    { href: "dashboard.html", label: "Dashboard", key: "dashboard" },
     { href: "exam.html", label: "Thi thử", key: "exam" },
     { href: "flashcards.html", label: "Flashcard", key: "flashcards" },
     { href: "exam.html#/gym", label: "Ôn tập", key: "gym" },
@@ -128,7 +129,7 @@
           <div class="mt-1" style="font-size:.8rem">Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Điểm trên web chỉ mang tính ước lượng.</div>
         </div>
         <div>
-          <a href="exam.html">Thi thử</a><a href="flashcards.html">Flashcard</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
+          <a href="dashboard.html">Dashboard</a><a href="exam.html">Thi thử</a><a href="flashcards.html">Flashcard</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
         </div>
       </div>
       <div class="container made-by">

@@ -61,6 +61,7 @@ function test(name, fn) {
 const sb = createSandbox();
 loadScripts(sb, [
   "public/assets/js/core/common.js",
+  "public/assets/js/core/roadmap.js",
   "public/data/grammar.js",
   "public/data/reading.js",
   "public/data/listening.js",
@@ -288,6 +289,102 @@ test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng
   assert.ok(appEl.innerHTML.includes("Bảng tiến độ học tập"));
   assert.ok(appEl.innerHTML.includes("<b>134</b><span>/200</span>"));
   assert.ok(appEl.innerHTML.includes("còn 26 điểm lên C1"));
+});
+
+test("FA.roadmap: ngưỡng mục tiêu, tick lộ trình theo bài đã làm, chuỗi ngày và giới hạn đề Free", () => {
+  const T = FA.roadmap.targets("B2");
+  assert.equal(T.overall, 120);
+  assert.deepEqual(JSON.parse(JSON.stringify(T.skills)), { listening: 34, reading: 38, speaking: 41, writing: 40 });
+  assert.equal(FA.roadmap.targets("C1").skills.reading, 46); // C1 dùng bảng "C" của kỹ năng
+  assert.equal(FA.roadmap.targets("xyz").level, "B2"); // bậc lạ → mặc định B2
+
+  const NOW = new Date(2026, 5, 15, 12).getTime(), DAY = 86400000;
+  const banks = { listening: ["l1", "l2", "l3"], reading: ["r1", "r2", "r3"], speaking: ["s1", "s2", "s3"], writing: ["w1", "w2", "w3"], grammar: ["g1", "g2", "g3"] };
+  const openCount = { listening: 2, reading: 2, speaking: 2, writing: 2, grammar: 2 }; // gói Free mở 2 đề đầu
+  const base = { goal: { target: "B2", examDate: "2026-07-15" }, banks, openCount, attempts: {}, fcKnown: {}, tipsDone: [], vocabTotal: 100, tipsTotal: 20, now: NOW };
+
+  // chưa làm gì
+  let r = FA.roadmap.compute(base);
+  assert.equal(r.pct, 0);
+  assert.equal(r.currentStage, 0);
+  assert.equal(r.streak, 0);
+  assert.equal(r.daysLeft, 31);
+  assert.equal(r.skills.listening.cap, 2);
+  assert.ok(r.stages[2].tasks.every((t) => t.need === 2)); // "làm 3 đề" bị giới hạn còn 2 do gói Free
+  assert.equal(r.skills.reading.nextId, "r1");
+
+  // đã làm: Grammar g1, 30 flashcard (hôm nay), 5 mẹo, mỗi kỹ năng chính 1 đề; Listening điểm 40 (đạt mục tiêu 34)
+  const fc = {}; for (let i = 0; i < 30; i++) fc["d|w" + i] = NOW;
+  const attempts = {
+    "grammar:g1": [{ score: 30, at: NOW - 2 * DAY }],
+    "listening:l1": [{ score: 20, at: NOW - 3 * DAY }, { score: 40, at: NOW - 1 * DAY }],
+    "reading:r1": [{ score: 30, at: NOW - 1 * DAY }],
+    "speaking:s1": [{ score: 35, at: NOW - 4 * DAY }],
+    "writing:w1": [{ score: 28, at: NOW - 5 * DAY }],
+  };
+  r = FA.roadmap.compute(Object.assign({}, base, { attempts, fcKnown: fc, tipsDone: [1, 2, 3, 4, 5] }));
+  assert.equal(r.stages[0].done, true);
+  assert.equal(r.stages[1].done, true);
+  assert.equal(r.currentStage, 2);
+  assert.equal(r.stages[2].state, "current");
+  assert.equal(r.skills.listening.latest, 40); // lượt mới nhất, không phải lượt cao nhất
+  assert.equal(r.skills.listening.best, 40);
+  assert.equal(r.skills.listening.reached, true);
+  assert.equal(r.skills.reading.reached, false);
+  assert.equal(r.skills.reading.nextId, "r2"); // đề tiếp theo chưa làm
+  assert.equal(r.overall.latest, 40 + 30 + 35 + 28);
+  assert.equal(r.overall.reached, true); // 133 ≥ 120, nhưng chưa đủ: từng kỹ năng phải đạt ngưỡng riêng
+  assert.equal(r.stages[3].done, false);
+  assert.equal(r.weakest, "writing"); // 28/40 = 70% thấp nhất trong các kỹ năng chưa đạt
+  assert.equal(r.streak, 6); // hôm nay (flashcard) + hôm qua … 5 ngày trước, liên tục
+  assert.ok(r.days.length === 14 && r.days[13].n === 30);
+  assert.ok(r.pace >= 1);
+  assert.ok(r.next.length > 0 && r.next.every((t) => !t.done));
+
+  // hôm nay chưa học → chuỗi tính tới hôm qua; bỏ một ngày thì chuỗi đứt
+  r = FA.roadmap.compute(Object.assign({}, base, { attempts: { "grammar:g1": [{ score: 10, at: NOW - 1 * DAY }, { score: 10, at: NOW - 2 * DAY }, { score: 10, at: NOW - 4 * DAY }] } }));
+  assert.equal(r.streak, 2);
+
+  // hoàn thành hết: mỗi kỹ năng đạt ngưỡng
+  const all = {};
+  Object.keys(banks).forEach((k) => banks[k].slice(0, 3).forEach((id, i) => { all[k + ":" + id] = [{ score: 50, at: NOW - (i + 1) * 3600000 }]; }));
+  r = FA.roadmap.compute(Object.assign({}, base, { attempts: all, fcKnown: fc, tipsDone: [1, 2, 3, 4, 5], openCount: { listening: 3, reading: 3, speaking: 3, writing: 3, grammar: 3 } }));
+  assert.equal(r.complete, true);
+  assert.equal(r.pct, 100);
+  assert.equal(r.overall.reached, true);
+  assert.equal(r.pace, null);
+});
+
+test("dashboard.js vẽ lộ trình, nhận mục tiêu đã lưu và không chặn khi chưa cấu hình Firebase", () => {
+  const s2 = createSandbox();
+  const appEl = { id: "app", innerHTML: "", querySelectorAll: () => [], querySelector: () => ({ onclick: null, onsubmit: null }) };
+  s2.document.getElementById = (id) => (id === "app" ? appEl : null);
+  loadScripts(s2, [
+    "public/assets/js/core/common.js",
+    "public/assets/js/core/roadmap.js",
+    "public/data/grammar.js",
+    "public/data/reading.js",
+    "public/data/listening.js",
+    "public/data/writing.js",
+    "public/data/speaking.js",
+    "public/data/vocab.js",
+  ]);
+  s2.FA.store.set("roadmap", { target: "C1", examDate: "" });
+  s2.FA.saveAttempt("reading", "r1", 30);
+  loadScripts(s2, ["public/assets/js/pages/dashboard.js"]);
+  assert.ok(appEl.innerHTML.includes("Lộ trình học của bạn"));
+  assert.ok(appEl.innerHTML.includes("Mục tiêu C1 · Overall ≥ 160/200"));
+  assert.ok(appEl.innerHTML.includes("Các giai đoạn lộ trình"));
+  assert.ok(!appEl.innerHTML.includes("Hãy <b>đăng nhập</b>"));
+  // có Firebase nhưng chưa đăng nhập → hiện màn đăng nhập thay vì dashboard
+  const s3 = createSandbox();
+  const app3 = { id: "app", innerHTML: "", querySelectorAll: () => [], querySelector: () => ({ onclick: null }) };
+  s3.document.getElementById = (id) => (id === "app" ? app3 : null);
+  loadScripts(s3, ["public/assets/js/core/common.js", "public/assets/js/core/roadmap.js", "public/data/grammar.js", "public/data/reading.js", "public/data/listening.js", "public/data/writing.js", "public/data/speaking.js", "public/data/vocab.js"]);
+  s3.FA.cloud = { enabled: () => true, cachedUser: () => null, authKnown: () => true, onChange() {}, signIn() {} };
+  loadScripts(s3, ["public/assets/js/pages/dashboard.js"]);
+  assert.ok(app3.innerHTML.includes("Hãy <b>đăng nhập</b>"));
+  assert.ok(!app3.innerHTML.includes("Các giai đoạn lộ trình"));
 });
 
 if (process.exitCode) {

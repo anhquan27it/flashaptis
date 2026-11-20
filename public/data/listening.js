@@ -918,7 +918,7 @@ window.FA_LISTENING = [
               },
               {
                 "s": "f",
-                "t": "I understand you might have been expecting it to be on Friday the 14th, but we're all off this day due to the national dentist holiday. Please let us know if that works for you!"
+                "t": "I understand you might have been expecting it to be on Friday the 14th, but we're all off this day due to the national holiday. Please let us know if that works for you!"
               }
             ]
           },
@@ -973,22 +973,22 @@ window.FA_LISTENING = [
             ]
           },
           {
-            "q": "How does he travel?",
+            "q": "How does the speaker's uncle travel these days?",
             "o": [
               "By car",
               "By plane",
               "By train"
             ],
             "a": 2,
-            "e": "Câu cuối: 'He travels by train' → đi bằng tàu hỏa.",
+            "e": "'these days he always goes by train' → hiện nay ông ấy luôn đi bằng tàu hỏa (trước đây lái xe, thỉnh thoảng đi máy bay).",
             "script": [
               {
                 "s": "f",
-                "t": "He travels most of the time, enjoying the convenience and comfort of his journeys."
+                "t": "My uncle travels a lot for work. He used to drive, and he has flown a few times."
               },
               {
                 "s": "f",
-                "t": "Whether it's for work or leisure, he finds it the best way to get around, especially because of the scenic views. He travels by train.",
+                "t": "But these days he always goes by train, because he loves the scenic views.",
                 "hl": 1
               }
             ]
@@ -1144,10 +1144,10 @@ window.FA_LISTENING = [
             ]
           },
           {
-            "q": "Listen to Marry talking to Jane while waiting for James. What did they decide to do?",
+            "q": "Listen to Mary talking to Jane while waiting for James. What did they decide to do?",
             "o": [
               "Cancel the meeting",
-              "Having the meeting without him",
+              "Have the meeting without him",
               "Wait for him longer"
             ],
             "a": 1,
@@ -2497,7 +2497,7 @@ window.FA_LISTENING = [
         "script": [
           {
             "s": "f",
-            "t": "What do you think about casting actors before casting them?"
+            "t": "What do you think about auditioning actors before casting them?"
           },
           {
             "s": "m",
@@ -2578,7 +2578,7 @@ window.FA_LISTENING = [
                 "o": [
                   "It can help reach new customers",
                   "It increases the product price",
-                  "It can build brand recognition"
+                  "It makes products cheaper to produce"
                 ],
                 "a": 0,
                 "e": "'it can help reach new customers who might otherwise never hear of the brand' → quảng cáo giúp tiếp cận khách hàng mới."
@@ -3752,11 +3752,11 @@ window.FA_LISTENING = [
               },
               {
                 "s": "m",
-                "t": "I think it starts with 20 or 10 or 30 something."
+                "t": "I think it starts with twenty or ten or thirty something."
               },
               {
                 "s": "m",
-                "t": "Is it 102030 or 301020?"
+                "t": "Is it one-zero-two-zero-three-zero, or three-zero-one-zero-two-zero?"
               },
               {
                 "s": "m",
@@ -3764,7 +3764,7 @@ window.FA_LISTENING = [
               },
               {
                 "s": "m",
-                "t": "I remember now – it's 201030!",
+                "t": "I remember now – it's two-zero-one-zero-three-zero!",
                 "hl": 1
               },
               {
@@ -3936,12 +3936,12 @@ window.FA_LISTENING = [
           {
             "q": "Mary is talking to her friend about her new home. What does she ask her friend about?",
             "o": [
-              "Where to buy a new table",
+              "Where to buy a coffee table",
               "Where to buy a sofa",
               "Where to buy curtains"
             ],
             "a": 0,
-            "e": "'especially a coffee table. Do you know where to buy one?' → hỏi chỗ mua bàn.",
+            "e": "'especially a coffee table. Do you know where to buy one?' → hỏi chỗ mua bàn cà phê (coffee table).",
             "script": [
               {
                 "s": "f",
@@ -4455,11 +4455,11 @@ window.FA_LISTENING = [
               "1.50 pounds"
             ],
             "a": 2,
-            "e": "'they cost 1.50 pounds' → 1,50 bảng.",
+            "e": "'they cost one pound fifty' → 1,50 bảng.",
             "script": [
               {
                 "s": "m",
-                "t": "The eggs are a bit more expensive than usual, but they cost 1.50 pounds.",
+                "t": "The eggs are a bit more expensive than usual, but they cost one pound fifty.",
                 "hl": 1
               },
               {
@@ -4958,78 +4958,78 @@ window.FA_LISTENING = [
             ]
           },
           {
-            "q": "A woman is talking about her job. What encouraged her to become a scientist?",
+            "q": "A woman is talking about her job. What first made her want to become a chef?",
             "o": [
-              "Her mother's support",
-              "A large stone",
-              "A computer"
+              "A cooking show on TV",
+              "Her grandmother's cooking",
+              "A school trip to a restaurant"
             ],
             "a": 1,
-            "e": "'a moment that really encouraged me to become a scientist' là lúc cô tìm thấy 'a large stone'; mẹ chỉ 'also inspired me to explore my interests', máy tính là việc hiện tại.",
+            "e": "'I spent every Sunday in my grandmother's kitchen' → chính những buổi xem bà nấu ăn khiến cô muốn làm đầu bếp; chương trình TV và chuyến đi tới nhà hàng chỉ được nhắc lướt qua.",
             "script": [
               {
                 "s": "f",
-                "t": "I've always loved science, but there was a moment that really encouraged me to become a scientist.",
+                "t": "I've always loved food, but there was one thing that really made me want to cook for a living.",
                 "hl": 1
               },
               {
                 "s": "f",
-                "t": "I remember when I was a child, I found a large stone during a school trip.",
+                "t": "As a girl, I spent every Sunday in my grandmother's kitchen, watching her make every dish from memory.",
                 "hl": 1
               },
               {
                 "s": "f",
-                "t": "It sparked my curiosity about geology."
+                "t": "It sparked my curiosity about flavours."
               },
               {
                 "s": "f",
-                "t": "My mother also inspired me to explore my interests in science."
+                "t": "My school once took us to a restaurant, and I enjoy cooking shows on TV now."
               },
               {
                 "s": "f",
-                "t": "Of course, I use the computer a lot now for my research, but that stone was the beginning.",
+                "t": "Of course, those were fun, but nothing beat those Sundays; that is where it all began.",
                 "hl": 1
               }
             ]
           },
           {
-            "q": "Listen to David talking about the conference. How long did he talk in the speech?",
+            "q": "Listen to David talking about a charity run. How far did he run?",
             "o": [
-              "20 minutes",
-              "10 minutes",
-              "15 minutes"
+              "5 kilometres",
+              "10 kilometres",
+              "15 kilometres"
             ],
             "a": 2,
-            "e": "'My speech lasted about 15 minutes, shorter than expected' → 15 phút.",
+            "e": "'My own run was fifteen kilometres, longer than I had ever done before' → 15 km.",
             "script": [
               {
                 "s": "m",
-                "t": "Hello everyone. Today, I want to tell you about the conference that took place last week."
+                "t": "Hello everyone. Today, I want to tell you about the charity run that took place last weekend."
               },
               {
                 "s": "m",
-                "t": "It was very interesting, and many people attended."
+                "t": "It was very well organised, and many people took part."
               },
               {
                 "s": "m",
-                "t": "I spoke about new ideas in business. My presentation wasn't very long, but I had a lot to say."
+                "t": "I ran for the children's hospital. I had trained for weeks, but I still had a lot to learn about pacing."
               },
               {
                 "s": "m",
-                "t": "The other speakers talked about technology and education."
+                "t": "The other runners were doing five or ten kilometres, and some were walking the short route."
               },
               {
                 "s": "m",
-                "t": "After the talks, there were some questions from the audience."
+                "t": "After the race, there was music and free fruit for everyone."
               },
               {
                 "s": "m",
-                "t": "My speech lasted about 15 minutes, shorter than expected.",
+                "t": "My own run was fifteen kilometres, longer than I had ever done before.",
                 "hl": 1
               },
               {
                 "s": "m",
-                "t": "However, the audience was very attentive, and I was happy to see that."
+                "t": "However, the crowd was very friendly, and I was happy to finish."
               }
             ]
           },
@@ -5325,7 +5325,7 @@ window.FA_LISTENING = [
               {
                 "s": "m",
                 "who": "C",
-                "t": "The distance from my house to school is 20 km, and it usually takes me an hour to get there."
+                "t": "The distance from my house to school is twenty kilometres, and it usually takes me an hour to get there."
               },
               {
                 "s": "m",
@@ -5780,7 +5780,7 @@ window.FA_LISTENING = [
               },
               {
                 "s": "f",
-                "t": "Normally, they're 2.50 pounds, but right now, they're discounted.",
+                "t": "Normally, they're two pounds fifty, but right now, they're discounted.",
                 "hl": 1
               },
               {
@@ -5814,28 +5814,28 @@ window.FA_LISTENING = [
             "q": "Two friends are talking with each other. What did they both buy?",
             "o": [
               "Books",
-              "Clothes",
-              "Shoes"
+              "Shoes",
+              "Clothes"
             ],
             "a": 1,
-            "e": "Người đàn ông mua 'a great jacket', người phụ nữ mua 'a cozy sweater' → cả hai đều mua quần áo.",
+            "e": "Người đàn ông mua 'a great pair of running shoes', người phụ nữ mua 'a pair of leather boots' → cả hai đều mua giày.",
             "script": [
               {
                 "s": "m",
-                "t": "I just got back from shopping. I found a great jacket and also picked up some tea.",
+                "t": "I just got back from shopping. I found a great pair of running shoes and also picked up some tea.",
                 "hl": 1
               },
               {
                 "s": "f",
-                "t": "Nice! What kind of jacket did you get?"
+                "t": "Nice! What kind of shoes did you get?"
               },
               {
                 "s": "m",
-                "t": "It's a stylish leather jacket. I think it'll be perfect for the fall. What about you?"
+                "t": "They're light blue trainers. I think they'll be perfect for the park. What about you?"
               },
               {
                 "s": "f",
-                "t": "I bought a cozy sweater and also grabbed a delicious cake.",
+                "t": "I bought a pair of leather boots and also grabbed a delicious cake.",
                 "hl": 1
               },
               {
@@ -5848,7 +5848,7 @@ window.FA_LISTENING = [
               },
               {
                 "s": "m",
-                "t": "Absolutely! New clothes and tasty treats for the chilly days ahead!"
+                "t": "Absolutely! New shoes and tasty treats for the days ahead!"
               }
             ]
           },
@@ -5912,18 +5912,18 @@ window.FA_LISTENING = [
             ]
           },
           {
-            "q": "How many weeks did they spend in India?",
+            "q": "How many nights did they spend in Japan?",
             "o": [
-              "2 weeks",
-              "4 weeks",
-              "3 weeks"
+              "3 nights",
+              "4 nights",
+              "2 nights"
             ],
             "a": 0,
-            "e": "'they spent two weeks there' → 2 tuần.",
+            "e": "'they spent three nights there' → 3 đêm.",
             "script": [
               {
                 "s": "m",
-                "t": "They traveled to India for a short trip, and they spent two weeks there.",
+                "t": "They traveled to Japan for a short trip, and they spent three nights there.",
                 "hl": 1
               },
               {
@@ -6264,7 +6264,7 @@ window.FA_LISTENING = [
             ]
           },
           {
-            "q": "Listen to a woman explaining why he was late. What is the main reason he gets late?",
+            "q": "Listen to a woman explaining why a colleague was late. What was the main reason he was late?",
             "o": [
               "Overslept",
               "Forgot something",
@@ -6403,15 +6403,15 @@ window.FA_LISTENING = [
             "script": [
               {
                 "s": "f",
-                "t": "I noted down 335 3902 from an old contact list, but one number was incorrect."
+                "t": "I noted down three three five, three nine zero two from an old contact list, but one number was incorrect."
               },
               {
                 "s": "f",
-                "t": "333 3029 is not her number; it belongs to someone else with a similar name."
+                "t": "Three three three, three zero two nine is not her number; it belongs to someone else with a similar name."
               },
               {
                 "s": "f",
-                "t": "Mary's real number is 555 3920.",
+                "t": "Mary's real number is five five five, three nine two zero.",
                 "hl": 1
               },
               {
@@ -6490,11 +6490,11 @@ window.FA_LISTENING = [
               },
               {
                 "s": "m",
-                "t": "I really love this nice family one, which costs £4,850, but it's way over my budget."
+                "t": "I really love this nice family one, which costs four thousand eight hundred and fifty pounds, but it's way over my budget."
               },
               {
                 "s": "m",
-                "t": "On the other hand, there's a smaller option – the small car costs £3,250, though honestly, it looks a bit too old.",
+                "t": "On the other hand, there's a smaller option – the small car costs three thousand two hundred and fifty pounds, though honestly, it looks a bit too old.",
                 "hl": 1
               },
               {
@@ -6787,7 +6787,7 @@ window.FA_LISTENING = [
               {
                 "q": "What does this guidebook offer to its audience?",
                 "o": [
-                  "It creates an adventure",
+                  "It makes travel feel like an adventure",
                   "It is difficult to navigate",
                   "It focuses solely on historical landmarks"
                 ],
@@ -6797,7 +6797,7 @@ window.FA_LISTENING = [
               {
                 "q": "What is the speaker's opinion about this guidebook?",
                 "o": [
-                  "It is suitable for particular generations",
+                  "It appeals especially to younger travellers",
                   "It caters only to seasoned travelers",
                   "It is outdated and irrelevant"
                 ],

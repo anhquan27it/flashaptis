@@ -143,7 +143,7 @@ window.FA_WRITING = [
     },
     "p2": {
       "instr": "Bạn là thành viên mới của Art Club. Điền vào mẫu bằng câu hoàn chỉnh (20–30 từ).",
-      "q": "Tell me a painting or a photo that you like.",
+      "q": "Tell us about a painting or a photo that you like.",
       "min": 20,
       "max": 30,
       "s": "I like a photo of a small boat on a quiet lake at sunrise. The colours are soft and warm, and it always makes me feel calm and relaxed."
@@ -155,7 +155,7 @@ window.FA_WRITING = [
       "questions": [
         {
           "who": "Anna",
-          "q": "I kept a painting for a long time. Tell me a thing that you have had for a long time.",
+          "q": "I have kept a painting for a long time. Tell me about something you have had for a long time.",
           "s": "I have had a small wooden box for about ten years. My grandfather gave it to me when I was a child, and I still keep my favourite photos and letters inside it."
         },
         {
@@ -165,13 +165,13 @@ window.FA_WRITING = [
         },
         {
           "who": "Mai",
-          "q": "Street art - where people paint on the building - is becoming popular. However, some people criticize that it is bad. What is your opinion?",
+          "q": "Street art, where people paint on buildings, is becoming popular. However, some people criticise it. What is your opinion?",
           "s": "I think street art is good when artists have permission. It makes grey walls colourful and brings art to everyone for free. However, painting on private property without asking is wrong, because owners then have to pay to clean it."
         }
       ]
     },
     "p4": {
-      "notice": "Dear all members,\nThe Art Club is organizing a talk to the public to attract more attention. We are going to invite an artist to give a talk to members. As a member of our club, could you give us an artist to join our talk and what topic should they share to gain more attention. We would like to have more both young and elderly members.",
+      "notice": "Dear all members,\nThe Art Club is organizing a public talk to attract more attention. We are going to invite an artist to give the talk. As a member of our club, could you suggest an artist and a topic that would attract more people? We would like to have more young and elderly members.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về thông báo này và điều bạn dự định làm. Khoảng 50 từ.",
         "min": 40,
@@ -245,7 +245,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member,\nThe cost of maintaining old buildings is very high and these buildings take up a lot of space. The government has a proposal that we knock down old buildings and build more modern blocks.",
+      "notice": "Dear member,\nThe cost of maintaining old buildings is very high and these buildings take up a lot of space. The government has a proposal that we knock down old buildings and build more modern blocks. We would like to hear your opinion about this proposal.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về đề xuất này và bạn nghĩ gì. Khoảng 50 từ.",
         "min": 40,
@@ -291,7 +291,7 @@ window.FA_WRITING = [
     },
     "p2": {
       "instr": "Bạn là thành viên mới của Book Club. Điền vào mẫu bằng câu hoàn chỉnh (20–30 từ).",
-      "q": "I am a final year student so I need to find a research a lot of materials such as books and scientific journals.",
+      "q": "Why do you want to join the Book Club? Tell us what you need from the club.",
       "min": 20,
       "max": 30,
       "s": "I am writing my graduation thesis, so I want to join this club to borrow books and scientific journals easily. I hope other members can also recommend useful research materials."
@@ -313,7 +313,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Mai",
-          "q": "Online books replace traditional books? What do you think about that?",
+          "q": "Will online books replace traditional books? What do you think about that?",
           "s": "I don't think online books will fully replace paper books. They are cheap and easy to carry, but many people still love the smell of paper and find it more comfortable for their eyes."
         }
       ]
@@ -358,7 +358,7 @@ window.FA_WRITING = [
           "s": "To the cinema."
         },
         {
-          "q": "What do you like doing with your friend?",
+          "q": "What do you like doing with your friends?",
           "s": "Watching films."
         }
       ]
@@ -439,7 +439,7 @@ window.FA_WRITING = [
     },
     "p2": {
       "instr": "Bạn là thành viên mới của College Club. Điền vào mẫu bằng câu hoàn chỉnh (20–30 từ).",
-      "q": "Please tell us about the days and times you can attend courses and what you would like to study?",
+      "q": "Please tell us the days and times you can attend courses and what you would like to study.",
       "min": 20,
       "max": 30,
       "s": "I can attend courses on Tuesday and Thursday evenings, after six o'clock. I would like to study English and computer skills, because they will help me find a better job."
@@ -535,7 +535,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Mai",
-          "q": "Do you agree with the view that volunteering is a form of learning, especially for young people? Why?",
+          "q": "Should schools organise volunteer activities for students? Why or why not?",
           "s": "I agree, because young people learn things at volunteer events that schools rarely teach, such as solving real problems, managing time and talking to strangers. These experiences also make them more responsible and confident adults."
         }
       ]
@@ -609,7 +609,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Mai",
-          "q": "Nowadays people use computers a lot. This is not good. What is your opinion?",
+          "q": "Nowadays people use computers a lot, and some say this is not good. What is your opinion?",
           "s": "I partly agree. Using computers too much can hurt our eyes and make us sit still for hours. However, computers are also very useful for work and study, so we only need to use them wisely."
         }
       ]
@@ -678,7 +678,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Tom",
-          "q": "Hi! What do you think about the club's price/ membership fee?",
+          "q": "Hi! What do you think about the club's membership fee?",
           "s": "I think the fee is quite reasonable. For a small monthly payment, we get professional teachers, fresh ingredients and a friendly group. It is much cheaper than a private cooking course, so I am happy to pay it."
         },
         {
@@ -689,7 +689,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member,\nAll classes will be canceled next week. Because the instructor will go on holiday. Classes will be announced later. Fees won't be refunded to the participants.",
+      "notice": "Dear member,\nAll classes will be cancelled next week because the instructor will be on holiday. The new class dates will be announced later. Fees will not be refunded to participants. Please tell us what you think and what you plan to do.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về thông báo này và điều bạn dự định làm. Khoảng 50 từ.",
         "min": 40,
@@ -724,7 +724,7 @@ window.FA_WRITING = [
           "s": "I read books."
         },
         {
-          "q": "First language?",
+          "q": "What is your first language?",
           "s": "Vietnamese."
         },
         {
@@ -786,7 +786,7 @@ window.FA_WRITING = [
       "instr": "Bạn đang đăng ký tham gia English Club. Trả lời 5 câu hỏi, mỗi câu từ 1–5 từ.",
       "questions": [
         {
-          "q": "What do you like doing with your friend?",
+          "q": "What do you like doing with your friends?",
           "s": "Going to the cinema."
         },
         {
@@ -794,7 +794,7 @@ window.FA_WRITING = [
           "s": "Fine, thank you."
         },
         {
-          "q": "Where do you wanna go on holiday?",
+          "q": "Where do you want to go on holiday?",
           "s": "To the beach."
         },
         {
@@ -837,7 +837,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Nowadays more and more new words and phrases are added to the language, so many people have strong reactions on this issue. Some people gladly accept others argue that there should be rules for language. Write a letter to your friend and the club manager to express your views and explain why so many people react like this.",
+      "notice": "Nowadays more and more new words and phrases are added to the language, so many people have strong reactions on this issue. Some people gladly accept them, while others argue that there should be rules for language. Write a letter to your friend and the club manager to express your views and explain why so many people react like this.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nêu quan điểm của bạn về việc ngày càng có nhiều từ và cụm từ mới, và giải thích vì sao nhiều người phản ứng mạnh như vậy. Khoảng 50 từ.",
         "min": 40,
@@ -883,7 +883,7 @@ window.FA_WRITING = [
     },
     "p2": {
       "instr": "Bạn là thành viên mới của Film Club. Điền vào mẫu bằng câu hoàn chỉnh (20–30 từ).",
-      "q": "Please write some of your favorite films and why do you like watching them?",
+      "q": "Please write about some of your favorite films and why you like watching them.",
       "min": 20,
       "max": 30,
       "s": "My favourite films are 'Titanic' and 'Frozen'. I enjoy them because the stories are exciting and moving, and the actors are brilliant. They also help me relax after work."
@@ -911,7 +911,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "We are writing to tell you that the guest actor, James McAvoy, will unfortunately not be able to give a talk at our next club meeting due to personal reasons. He has requested we reschedule the talk for the next year in either January or March. Please contact the club secretary if you have a preference for one of the two months. Our meeting will take place as usual with a discussion on the advantages and disadvantages of learning on the Internet.",
+      "notice": "We are writing to tell you that the guest actor, James McAvoy, will unfortunately not be able to give a talk at our next club meeting due to personal reasons. He has requested we reschedule the talk for the next year in either January or March. Please contact the club secretary if you have a preference for one of the two months. Our meeting will take place as usual with a discussion on the advantages and disadvantages of watching films online.",
       "informal": {
         "instr": "Viết email cho một người bạn cũng là thành viên của câu lạc bộ. Nói về cảm xúc của bạn khi buổi nói chuyện của James McAvoy bị dời và điều bạn muốn làm. Khoảng 50 từ.",
         "min": 40,
@@ -957,7 +957,7 @@ window.FA_WRITING = [
     },
     "p2": {
       "instr": "Bạn là thành viên mới của Fitness Club. Điền vào mẫu bằng câu hoàn chỉnh (20–30 từ).",
-      "q": "Please talk about the last time you went for a run?",
+      "q": "Please tell us about the last time you went for a run.",
       "min": 20,
       "max": 30,
       "s": "Last Sunday morning I went for a run in the park near my house. I ran for about thirty minutes, and afterwards I felt tired but very happy."
@@ -985,7 +985,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear members,\nsome equipment in the club is old and needs to be replaced. Our club is planning to hold a sponsorship event to raise money for the upgrade of sports equipment. On the other hand, there are also some opinions that the club should increase the membership fee to 50%.",
+      "notice": "Dear members,\nSome equipment in the club is old and needs to be replaced. Our club is planning to hold a sponsorship event to raise money for the upgrade of sports equipment. On the other hand, there are also some opinions that the club should increase the membership fee by 50%.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về thông báo này và ý kiến của bạn: sự kiện tài trợ hay tăng phí thành viên. Khoảng 50 từ.",
         "min": 40,
@@ -1048,7 +1048,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Tom",
-          "q": "I want to visit your country? Do you have any suggestions for me on what delicious food to eat?",
+          "q": "I want to visit your country. Do you have any suggestions on what delicious food I should try?",
           "s": "You must try pho, a hot noodle soup with beef or chicken. Banh mi sandwiches and fresh spring rolls are also excellent and cheap. I recommend eating at small street stalls, because the food there is tasty and authentic."
         },
         {
@@ -1059,7 +1059,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear members,\nthe club needs volunteers to be guest speakers for the talk show with a famous chef. Please suggest your desire to be a speaker and what topic will you talk about?",
+      "notice": "Dear members,\nthe club needs volunteers to be guest speakers for the talk show with a famous chef. Please tell us whether you would like to be a speaker and what topic you would talk about.",
       "informal": {
         "instr": "Viết email cho một người bạn. Cho bạn biết những gợi ý bạn sẽ đưa ra (muốn làm diễn giả không, chủ đề gì) và vì sao. Khoảng 50 từ.",
         "min": 40,
@@ -1094,7 +1094,7 @@ window.FA_WRITING = [
           "s": "I watched television."
         },
         {
-          "q": "First language?",
+          "q": "What is your first language?",
           "s": "Vietnamese."
         },
         {
@@ -1156,7 +1156,7 @@ window.FA_WRITING = [
       "instr": "Bạn đang đăng ký tham gia Home Living Club. Trả lời 5 câu hỏi, mỗi câu từ 1–5 từ.",
       "questions": [
         {
-          "q": "What is your first school?",
+          "q": "What was your first school?",
           "s": "Sunshine Primary School."
         },
         {
@@ -1191,7 +1191,7 @@ window.FA_WRITING = [
       "questions": [
         {
           "who": "Anna",
-          "q": "You have to stay in the bedroom but have to share with your brother. How do you feel?",
+          "q": "Imagine you have to share a bedroom with your brother. How do you feel?",
           "s": "Honestly, I would feel a little uncomfortable at first because I would lose my privacy. However, I get along well with my brother, so I think we could share the room and still have fun together."
         },
         {
@@ -1281,7 +1281,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member,\nThe club will be repaired. Please suggest an alternative meeting or activity.",
+      "notice": "Dear member,\nThe club building will be repaired and closed for a few weeks. Please suggest an alternative meeting place or activity.",
       "informal": {
         "instr": "Viết email cho một người bạn cũng là thành viên của câu lạc bộ. Nói về cảm nghĩ của bạn về việc câu lạc bộ phải sửa chữa và đề xuất buổi gặp mặt hoặc hoạt động thay thế. Khoảng 50 từ.",
         "min": 40,
@@ -1429,7 +1429,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member, the club wants to make a plan for the young people because they just love to stay home and play games.",
+      "notice": "Dear member, the club wants to make a plan to attract young people, because many of them prefer to stay at home and play games. Please share your thoughts.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về thông báo này và điều bạn dự định làm. Khoảng 50 từ.",
         "min": 40,
@@ -1503,7 +1503,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member, The club organizes travel in the summer. Do you want to go to the mountains or the coast? Please give a suggestion for both young and old people.",
+      "notice": "Dear member, the club is organizing a trip this summer. Would you prefer to go to the mountains or the coast? Please give a suggestion that suits both young and older people.",
       "informal": {
         "instr": "Viết email cho một người bạn. Nói về cảm xúc của bạn về thông báo này và điều bạn dự định làm. Khoảng 50 từ.",
         "min": 40,
@@ -1542,7 +1542,7 @@ window.FA_WRITING = [
           "s": "Yes, every day."
         },
         {
-          "q": "Tell me the last time you watched TV.",
+          "q": "When was the last time you watched TV?",
           "s": "Last night."
         }
       ]
@@ -1561,7 +1561,7 @@ window.FA_WRITING = [
       "questions": [
         {
           "who": "Anna",
-          "q": "Hi! Welcome to the club. How to have a beautiful picture?",
+          "q": "Hi! Welcome to the club. How can I take a beautiful picture?",
           "s": "Thank you! To get a beautiful picture, I think good light is the most important thing, so shoot in the morning or at sunset. Also, choose an interesting subject, keep the camera steady and try different angles."
         },
         {
@@ -1604,7 +1604,7 @@ window.FA_WRITING = [
           "s": "Blue."
         },
         {
-          "q": "What is your first school?",
+          "q": "What was your first school?",
           "s": "Sunrise Primary School."
         },
         {
@@ -1651,7 +1651,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear all members in our club,\nOur club is preparing to organize the science exhibition next month. Both young people and elderly people can take part in our activities in the exhibition. Could you contribute some ideas for our event team? Whether our club issues tickets for participants? I would like to hear your contribution.",
+      "notice": "Dear all members in our club,\nOur club is preparing to organize the science exhibition next month. Both young people and elderly people can take part in our activities in the exhibition. Could you contribute some ideas for our event team? Should our club sell tickets to participants? I would like to hear your contribution.",
       "informal": {
         "instr": "Viết email cho một người bạn cũng là thành viên của câu lạc bộ. Nói về cảm xúc của bạn, ý tưởng cho triển lãm và việc có nên bán vé không. Khoảng 50 từ.",
         "min": 40,
@@ -1748,7 +1748,7 @@ window.FA_WRITING = [
       "instr": "Bạn đang đăng ký tham gia Sports Club. Trả lời 5 câu hỏi, mỗi câu từ 1–5 từ.",
       "questions": [
         {
-          "q": "Tell me the last time you watched TV?",
+          "q": "When was the last time you watched TV?",
           "s": "Last night."
         },
         {
@@ -1760,11 +1760,11 @@ window.FA_WRITING = [
           "s": "Mathematics."
         },
         {
-          "q": "What do you like doing with your friend?",
+          "q": "What do you like doing with your friends?",
           "s": "Playing football together."
         },
         {
-          "q": "Where do you wanna go on holiday?",
+          "q": "Where do you want to go on holiday?",
           "s": "To Da Nang."
         }
       ]
@@ -1830,7 +1830,7 @@ window.FA_WRITING = [
           "s": "Autumn."
         },
         {
-          "q": "Which sports is the most popular in your country?",
+          "q": "Which sport is the most popular in your country?",
           "s": "Football."
         },
         {
@@ -1862,7 +1862,7 @@ window.FA_WRITING = [
         },
         {
           "who": "Tom",
-          "q": "I used to work on a laptop and it stopped and I lost all my notes. Tell me about a bad time with your computer?",
+          "q": "I used to work on a laptop and it stopped and I lost all my notes. Tell me about a time when you had a problem with your computer.",
           "s": "Last year my computer suddenly shut down while I was writing an important report, and I had not saved it. I lost three hours of work and had to start again. Now I always back up my files."
         },
         {
@@ -1873,7 +1873,7 @@ window.FA_WRITING = [
       ]
     },
     "p4": {
-      "notice": "Dear member,\nMembers often post on the website's club. But lately there's been a few negatives on the other member's post. We are thinking of changing the website to identify anyone who makes a comment. Please give your opinion to fix the situation.",
+      "notice": "Dear member,\nMembers often post on the club's website. But lately there have been some negative comments on other members' posts. We are thinking of changing the website so that anyone who makes a comment is identified. Please give your opinion on how to fix the situation.",
       "informal": {
         "instr": "Viết email cho một người bạn cũng là thành viên của câu lạc bộ. Nói về cảm xúc và ý kiến của bạn về việc này. Khoảng 50 từ.",
         "min": 40,

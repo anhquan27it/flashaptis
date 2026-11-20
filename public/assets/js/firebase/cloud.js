@@ -10,7 +10,7 @@
   const cfg = window.FA_FIREBASE;
   const SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
   const PREFIX = "flashaptis:";
-  const KV_KEYS = ["wrongbook", "fc-known", "tips-done", "calc"]; // ngoài ra còn "speakRate:*"
+  const KV_KEYS = ["wrongbook", "fc-known", "tips-done", "calc", "roadmap"]; // ngoài ra còn "speakRate:*"
   const isKV = (k) => KV_KEYS.indexOf(k) > -1 || k.indexOf("speakRate:") === 0;
 
   let auth = null, db = null, user = null, ready = false, applying = false, pushT = null;
@@ -416,6 +416,7 @@
                 <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(who.email || "")}</span></div>
               </div>
               <div class="acct-plan"></div><!-- plan.js điền: gói hiện tại, lượt AI -->
+              <a role="menuitem" href="dashboard.html">🗺️ Lộ trình học</a>
               <a role="menuitem" href="exam.html#/progress">📊 Tiến độ & lịch sử</a>
               <a role="menuitem" href="pricing.html">⭐ Gói & thanh toán</a>
               <a role="menuitem" href="admin.html" class="acct-admin" hidden>🛠️ Trang quản trị (Admin)</a>

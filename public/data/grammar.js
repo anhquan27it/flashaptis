@@ -4423,14 +4423,14 @@ window.FA_GRAMMAR = [
     "questions": [
       {
         "sec": "grammar",
-        "q": "Were the weather ______, we would hold the reception in the garden.",
+        "q": "Were the weather ______ than forecast, we would hold the reception in the garden.",
         "o": [
           "nice",
           "nicer",
           "nicest"
         ],
         "a": 1,
-        "e": "Đảo ngữ điều kiện loại 2 ('Were the weather ...' = If the weather were ...). Cần tính từ so sánh hơn 'nicer' (thời tiết đẹp hơn thì mới tổ chức ngoài vườn)."
+        "e": "Đảo ngữ điều kiện loại 2 ('Were the weather ...' = If the weather were ...). 'than forecast' đòi hỏi tính từ so sánh hơn 'nicer' (thời tiết đẹp hơn dự báo thì mới tổ chức ngoài vườn)."
       },
       {
         "sec": "grammar",

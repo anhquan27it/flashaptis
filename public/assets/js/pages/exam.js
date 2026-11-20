@@ -89,7 +89,7 @@
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return viewHub();
     if (parts[0] === "progress") return viewProgress();
-    if (parts[0] === "gym") return parts[1] === "wrong" ? viewGym(true) : viewGym(false);
+    if (parts[0] === "gym") return needLogin() ? viewLogin(null, null) : parts[1] === "wrong" ? viewGym(true) : viewGym(false);
     const skill = parts[0];
     if (!SKILLS[skill]) return viewHub();
     if (!parts[1]) return viewList(skill);
@@ -101,20 +101,22 @@
   }
 
   /* chưa đăng nhập → phải đăng nhập mới được làm bài */
+  /* skill/test = null → màn Ôn tập nhanh (#/gym) cũng phải đăng nhập */
   function viewLogin(skill, test) {
     view = "login";
-    const S = SKILLS[skill];
+    const S = skill ? SKILLS[skill] : null;
+    const back = skill ? `#/${skill}` : "#/";
     const checking = authPending() && !authWaitTimedOut;
     app.innerHTML = `
       <div class="page"><div class="container narrow">
-        <div class="crumbs"><a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}</div>
+        <div class="crumbs">${skill ? `<a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}` : `<a href="#/">← Kỹ năng</a> / Ôn tập nhanh`}</div>
         <div class="card empty">
           <div class="big">${checking ? "⏳" : "🔐"}</div>
-          <h2>${esc(test.title)} — ${esc(S.name)}</h2>
+          <h2>${skill ? `${esc(test.title)} — ${esc(S.name)}` : "Ôn tập nhanh"}</h2>
           ${checking ? `<p>Đang kiểm tra đăng nhập…</p>` : `
           <p>Hãy <b>đăng nhập</b> để làm bài. Tiến trình của bạn (đề nào đang làm dở, đề nào đã hoàn thành, điểm số) sẽ được lưu theo tài khoản và <b>đồng bộ khi bạn dùng thiết bị khác</b>.</p>
           <p class="muted" style="font-size:.9rem">Đăng nhập bằng Google hoặc email — miễn phí, chỉ mất vài giây. Đề Free vẫn miễn phí.</p>
-          <div class="row" style="justify-content:center"><button class="btn btn-primary" id="loginBtn">Đăng nhập</button><button class="btn btn-outline" id="signupBtn">Tạo tài khoản</button><a class="btn btn-ghost" href="#/${skill}">← Chọn đề khác</a></div>`}
+          <div class="row" style="justify-content:center"><button class="btn btn-primary" id="loginBtn">Đăng nhập</button><button class="btn btn-outline" id="signupBtn">Tạo tài khoản</button><a class="btn btn-ghost" href="${back}">${skill ? "← Chọn đề khác" : "← Về trang kỹ năng"}</a></div>`}
         </div>
       </div></div>`;
     const lb = app.querySelector("#loginBtn"), sb = app.querySelector("#signupBtn");
@@ -1245,7 +1247,7 @@
           const yours = (t, min, max, k) => `<div><div class="sample-label" style="color:var(--orange-700)">Bài của bạn · ${FA.wordCount(t)} từ (yêu cầu ${min}–${max})</div><div class="passage" style="white-space:pre-line;line-height:1.7;margin:6px 0 0">${esc(t) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox(k)}${relBox(k)}</div>`;
           const sample = (s) => `<div class="sample"><div class="sample-label">Bài mẫu tham khảo</div>${esc(s)}</div>`;
           el.innerHTML = `
-            <div class="q-card mb-2"><div class="q-part">Part 1</div>${T.p1.questions.map((q, k) => `<div class="mb-2"><b>${k + 1}. ${esc(q.q)}</b><div>Bạn: ${esc(st.p1[k]) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox("p1-" + k)}${relBox("p1-" + k)}<div style="color:#166534">Mẫu: ${esc(q.s)}</div></div>`).join("")}</div>
+            <div class="q-card mb-2"><div class="q-part">Part 1</div>${T.p1.questions.map((q, k) => `<div class="mb-2"><b>${k + 1}. ${esc(q.q)}</b><div>Bạn: ${esc(st.p1[k]) || '<span class="muted">(bỏ trống)</span>'}</div>${spellBox("p1-" + k)}${relBox("p1-" + k)}<div class="txt-ok">Mẫu: ${esc(q.s)}</div></div>`).join("")}</div>
             <div class="q-card mb-2"><div class="q-part">Part 2</div><div class="q-text">${esc(T.p2.q)}</div><div class="review-split">${yours(st.p2, T.p2.min, T.p2.max, "p2")}${sample(T.p2.s)}</div></div>
             <div class="q-card mb-2"><div class="q-part">Part 3</div>${T.p3.questions.map((q, k) => `<div class="mb-2"><div class="chat-bubble"><div class="who">${esc(q.who)}</div>${esc(q.q)}</div><div class="review-split">${yours(st.p3[k], T.p3.min, T.p3.max, "p3-" + k)}${sample(q.s)}</div></div>`).join("")}</div>
             <div class="q-card mb-2"><div class="q-part">Part 4</div><div class="passage" style="white-space:pre-line">${esc(T.p4.notice)}</div>
@@ -1605,7 +1607,7 @@
       if (!wrong.length) { body.innerHTML = `<div class="empty card"><div class="big">📒</div><p>Sổ câu sai đang trống. Làm đề hoặc vào Luyện nhanh — câu nào sai sẽ tự lưu ở đây.</p><a class="btn btn-primary" href="#/gym">Luyện nhanh</a></div>`; return; }
       body.innerHTML = `<div class="row mb-2"><button class="btn btn-primary" id="reviewAll">Ôn lại ${Math.min(10, wrong.length)} câu</button><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="clearAll">Xóa hết</button></div>
         ${wrong.map((w) => `<div class="card mb-2" style="padding:14px 16px"><div class="row"><span class="pill gray">${esc(w.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(w.id)}">Bỏ khỏi sổ</button></div>
-          <div class="mt-1"><b>${esc(w.q)}</b></div><div style="font-size:.92rem;color:#166534">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
+          <div class="mt-1"><b>${esc(w.q)}</b></div><div class="txt-ok" style="font-size:.92rem">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
       body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(wrong).slice(0, 10), true, body);
       body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
       body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { FA.removeWrong(b.dataset.del); viewGym(true); }));

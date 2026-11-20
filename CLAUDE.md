@@ -24,14 +24,14 @@ Không có lệnh test. Cách đã dùng để kiểm tra hành vi: script Node 
 flashaptis/
 ├── public/                     # Web tĩnh — CHỈ thư mục này được deploy lên Firebase Hosting
 │   ├── index.html  exam.html  flashcards.html  tips.html  guide.html
-│   ├── calculator.html  pricing.html  admin.html
+│   ├── calculator.html  pricing.html  admin.html  dashboard.html
 │   ├── assets/
 │   │   ├── css/style.css
 │   │   └── js/
-│   │       ├── core/           common.js — namespace FA, header/footer, lưu trữ, CEFR
+│   │       ├── core/           common.js — namespace FA, header/footer, lưu trữ, CEFR · roadmap.js — tính lộ trình học (FA.roadmap)
 │   │       ├── firebase/       firebase-config.js, cloud.js (đăng nhập + đồng bộ), plan.js (Free/Pro)
 │   │       ├── grading/        ai-grader.js, speaking-grader.js, relevance.js, spellcheck.js, ai-config.example.js
-│   │       └── pages/          exam.js, flashcards.js — logic riêng của từng trang
+│   │       └── pages/          exam.js, flashcards.js, dashboard.js — logic riêng của từng trang
 │   └── data/                   Ngân hàng đề: grammar, reading, listening, writing (+ writing-rel), speaking, vocab
 ├── functions/                  Cloud Function gradeWriting (Node 20) — proxy AI giữ API key
 ├── firebase.json  .firebaserc  firestore.rules
@@ -45,6 +45,10 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 - [public/assets/js/core/common.js](public/assets/js/core/common.js): `FA` — header/footer (`FA.renderShell`), `FA.store` (localStorage, tiền tố `flashaptis:`), lịch sử làm bài (`FA.saveAttempt` / `FA.updateAttempt`), sổ câu sai, và **bảng quy đổi điểm → CEFR** (`FA.CEFR`, `FA.toCEFR`, `FA.speakingTo50`). Đổi thang điểm thì sửa ở đây rồi cập nhật `calculator.html`, `guide.html`, README cho khớp.
 - [exam.html](public/exam.html) + [public/assets/js/pages/exam.js](public/assets/js/pages/exam.js): SPA định tuyến bằng hash (`#/<skill>/<testId>`, `#/gym`). `RUNNERS[skill](test, replay?)` cho 5 kỹ năng (grammar, reading, listening, writing, speaking), tất cả kết thúc bằng `renderResult(o)`. Thứ tự script trong `exam.html`: `common.js` → `data/*.js` → `relevance.js` → `ai-config.js` → `ai-grader.js` → `speaking-grader.js` → `spellcheck.js` → `exam.js`.
 - `data/*.js`: ngân hàng đề, gán vào biến global (`FA_WRITING`, …). Hiện có 28 đề Grammar, 13 Reading, 24 Listening, 28 Writing, 27 Speaking (đề 1–3 mỗi kỹ năng là bản gốc FlashAptis tự biên soạn; các đề sau chuyển từ thư mục `Đề/` — PDF/DOCX nguồn, 25 bộ + 25 đề grammar/vocab). Khi chuyển đề: Grammar vocab được đổi từ dạng nối (5 câu/10 lựa chọn) sang trắc nghiệm 4 lựa chọn; Reading/Listening gốc không có đáp án nên đáp án do người chuyển tự giải rồi **kiểm tra chéo bằng một lượt giải độc lập**; Listening Part 2 (6 lựa chọn) / Part 3 (4 nhận định Man/Woman/Both) đã viết lại cho khớp transcript vì file gốc thiếu/lạc đề; Reading bộ 10–23 thực chất cùng một đề (chỉ xáo thứ tự) nên chỉ lấy một. Reading có 4 part (1 bài sắp xếp) hoặc 5 part (2 bài). Speaking Part 2–3 dùng ảnh thật ở `public/assets/img/speaking/` (trường `photo.img`, đề cũ vẫn dùng emoji `photo.emo`); `p4.time` là thời gian nói (mặc định 120 giây). 3 đề Listening (bộ 7, 11, 14 của thư mục nguồn) bị thiếu hẳn phần nội dung gốc nên **chưa đưa lên**. Trường `notes`/`src` của dữ liệu chuyển đề không được đưa vào `data/*.js`. Thêm đề Writing mới phải khai báo tiêu chí nội dung tương ứng trong [public/data/writing-rel.js](public/data/writing-rel.js) (`REL.<id>`), nếu không đề đó không được chấm bám sát câu hỏi.
+
+### Dashboard lộ trình (dashboard.html)
+- [public/dashboard.html](public/dashboard.html) + [pages/dashboard.js](public/assets/js/pages/dashboard.js) (chỉ vẽ UI) + [core/roadmap.js](public/assets/js/core/roadmap.js) (`FA.roadmap.compute`, thuần dữ liệu → có test trong `tests/test.js`). Người dùng chọn bậc mục tiêu B1/B2/C1 + ngày thi (`FA.store` khóa `roadmap`, đã thêm vào `KV_KEYS` của cloud.js nên đồng bộ theo tài khoản). Ngưỡng điểm mục tiêu lấy từ `FA.CEFR` (đổi thang điểm ở common.js là dashboard tự theo). 4 giai đoạn (Nền tảng → Khởi động 4 kỹ năng → Luyện sâu → Chạm mục tiêu) với các việc tự tick theo `attempts` / `fc-known` / `tips-done`; số đề yêu cầu bị giới hạn bởi số đề gói hiện tại mở (`FA.plan.locked`) để người dùng Free không bị kẹt. Thứ tự script: `common.js` → cloud/plan → `data/*.js` → `roadmap.js` → `dashboard.js`.
+- **Bắt buộc đăng nhập** (Firebase đã cấu hình mà chưa có người dùng): dashboard, mọi đề thi (`viewLogin` trong exam.js) và Ôn tập nhanh `#/gym` đều hiện màn đăng nhập; không cấu hình Firebase (chạy local không cloud) thì không chặn. Flashcard và Mẹo vẫn mở tự do.
 
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.

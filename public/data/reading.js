@@ -298,7 +298,7 @@ window.FA_READING = [
         "type": "gap",
         "title": "Part 1 · Sentence comprehension",
         "instr": "Chọn từ đúng cho mỗi chỗ trống.",
-        "text": "Hey Lewis,\nI {0} reading books in the library.\nMy bag is a bit {1} for my laptop.\nCan you go to the {2} to buy some milk?\nThere are many {3} in the class.\nThey want to {4} the class.\nLove,\nHelen",
+        "text": "Hey Lewis,\nI {0} reading books in the library.\nMy bag is a bit {1} for my laptop.\nCan you go to the {2} to buy some milk?\nThere are many {3} in the class.\nMy classmates want to {4} the new library after school.\nLove,\nHelen",
         "gaps": [
           {
             "o": [
@@ -343,7 +343,7 @@ window.FA_READING = [
               "fly"
             ],
             "a": 1,
-            "e": "Sau 'want to' cần động từ hợp nghĩa: 'visit the class' — đến thăm lớp học."
+            "e": "Sau 'want to' cần động từ hợp nghĩa: 'visit the new library' — đến thăm thư viện mới."
           }
         ]
       },
@@ -619,7 +619,7 @@ window.FA_READING = [
           "The wrong priority",
           "Focus on sustainability",
           "The unique feeling of achievement",
-          "A disturbing relevant",
+          "A disturbing consequence",
           "Publicity of achievement"
         ],
         "paragraphs": [
@@ -644,9 +644,9 @@ window.FA_READING = [
             "e": "Người leo núi bỏ qua an toàn, chỉ chăm chăm 'bagging the peak' → ưu tiên sai: 'The wrong priority'."
           },
           {
-            "text": "This distorted mindset leads to a disturbing relevant – a troubling reality where our ego directly impacts the environment. As more people flock to the mountains with the wrong priorities, we witness a direct correlation between human traffic and environmental degradation. Trails are eroded, campsites are littered with non-biodegradable waste, and delicate wildlife habitats are disturbed.",
+            "text": "This distorted mindset leads to a disturbing consequence – a troubling reality where our ego directly impacts the environment. As more people flock to the mountains with the wrong priorities, we witness a direct correlation between human traffic and environmental degradation. Trails are eroded, campsites are littered with non-biodegradable waste, and delicate wildlife habitats are disturbed.",
             "a": 5,
-            "e": "'a troubling reality where our ego directly impacts the environment': đường mòn xói mòn, rác thải → hệ quả đáng lo ngại: 'A disturbing relevant'."
+            "e": "'a troubling reality where our ego directly impacts the environment': đường mòn xói mòn, rác thải → hệ quả đáng lo ngại: 'A disturbing consequence'."
           },
           {
             "text": "Facing this ecological crisis, the mountaineering community is being forced to shift its focus on sustainability. We are realizing that the mountains are finite resources that cannot withstand endless abuse. This creates a new imperative: implementing stricter limits on climber numbers, enforcing 'leave no trace' policies, and promoting ethical tourism. The goal is shifting from conquering the land to preserving it.",
@@ -727,7 +727,7 @@ window.FA_READING = [
         "first": "This month, the wellness day took place on Friday, focusing on work-life balance.",
         "sentences": [
           "Activities included team yoga, time management seminars, and a group walk.",
-          "More than 50 employees participated in these activities, with Mr. A leading a workshop on stress relief.",
+          "More than 50 employees participated in these activities, with Mr. Allen leading a workshop on stress relief.",
           "Employees enjoyed healthy snacks and exchanged tips for managing stress.",
           "After the workshops, awards were given for the most creative wellness ideas."
         ],
@@ -910,14 +910,14 @@ window.FA_READING = [
         "title": "Part 2 · Text cohesion",
         "instr": "Sắp xếp các câu theo đúng thứ tự để tạo thành đoạn văn hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         "topic": "The history of transportation",
-        "first": "In the past, transportation was primarily accessible to the wealthy.",
+        "first": "In the past, long journeys were mainly possible for wealthy people.",
         "sentences": [
-          "Later, air travel became popular among business professionals.",
-          "Eventually, buses and trains were introduced as affordable alternatives to air travel.",
-          "These made traveling more accessible to everyone.",
-          "Today, buses and trains are among the most common transportation options."
+          "Later, railways spread across many countries and made travel faster.",
+          "Eventually, buses and cheap train tickets made journeys affordable for ordinary families.",
+          "These changes made travelling accessible to almost everyone.",
+          "Today, buses and trains are among the most common transport options, and planes are popular for very long distances."
         ],
-        "tip": "Mẹo: 'In the past' mở đầu → 'Later' (air travel) → 'Eventually' (buses and trains là lựa chọn rẻ hơn 'to air travel') → 'These made traveling more accessible' trỏ về buses and trains → 'Today' kết thúc ở hiện tại."
+        "tip": "Mẹo: 'In the past' mở đầu → 'Later' (đường sắt phát triển) → 'Eventually' (xe buýt, vé tàu rẻ cho gia đình bình thường) → 'These changes' trỏ về hai câu trước → 'Today' kết thúc ở hiện tại."
       },
       {
         "type": "opinion",
@@ -1356,7 +1356,7 @@ window.FA_READING = [
         "type": "heading",
         "title": "Part 4 · Long text comprehension",
         "instr": "Đọc bài viết và chọn tiêu đề phù hợp nhất cho mỗi đoạn.",
-        "topic": "Women mathematicians",
+        "topic": "Milestones in science and mathematics",
         "headings": [
           "Trailblazing Computer Science",
           "Driving Space Exploration Forward",
@@ -1732,7 +1732,7 @@ window.FA_READING = [
         "headings": [
           "Focusing on sustainable digital solutions",
           "Building inclusive digital ecosystems",
-          "Over-reliance on automated systems",
+          "Over-reliance on digital devices",
           "Building innovative tech communities",
           "Promoting digital skills training",
           "Enhancing productivity through automation",
@@ -1757,7 +1757,7 @@ window.FA_READING = [
           {
             "text": "Although digital devices offer numerous advantages, over-reliance on screens can lead to negative consequences. Individuals may experience reduced social interactions, trouble concentrating, and higher stress levels. It's crucial to balance digital engagement with offline activities for maintaining mental and physical well-being.",
             "a": 2,
-            "e": "'over-reliance on screens can lead to negative consequences' → phụ thuộc quá mức: 'Over-reliance on automated systems' là tiêu đề duy nhất nói về sự lệ thuộc."
+            "e": "'over-reliance on screens can lead to negative consequences' → phụ thuộc quá mức: 'Over-reliance on digital devices' là tiêu đề duy nhất nói về sự lệ thuộc."
           },
           {
             "text": "Not everyone has equal access to technology, which can result in significant social and economic divides. Those without reliable internet or modern devices may miss out on educational and employment opportunities, making it essential to address these inequalities through policies and community-driven efforts.",
@@ -1826,12 +1826,12 @@ window.FA_READING = [
           },
           {
             "o": [
-              "food",
+              "vegetables",
               "books",
               "games"
             ],
             "a": 0,
-            "e": "'rice and food' — cơm và thức ăn, ăn mỗi ngày; 'books', 'games' không ăn được."
+            "e": "'rice and vegetables' — cơm và rau ăn mỗi ngày; 'books', 'games' không ăn được."
           }
         ]
       },
@@ -1840,14 +1840,14 @@ window.FA_READING = [
         "title": "Part 2 · Text cohesion",
         "instr": "Sắp xếp các câu theo đúng thứ tự để tạo thành đoạn văn hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         "topic": "Weekend activities",
-        "first": "It was held on Saturday morning, there was a 10 km race for adults.",
+        "first": "On Saturday morning, the town held a 10 km race for adults.",
         "sentences": [
           "There were 60 participants, in which Ms. Kamus kept the fastest speed and won.",
           "After she received the prize, the following time was for children's activities.",
-          "Activities including football, swimming, skipping rope, and the children played together very happily.",
+          "Activities included football, swimming and skipping rope, and the children played together very happily.",
           "After playing, the children were very hungry and ate with their parents."
         ],
-        "tip": "Mẹo: câu mở đầu giới thiệu sự kiện ('It was held on Saturday morning… a 10 km race'); tiếp theo là số người tham gia và người thắng ('Ms. Kamus… won'); 'After she received the prize' trỏ ngược về người thắng và chuyển sang hoạt động của trẻ em; sau đó là các hoạt động của trẻ; 'After playing' kết thúc với việc các em đói và ăn cùng bố mẹ."
+        "tip": "Mẹo: câu mở đầu giới thiệu sự kiện ('On Saturday morning… a 10 km race'); tiếp theo là số người tham gia và người thắng ('Ms. Kamus… won'); 'After she received the prize' trỏ ngược về người thắng và chuyển sang hoạt động của trẻ em; sau đó là các hoạt động của trẻ; 'After playing' kết thúc với việc các em đói và ăn cùng bố mẹ."
       },
       {
         "type": "opinion",
@@ -2029,11 +2029,11 @@ window.FA_READING = [
         "first": "Old movies were very different from today's movies.",
         "sentences": [
           "That's because the movies were only in black and white, and sometimes without sound.",
-          "Not only did these technological limitations exist, the movies were also low budget.",
+          "Besides these technological limitations, the movies also had low budgets.",
           "Due to the lack of money, actors also had few opportunities to earn money through acting.",
           "Now things have changed, actors and filmmakers can earn thousands of dollars from film production."
         ],
-        "tip": "Mẹo: câu mở đầu nêu ý chung 'Old movies were very different'; 'That's because' giải thích lý do (đen trắng, không tiếng); 'Not only… also low budget' bổ sung hạn chế thứ hai ('these technological limitations'); 'Due to the lack of money' là hệ quả của kinh phí thấp; 'Now things have changed' đối lập với quá khứ nên đứng cuối."
+        "tip": "Mẹo: câu mở đầu nêu ý chung 'Old movies were very different'; 'That's because' giải thích lý do (đen trắng, không tiếng); 'Besides… also had low budgets' bổ sung hạn chế thứ hai ('these technological limitations'); 'Due to the lack of money' là hệ quả của kinh phí thấp; 'Now things have changed' đối lập với quá khứ nên đứng cuối."
       },
       {
         "type": "opinion",
