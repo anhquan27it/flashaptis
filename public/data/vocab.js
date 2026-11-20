@@ -162,3 +162,5 @@ window.FA_VOCAB = [
     ],
   },
 ];
+// số thẻ trong data/vocab-topics.js (file ~1 MB chỉ nạp ở trang Flashcard) — để trang chủ đếm tổng số từ mà không phải tải file đó; tests/test.js kiểm tra khớp
+window.FA_VOCAB_TOPICS_N = 4600;

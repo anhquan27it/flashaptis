@@ -2,7 +2,9 @@
 (function () {
   const FA = window.FA, esc = FA.esc;
   const app = document.getElementById("app");
-  const DECKS = window.FA_VOCAB;
+  // bộ cơ bản (data/vocab.js) + 23 chủ đề × 200 từ (data/vocab-topics.js, group: "topic")
+  const BASIC = window.FA_VOCAB || [], TOPICS = window.FA_VOCAB_TOPICS || [];
+  const DECKS = BASIC.concat(TOPICS);
   const known = () => FA.store.get("fc-known", {});
   const isKnown = (deck, w) => !!known()[deck + "|" + w];
   const setKnown = (deck, w, v) => {
@@ -12,7 +14,9 @@
   };
   /* thẻ trong bộ "Từ khó của tôi" mang theo _d = bộ gốc → trạng thái thuộc/sao luôn gắn với bộ gốc */
   const did = (deck, c) => c._d || deck.id;
-  const deckKnown = (d) => d.cards.filter((c) => isKnown(did(d, c), c.w)).length;
+  // K: bảng fc-known đọc sẵn một lần (4.600+ thẻ → không parse localStorage cho từng thẻ)
+  const deckKnown = (d, K) => { K = K || known(); return d.cards.filter((c) => K[did(d, c) + "|" + c.w]).length; };
+  const exHTML = (c) => `“${esc(c.x)}”${c.x2 ? `<br>“${esc(c.x2)}”` : ""}`;
   /* ⭐ từ khó: FA.store "fc-starred" {"bộ|từ": thời điểm gắn sao} (đồng bộ theo tài khoản qua cloud.js) */
   const starred = () => FA.store.get("fc-starred", {});
   const isStar = (deck, w) => !!starred()[deck + "|" + w];
@@ -44,20 +48,36 @@
   function route() {
     setKeys(null);
     FA.stopSpeak();
-    const [deckId, mode] = location.hash.replace(/^#\/?/, "").split("/");
+    const [deckId, mode, arg] = location.hash.replace(/^#\/?/, "").split("/");
     const deck = deckId === STAR_ID ? starDeck() : DECKS.find((d) => d.id === deckId);
     window.scrollTo(0, 0);
     if (!deck) return viewDecks();
     if (!deck.cards.length) return viewStarEmpty();
     if (mode === "quiz") return viewQuiz(deck);
-    viewStudy(deck);
+    // #bộ/list/từ → mở thẳng danh sách từ, lọc sẵn theo từ (từ ô tra nhanh ở trang bộ thẻ)
+    let q = "";
+    try { q = decodeURIComponent(arg || ""); } catch (e) {}
+    viewStudy(deck, mode === "list" ? { list: true, search: q } : null);
   }
   window.addEventListener("hashchange", route);
 
   /* ---------- danh sách bộ thẻ ---------- */
+  let deckSearch = "";
   function viewDecks() {
+    const K = known();
     const total = DECKS.reduce((n, d) => n + d.cards.length, 0);
-    const k = DECKS.reduce((n, d) => n + deckKnown(d), 0);
+    const k = DECKS.reduce((n, d) => n + deckKnown(d, K), 0);
+    const deckCard = (d) => {
+      const n = deckKnown(d, K);
+      return `<div class="card deck-card">
+        <div class="emoji">${d.emoji}</div>
+        <h3 class="mt-1">${esc(d.name)}</h3>
+        ${d.en ? `<div class="muted" style="font-size:.82rem;margin-top:-4px">${esc(d.en)}</div>` : ""}
+        <div class="muted" style="font-size:.9rem">${d.cards.length} thẻ · đã thuộc ${n}</div>
+        <div class="progress bar"><i style="width:${(n / d.cards.length) * 100}%"></i></div>
+        <div class="row mt-2"><a class="btn btn-primary btn-sm" href="#${d.id}">Học thẻ</a><a class="btn btn-outline btn-sm" href="#${d.id}/quiz">Kiểm tra</a></div>
+      </div>`;
+    };
     app.innerHTML = `
       <div class="page"><div class="container">
         <span class="eyebrow">Flashcard</span>
@@ -67,8 +87,10 @@
           <div class="ring" style="--p:${Math.round((k / total) * 100)}" data-label="${Math.round((k / total) * 100)}%"></div>
           <div><b style="font-family:var(--font-head);font-size:1.2rem">${k}/${total} từ đã thuộc</b><div class="muted">Tiến độ được lưu trên máy của bạn.</div></div>
         </div>
+        <input class="inp mb-2" id="allSearch" value="${esc(deckSearch)}" placeholder="🔍 Tra nhanh trong ${total.toLocaleString("vi-VN")} từ (tiếng Anh hoặc nghĩa tiếng Việt)…">
+        <div id="allRes"></div>
         ${(() => {
-          const sd = starDeck(), n = sd.cards.length, kn = deckKnown(sd);
+          const sd = starDeck(), n = sd.cards.length, kn = deckKnown(sd, K);
           return `<div class="card star-deck mb-2">
             <div class="emoji">⭐</div>
             <div style="flex:1;min-width:200px">
@@ -78,45 +100,70 @@
             ${n ? `<div class="row"><a class="btn btn-primary btn-sm" href="#${STAR_ID}">Ôn từ khó</a><a class="btn btn-outline btn-sm" href="#${STAR_ID}/quiz">Kiểm tra</a></div>` : ""}
           </div>`;
         })()}
-        <div class="grid grid-4">
-          ${DECKS.map((d) => {
-            const n = deckKnown(d);
-            return `<div class="card deck-card">
-              <div class="emoji">${d.emoji}</div>
-              <h3 class="mt-1">${esc(d.name)}</h3>
-              <div class="muted" style="font-size:.9rem">${d.cards.length} thẻ · đã thuộc ${n}</div>
-              <div class="progress bar"><i style="width:${(n / d.cards.length) * 100}%"></i></div>
-              <div class="row mt-2"><a class="btn btn-primary btn-sm" href="#${d.id}">Học thẻ</a><a class="btn btn-outline btn-sm" href="#${d.id}/quiz">Kiểm tra</a></div>
-            </div>`;
-          }).join("")}
-        </div>
+        <h2 class="mt-3 mb-1">Bộ cơ bản</h2>
+        <p class="muted mb-2" style="font-size:.92rem">Từ vựng nền tảng, có phiên âm — học trước nếu bạn mới bắt đầu.</p>
+        <div class="grid grid-4">${BASIC.map(deckCard).join("")}</div>
+        ${TOPICS.length ? `
+        <h2 class="mt-4 mb-1">Từ vựng theo chủ đề Aptis</h2>
+        <p class="muted mb-2" style="font-size:.92rem">${TOPICS.length} chủ đề hay gặp trong Speaking & Writing, mỗi chủ đề ${Math.round(TOPICS.reduce((n, d) => n + d.cards.length, 0) / TOPICS.length)} từ — kèm cấu trúc/cách dùng và 2 câu ví dụ. Mẹo: bật “Chỉ từ chưa thuộc” để học dần từng đợt.</p>
+        <div class="grid grid-4">${TOPICS.map(deckCard).join("")}</div>` : ""}
       </div></div>`;
+    // tra nhanh mọi bộ: hiện tối đa 30 kết quả, bấm để mở danh sách từ của bộ đó
+    const inp = app.querySelector("#allSearch"), res = app.querySelector("#allRes");
+    const search = () => {
+      deckSearch = inp.value;
+      const q = deckSearch.trim().toLowerCase();
+      if (q.length < 2) { res.innerHTML = ""; return; }
+      const hits = [];
+      for (const d of DECKS) {
+        for (const c of d.cards) {
+          if (c.w.toLowerCase().includes(q) || c.m.toLowerCase().includes(q)) hits.push([d, c]);
+          if (hits.length >= 31) break;
+        }
+        if (hits.length >= 31) break;
+      }
+      res.innerHTML = `<div class="card mb-2" style="padding:10px 14px">${hits.length ? hits.slice(0, 30).map(([d, c]) => `<div class="fc-vocab-row">
+          <div style="min-width:0"><div><b>${esc(c.w)}</b> <span class="pill gray">${esc(c.t)}</span> <a class="pill" href="#${d.id}/list/${encodeURIComponent(c.w)}">${d.emoji} ${esc(d.name)}</a></div>
+            <div style="color:var(--orange-700);font-weight:600;font-size:.94rem">${esc(c.m)}</div>
+            ${c.u ? `<div class="muted" style="font-size:.84rem">${esc(c.u)}</div>` : ""}
+            <div class="muted" style="font-size:.84rem;font-style:italic">“${esc(c.x)}”</div></div>
+          <button type="button" class="btn btn-ghost btn-sm" data-say="${esc(c.w)}" title="Nghe phát âm">🔊</button></div>`).join("") + (hits.length > 30 ? `<p class="muted mb-0 mt-1" style="font-size:.85rem">Còn nữa — gõ cụ thể hơn để thu hẹp.</p>` : "")
+        : `<p class="muted mb-0">Không tìm thấy “${esc(deckSearch)}”.</p>`}</div>`;
+      res.querySelectorAll("[data-say]").forEach((b) => (b.onclick = () => FA.speak(b.dataset.say, { gender: "f", rate: 0.9 }).catch(() => {})));
+    };
+    inp.oninput = search;
+    if (deckSearch) search();
   }
 
   /* ---------- chế độ học lật thẻ ---------- */
-  function viewStudy(deck) {
-    let onlyNew = deck.cards.some((c) => !isKnown(did(deck, c), c.w)) && deckKnown(deck) > 0;
-    let reverse = false, showList = false, search = "", slide = false;
+  function viewStudy(deck, opt) {
+    const K0 = known();
+    let onlyNew = deck.cards.some((c) => !K0[did(deck, c) + "|" + c.w]) && deckKnown(deck, K0) > 0;
+    let reverse = false, showList = !!(opt && opt.list), search = (opt && opt.search) || "", slide = false;
     let queue, flipped = false;
     const build = () => {
-      queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !isKnown(did(deck, c), c.w)));
+      const K = known();
+      queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !K[did(deck, c) + "|" + c.w]));
     };
     build();
 
     function drawList() {
       setKeys(null);
       const q = search.trim().toLowerCase();
-      const rows = deck.cards.filter((c) => !q || c.w.toLowerCase().includes(q) || c.m.toLowerCase().includes(q));
+      const all = deck.cards.filter((c) => !q || c.w.toLowerCase().includes(q) || c.m.toLowerCase().includes(q));
+      const LIMIT = 300, rows = all.slice(0, LIMIT); // bộ lớn: vẽ tối đa 300 dòng cho nhẹ máy
+      const KL = known();
       app.innerHTML = shell(`
         <input class="inp mb-2" id="fcSearch" value="${esc(search)}" placeholder="🔍 Tìm từ tiếng Anh hoặc nghĩa tiếng Việt…">
         <div class="fc-vocab-list">
           ${rows.length ? rows.map((c, idx) => {
-            const kn = isKnown(did(deck, c), c.w);
+            const kn = !!KL[did(deck, c) + "|" + c.w];
             return `<div class="fc-vocab-row">
               <div style="min-width:0">
                 <div><b>${esc(c.w)}</b> ${c.p ? `<span class="muted" style="font-size:.86rem">${esc(c.p)}</span>` : ""} <span class="pill gray">${esc(c.t)}</span>${c._dn ? ` <span class="pill">${esc(c._dn)}</span>` : ""}</div>
                 <div style="color:var(--orange-700);font-weight:600;font-size:.94rem">${esc(c.m)}</div>
-                <div class="muted" style="font-size:.84rem;font-style:italic">“${esc(c.x)}”</div>
+                ${c.u ? `<div class="muted" style="font-size:.84rem">📐 ${esc(c.u)}</div>` : ""}
+                <div class="muted" style="font-size:.84rem;font-style:italic">${exHTML(c)}</div>
               </div>
               <div class="row" style="flex-shrink:0">
                 <button type="button" class="btn btn-ghost btn-sm star-toggle${isStar(did(deck, c), c.w) ? " on" : ""}" data-star="${idx}" title="Gắn sao từ khó">${isStar(did(deck, c), c.w) ? "★" : "☆"}</button>
@@ -125,7 +172,8 @@
               </div>
             </div>`;
           }).join("") : `<div class="card empty"><p class="mb-0">Không tìm thấy từ nào khớp “${esc(search)}”.</p></div>`}
-        </div>`);
+        </div>
+        ${all.length > LIMIT ? `<p class="muted center" style="font-size:.88rem">Đang hiện ${LIMIT}/${all.length} từ — gõ vào ô tìm kiếm để lọc.</p>` : ""}`);
       const inp = app.querySelector("#fcSearch");
       inp.oninput = () => {
         search = inp.value;
@@ -167,10 +215,11 @@
       const c = queue[0];
       const front = reverse ? `<div class="fc-mean" style="font-size:1.8rem">${esc(c.m)}</div><div class="fc-type"><span class="pill gray">${esc(c.t)}</span></div>`
         : `<div class="fc-word">${esc(c.w)}</div>${c.p ? `<div class="fc-ipa">${esc(c.p)}</div>` : ""}<div class="fc-type"><span class="pill gray">${esc(c.t)}</span></div>`;
-      const back = reverse ? `<div class="fc-word" style="font-size:2rem">${esc(c.w)}</div>${c.p ? `<div class="fc-ipa">${esc(c.p)}</div>` : ""}<div class="fc-ex mt-2">“${esc(c.x)}”</div>`
-        : `<div class="fc-mean">${esc(c.m)}</div><div class="fc-ex">“${esc(c.x)}”</div>`;
+      const usage = c.u ? `<div class="fc-use">📐 ${esc(c.u)}</div>` : "";
+      const back = reverse ? `<div class="fc-word" style="font-size:2rem">${esc(c.w)}</div>${c.p ? `<div class="fc-ipa">${esc(c.p)}</div>` : ""}${usage}<div class="fc-ex mt-2">${exHTML(c)}</div>`
+        : `<div class="fc-mean">${esc(c.m)}</div>${usage}<div class="fc-ex">${exHTML(c)}</div>`;
       app.innerHTML = shell(`
-        <div class="progress-meta" style="max-width:560px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ${c._dn ? ` · ${esc(c._dn)}` : ""}</span><span>${isKnown(did(deck, c), c.w) ? "✅ Đã thuộc" : ""}</span></div>
+        <div class="progress-meta" style="max-width:720px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ${c._dn ? ` · ${esc(c._dn)}` : ""}</span><span>${isKnown(did(deck, c), c.w) ? "✅ Đã thuộc" : ""}</span></div>
         <div class="fc-wrap">
           <div class="fc ${slide ? "fc-slide" : ""}" id="fc">
             <div class="fc-face fc-front">${starBtn(deck, c)}<button class="speak-btn" title="Nghe phát âm">🔊</button>${front}<div class="fc-hint">Bấm vào thẻ hoặc phím <kbd>Space</kbd> để lật</div></div>

@@ -138,7 +138,7 @@
     document.getElementById("statQ").textContent = FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0);
     document.getElementById("statR").textContent = FA_READING.length;
     document.getElementById("statL").textContent = FA_LISTENING.length;
-    document.getElementById("statV").textContent = FA_VOCAB.reduce((n, d) => n + d.cards.length, 0);
+    document.getElementById("statV").textContent = (FA_VOCAB.reduce((n, d) => n + d.cards.length, 0) + (window.FA_VOCAB_TOPICS_N || 0)).toLocaleString("vi-VN");
     // demo tương tác
     document.querySelectorAll("#demo .demo-opt").forEach((el) => el.addEventListener("click", () => {
       document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok", "bad"));

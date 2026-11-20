@@ -70,6 +70,10 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 - exam.js: `watchReports(el)` tự gắn nút vào mọi `.q-card` có `.q-part` ở phần xem lại (MutationObserver, nên đổi tab lọc vẫn có); nút trên thanh phòng thi dùng `FA.reportCtx` lấy part/câu đang làm (`curTest` do wrapper `RUNNERS` gán); Ôn tập có nút sau khi trả lời (`gymRef`).
 - `firestore.rules` có khối `reports` (người dùng chỉ tạo, admin đọc/sửa/xóa) — **phải `firebase deploy --only firestore`** thì mới gửi được. admin.html có tab "🐞 Báo lỗi đề" (`#reports`): lọc chưa xử lý, đếm câu bị báo nhiều lần, Đã sửa / Bỏ qua / Mở lại / Xóa.
 
+### Flashcard từ vựng
+- `data/vocab.js` (`FA_VOCAB`, 8 bộ cơ bản có phiên âm) + [data/vocab-topics.js](public/data/vocab-topics.js) (`FA_VOCAB_TOPICS`, 23 chủ đề Aptis × 200 từ = 4.600 thẻ, chuyển từ thư mục `Từ vựng chủ đề/*.xlsx`; thẻ có thêm `u` cấu trúc/cách dùng và `x2` ví dụ 2, không có phiên âm; id bộ dạng `t-…`). File chủ đề ~1 MB nên **chỉ flashcards.html nạp**; trang chủ đếm tổng qua `FA_VOCAB_TOPICS_N` ở cuối vocab.js (test kiểm tra khớp). Thư mục `Từ vựng chủ đề/` nằm ngoài `public/` nên không bị deploy.
+- flashcards.js: đọc `fc-known` một lần mỗi lần vẽ (`deckKnown(d, K)`) — đừng gọi `isKnown` trong vòng lặp hàng nghìn thẻ; danh sách từ vẽ tối đa 300 dòng; ô tra nhanh ở trang bộ thẻ tìm trong mọi bộ, link `#bộ/list/từ` mở danh sách lọc sẵn.
+
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
 - Đáp án trắc nghiệm bị **xáo thứ tự mỗi lần tải trang** → `ans` phải lưu **văn bản** lựa chọn, không lưu chỉ số (xem `optText` / `optIdx`).

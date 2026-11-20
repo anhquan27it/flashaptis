@@ -635,9 +635,9 @@ textarea.inp { min-height: 140px; resize: vertical; line-height: 1.6; }
 .bar-row .progress { height: 10px; }
 
 /* Flashcards */
-.fc-wrap { perspective: 1200px; max-width: 560px; margin: 0 auto; }
+.fc-wrap { perspective: 1400px; max-width: 720px; margin: 0 auto; }
 .fc {
-  position: relative; height: 340px; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.2,.8,.2,1); cursor: pointer;
+  position: relative; height: 430px; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.2,.8,.2,1); cursor: pointer;
 }
 .fc.fc-slide { animation: fc-in .22s ease-out; }
 @keyframes fc-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
@@ -654,7 +654,7 @@ textarea.inp { min-height: 140px; resize: vertical; line-height: 1.6; }
 .fc-mean { font-size: 1.5rem; font-weight: 700; color: var(--orange-700); margin-bottom: 12px; }
 .fc-ex { color: var(--ink-2); font-style: italic; }
 .fc-hint { position: absolute; bottom: 14px; font-size: .8rem; color: var(--muted); }
-.fc-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 560px; margin: 18px auto 0; }
+.fc-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 720px; margin: 18px auto 0; }
 .fc-actions .btn { padding: 12px 8px; }
 .btn-red { background: #fff; border-color: #fecaca; color: var(--red); }
 .btn-red:hover { background: #fef2f2; }
@@ -1097,3 +1097,23 @@ body.mock-on { background: var(--bg); }
 :root[data-theme="dark"] .mock-warn.on { background: #3b1717; border-color: #7f1d1d; color: #fca5a5; }
 :root[data-theme="dark"] .lock-box h2 { color: #fca5a5; }
 :root[data-theme="dark"] .mock-steps span.done { border-color: #14532d; color: #86efac; }
+
+/* Flashcard chủ đề: cấu trúc/cách dùng + 2 ví dụ (thẻ dài → không bị cắt phần trên khi cuộn) */
+.fc-face { justify-content: safe center; }
+.fc-use { font-size: .86rem; color: var(--ink-2); background: var(--surface-2); border: 1px dashed var(--line-2); border-radius: 10px; padding: 6px 10px; margin: 0 0 10px; max-width: 100%; }
+.fc-back .fc-ex { font-size: .95rem; line-height: 1.55; }
+/* Thẻ flashcard lớn hơn (máy tính) — điện thoại giữ cỡ vừa màn hình */
+.fc-word { font-size: 3rem; }
+.fc-mean { font-size: 1.85rem; }
+.fc-ipa { font-size: 1.1rem; }
+.fc-type .pill { font-size: .95rem; padding: 4px 14px; }
+.fc-back .fc-ex { font-size: 1.08rem; }
+.fc-use { font-size: .95rem; }
+.fc-actions .btn { padding: 14px 10px; font-size: 1.05rem; }
+@media (max-width: 640px) {
+  .fc { height: 380px; }
+  .fc-word { font-size: 2.3rem; }
+  .fc-mean { font-size: 1.5rem; }
+  .fc-back .fc-ex { font-size: .98rem; }
+  .fc-actions .btn { padding: 12px 6px; font-size: .95rem; }
+}

@@ -70,11 +70,12 @@ loadScripts(sb, [
   "public/data/speaking.js",
   "public/data/vocab.js",
   "public/data/mock.js",
+  "public/data/vocab-topics.js",
   "public/assets/js/grading/relevance.js",
   "public/assets/js/grading/speaking-grader.js",
 ]);
 
-const { FA, FA_GRAMMAR, FA_READING, FA_LISTENING, FA_WRITING, FA_SPEAKING, FA_VOCAB, FA_MOCK } = sb;
+const { FA, FA_GRAMMAR, FA_READING, FA_LISTENING, FA_WRITING, FA_SPEAKING, FA_VOCAB, FA_MOCK, FA_VOCAB_TOPICS, FA_VOCAB_TOPICS_N } = sb;
 
 console.log("1. Kiểm tra ngân hàng đề:");
 
@@ -232,6 +233,29 @@ test("FA_MOCK (Full Test): mỗi bộ tham chiếu đủ 5 đề lẻ có thật
     if (allFree) free++;
   }
   assert.ok(free >= 1, "nên có ít nhất 1 Full Test làm được với gói Free");
+});
+
+
+test("FA_VOCAB_TOPICS: 23 chủ đề × 200 từ, đủ trường, không trùng từ trong bộ, id bộ không trùng với bộ cơ bản", () => {
+  assert.ok(Array.isArray(FA_VOCAB_TOPICS) && FA_VOCAB_TOPICS.length === 23, "cần 23 chủ đề");
+  const ids = new Set(FA_VOCAB.map((d) => d.id));
+  let n = 0;
+  const POS = new Set(["n", "n phr", "v", "adj", "adj phr", "phr v", "idiom", "prep phr"]);
+  for (const d of FA_VOCAB_TOPICS) {
+    assert.ok(!ids.has(d.id), "trùng id bộ: " + d.id);
+    ids.add(d.id);
+    assert.ok(d.name && d.en && d.emoji, d.id + ": thiếu tên/emoji");
+    assert.equal(d.cards.length, 200, d.id + ": cần 200 từ");
+    const seen = new Set();
+    for (const c of d.cards) {
+      assert.ok(c.w && c.m && c.u && c.x && c.x2, d.id + ": thẻ thiếu trường " + JSON.stringify(c));
+      assert.ok(POS.has(c.t), d.id + ": loại từ lạ " + c.t);
+      assert.ok(!seen.has(c.w.toLowerCase()), d.id + ": trùng từ " + c.w);
+      seen.add(c.w.toLowerCase());
+    }
+    n += d.cards.length;
+  }
+  assert.equal(FA_VOCAB_TOPICS_N, n, "FA_VOCAB_TOPICS_N trong vocab.js phải bằng số thẻ thật (" + n + ")");
 });
 
 console.log("\n2. Kiểm tra hàm quy đổi CEFR & chấm nội dung:");
