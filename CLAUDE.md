@@ -57,6 +57,8 @@ Mọi đường dẫn trong HTML là tương đối so với `public/` (vd. `ass
 
 - **Hiệu ứng chuyển trang/tab**: đổi trang dùng CSS `@view-transition` (Chrome/Edge; header có `view-transition-name` nên đứng yên); đổi hash và bấm `.tab` gọi `FA.fxIn(el)` (common.js) để chạy lại animation `.fx-in` — chỉ là CSS, không đụng logic trang; tắt khi prefers-reduced-motion.
 
+- **Nút liên hệ hỗ trợ** (`FA.contact.mount()`, gọi trong `renderShell` nên có ở mọi trang có header): nút 💬 góc dưới phải mở popup dẫn tới Messenger/Facebook; đổi link ở `FA.CONTACT` (common.js).
+
 ### Lịch sử & xem lại bài
 - Lượt làm bài lưu theo khóa `skill:testId` (tối đa 10, mới nhất đứng đầu), mỗi lượt có `at` (tăng nghiêm ngặt, dùng làm khóa) và `ans` (bài làm). Nút "Xem lại" ở bảng lịch sử gọi `RUNNERS[skill](test, attempt)`: runner nạp lại `ans`, **không lưu lượt mới**, không thêm vào sổ câu sai.
 - Đáp án trắc nghiệm bị **xáo thứ tự mỗi lần tải trang** → `ans` phải lưu **văn bản** lựa chọn, không lưu chỉ số (xem `optText` / `optIdx`).
