@@ -1783,12 +1783,22 @@
     all[id] = list.sort((a, b) => b.at - a.at).slice(0, 10);
     FA.store.set("mock", all);
   }
+  /* Speaking tự chấm (không có AI) mà người dùng chưa bấm "Lưu điểm" → điểm chỉ là mặc định 3/5 mỗi part:
+     KHÔNG cộng vào Overall (ghi rõ "chờ chấm Speaking") để điểm tổng không bị thổi phồng. */
+  const speakPending = (run) => !!(run.os.speaking && run.os.speaking.selfScore && !run.speakSaved);
   function mockRecord(run, status) {
-    const scores = {};
-    MOCK_ORDER.forEach((k) => (scores[k] = run.os[k] ? run.os[k].score : null));
+    const scores = {}, cefrs = {};
+    const pend = speakPending(run);
+    MOCK_ORDER.forEach((k) => {
+      const o = run.os[k];
+      scores[k] = o && !(k === "speaking" && pend) ? o.score : null;
+      cefrs[k] = o && !(k === "speaking" && pend) ? o.cefr || "" : ""; // CEFR của runner (Listening/Reading xét trên điểm chưa làm tròn)
+    });
     const overall = CORE_SKILLS.reduce((n, k) => n + (scores[k] || 0), 0);
-    return { at: run.at, finishedAt: Date.now(), status, strikes: run.strikes || 0, scores, overall, cefr: FA.toCEFR("overall", overall) };
+    return { at: run.at, finishedAt: Date.now(), status, strikes: run.strikes || 0, scores, cefrs, overall, cefr: FA.toCEFR("overall", overall), speakPending: pend || undefined };
   }
+  // đóng tab / tải lại giữa Full Test → vẫn ghi lại lượt thi (kết thúc sớm, giữ số lần vi phạm); localStorage ghi đồng bộ nên kịp lưu
+  window.addEventListener("pagehide", () => { if (mockRun) mockEnd("aborted", false); });
   // tab mở phòng thi cập nhật lịch sử → tab gốc (đang ở trang giới thiệu) vẽ lại
   window.addEventListener("storage", (e) => {
     if (e.key === "flashaptis:mock" && !running && !mockRun && (view === "mockIntro" || view === "mockList")) route();
@@ -1814,7 +1824,7 @@
         ${needLogin() ? LOGIN_NOTE : ""}
         <div class="grid grid-2">
           ${MOCKS.map((m) => {
-            const h = mockHist(m.id), best = h.filter((r) => r.status === "done").sort((a, b) => b.overall - a.overall)[0], locked = mockLocked(m);
+            const h = mockHist(m.id), best = h.filter((r) => r.status === "done" && !r.speakPending).sort((a, b) => b.overall - a.overall)[0], locked = mockLocked(m);
             return `<a class="card skill-card" href="#/mock/${m.id}">
               <div class="icon">${locked ? "🔒" : "🏁"}</div>
               ${locked ? `<span class="pill">PRO</span>` : `<span class="pill green">Free</span>`} ${h.length ? `<span class="pill gray">Đã thi ${h.length} lần</span>` : ""}
@@ -1875,7 +1885,7 @@
         </div>
         <div id="roomNote"></div>
         ${hist.length ? `<div class="mt-4"><h3>Lịch sử Full Test</h3><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Overall</th><th>L · R · S · W</th><th>Grammar</th><th>Trạng thái</th></tr>
-          ${hist.map((r) => `<tr><td>${FA.fmtDate(r.at)}</td><td><b>${r.overall}</b>/200 · ${esc(r.cefr)}</td><td>${CORE_SKILLS.map((k) => (r.scores[k] == null ? "–" : r.scores[k])).join(" · ")}</td><td>${r.scores.grammar == null ? "–" : r.scores.grammar + "/50"}</td><td>${MOCK_STATUS[r.status] || esc(r.status)}${r.strikes ? `<br><span class="muted" style="font-size:.85rem">⚠️ ${r.strikes} lần rời màn hình</span>` : ""}</td></tr>`).join("")}
+          ${hist.map((r) => `<tr><td>${FA.fmtDate(r.at)}</td><td><b>${r.overall}</b>/200 · ${esc(r.cefr)}${r.speakPending ? `<br><span class="muted" style="font-size:.82rem">tạm tính, chưa gồm Speaking</span>` : ""}</td><td>${CORE_SKILLS.map((k) => (r.scores[k] == null ? "–" : r.scores[k])).join(" · ")}</td><td>${r.scores.grammar == null ? "–" : r.scores.grammar + "/50"}</td><td>${MOCK_STATUS[r.status] || esc(r.status)}${r.strikes ? `<br><span class="muted" style="font-size:.85rem">⚠️ ${r.strikes} lần rời màn hình</span>` : ""}</td></tr>`).join("")}
         </table></div><p class="muted" style="font-size:.85rem">Muốn xem lại bài làm từng phần: vào đề lẻ tương ứng → Lịch sử làm bài → Xem lại.</p></div>` : ""}
       </div></div>`;
     app.querySelector("#openRoom").onclick = () => {
@@ -1899,7 +1909,8 @@
           <h1 class="page-title mb-1">🏁 ${esc(m.title)}</h1>
           <p class="muted">5 phần · khoảng ${MOCK_MIN} phút · tối đa ${MOCK_MAX_STRIKES - 1} lần cảnh báo rời màn hình.</p>
           <ul class="mock-check">
-            <li id="ckMic">${micOK ? `🎙️ Micro: <button type="button" class="btn btn-outline btn-sm" id="micBtn">Kiểm tra micro</button> <span id="micSt" class="muted"></span>` : `⚠️ Trình duyệt không hỗ trợ ghi âm — phần Speaking vẫn làm được nhưng không ghi âm (nên dùng Chrome/Edge).`}</li>
+            <li id="ckMic">${micOK ? `🎙️ Micro (bắt buộc kiểm tra — để hộp xin quyền không bật lên giữa giờ thi và bị tính là rời màn hình): <button type="button" class="btn btn-outline btn-sm" id="micBtn">Kiểm tra micro</button> <span id="micSt" class="muted"></span>
+              <label class="mock-agree" style="margin-top:6px;font-weight:400"><input type="checkbox" id="noMic"> Tôi không có micro — thi Speaking không ghi âm</label>` : `⚠️ Trình duyệt không hỗ trợ ghi âm — phần Speaking vẫn làm được nhưng không ghi âm (nên dùng Chrome/Edge).`}</li>
             <li>${fsOK ? "🖥️ Phòng thi sẽ chuyển sang <b>toàn màn hình</b>. Đừng bấm Esc hay chuyển tab." : "⚠️ Trình duyệt này không hỗ trợ toàn màn hình — vẫn thi được, nhưng mọi lần chuyển tab/ứng dụng đều bị ghi lại."}</li>
             <li>🎧 Bật loa/tai nghe cho phần Listening.</li>
           </ul>
@@ -1911,6 +1922,9 @@
           </div>
         </div>
       </div></div>`;
+    const agree = app.querySelector("#agree"), enter = app.querySelector("#enterBtn"), noMic = app.querySelector("#noMic");
+    let micReady = !micOK; // trình duyệt không ghi âm được → không cần kiểm tra
+    const sync = () => (enter.disabled = !(agree.checked && (micReady || (noMic && noMic.checked))));
     const mb = app.querySelector("#micBtn");
     if (mb) mb.onclick = async () => {
       const stEl = app.querySelector("#micSt");
@@ -1918,11 +1932,13 @@
       try {
         const s = await navigator.mediaDevices.getUserMedia({ audio: true });
         s.getTracks().forEach((t) => t.stop());
+        micReady = true;
         stEl.innerHTML = `<span class="txt-ok">✓ Micro hoạt động</span>`;
       } catch (e) { stEl.textContent = "✗ Chưa có quyền micro — bấm biểu tượng 🔒 trên thanh địa chỉ để cho phép, rồi thử lại."; }
+      sync();
     };
-    const agree = app.querySelector("#agree"), enter = app.querySelector("#enterBtn");
-    agree.onchange = () => (enter.disabled = !agree.checked);
+    agree.onchange = sync;
+    if (noMic) noMic.onchange = sync;
     enter.onclick = () => {
       if (mockLocked(m) || needLogin()) return route();
       mockRun = { m, idx: 0, os: {}, strikes: 0, at: Date.now(), terminated: false, inBreak: false };
@@ -2003,13 +2019,15 @@
     saveMockRec(run.m.id, rec);
     if (render === false) return;
     viewMockResult(run, rec);
-    if (status === "done" && FA.celebrate) FA.celebrate({ icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.` });
+    if (status === "done" && FA.celebrate) FA.celebrate(rec.speakPending
+      ? { icon: "🏁", title: `Hoàn thành ${run.m.title}!`, sub: "Tự chấm Speaking ở tab bên dưới để có điểm Overall đầy đủ." }
+      : { icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.` });
   }
 
   function viewMockResult(run, rec) {
     view = "mockResult";
     const m = run.m;
-    const lvl = (k, s) => (s == null ? "" : FA.CEFR[k] ? FA.toCEFR(k, s) : "");
+    const tileNote = (k) => (k === "speaking" && rec.speakPending ? "chờ tự chấm" : rec.scores[k] == null ? "chưa làm" : k === "grammar" ? "không cộng Overall" : esc((rec.cefrs && rec.cefrs[k]) || ""));
     const summary = () => `
       <div class="result-hero">
         <div class="ring-lg" style="--p:${Math.round((rec.overall / 200) * 100)}"><div><b>${rec.overall}</b><span>/200</span></div></div>
@@ -2017,10 +2035,11 @@
           <span class="eyebrow">Kết quả Full Test · ${esc(m.title)}</span>
           <h2 class="mb-0">${rec.status === "done" ? "Hoàn thành bài thi! 🎉" : rec.status === "terminated" ? "Bài thi bị dừng" : "Bài thi kết thúc sớm"}</h2>
           <div class="row mt-1"><span class="cefr-badge">${esc(rec.cefr)}</span><span class="muted">bậc CEFR Overall ước lượng (Listening + Reading + Speaking + Writing)</span></div>
-          <div class="mock-scores">${MOCK_ORDER.map((k) => `<div class="${k === "grammar" ? "g" : ""}"><span>${SKILLS[k].icon} ${esc(short(k))}</span><b>${rec.scores[k] == null ? "–" : rec.scores[k]}<small>/50</small></b><em>${rec.scores[k] == null ? "chưa làm" : k === "grammar" ? "không cộng Overall" : esc(lvl(k, rec.scores[k]))}</em></div>`).join("")}</div>
+          <div class="mock-scores">${MOCK_ORDER.map((k) => `<div class="${k === "grammar" ? "g" : ""}"><span>${SKILLS[k].icon} ${esc(short(k))}</span><b>${rec.scores[k] == null ? "–" : rec.scores[k]}<small>/50</small></b><em>${tileNote(k)}</em></div>`).join("")}</div>
           ${rec.status === "terminated" ? `<div class="explain mt-1">⛔ Bạn đã rời màn hình thi ${rec.strikes} lần nên bài thi tự nộp và dừng. Các phần chưa làm tính 0 điểm.</div>` : rec.status === "aborted" ? `<div class="explain mt-1">⏹ Bạn đã kết thúc sớm — các phần chưa làm tính 0 điểm.</div>` : ""}
           ${rec.strikes && rec.status !== "terminated" ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">⚠️ Ghi nhận ${rec.strikes} lần rời màn hình trong lúc thi.</p>` : ""}
-          ${run.os.speaking ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">🎙️ Điểm Speaking ${run.os.speaking.selfScore ? "đang là điểm tự chấm mặc định" : "do AI chấm sẵn"} — mở tab Speaking bên dưới, nghe lại bản ghi, chỉnh thanh điểm rồi bấm <b>Lưu điểm</b>: Overall tự cập nhật.</p>` : ""}
+          ${rec.speakPending ? `<div class="explain mt-1">🎙️ <b>Overall đang tạm tính, chưa gồm Speaking.</b> Không có AI chấm nên bạn cần tự chấm: mở tab Speaking bên dưới, nghe lại bản ghi, kéo thanh điểm từng part rồi bấm <b>Lưu điểm</b> — Overall và bậc CEFR sẽ tự cập nhật.</div>`
+            : run.os.speaking ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">🎙️ Speaking ${run.os.speaking.selfScore ? "theo điểm bạn tự chấm" : "do AI chấm sẵn"} — có thể chỉnh lại ở tab Speaking (bấm <b>Lưu điểm</b>), Overall tự cập nhật.</p>` : ""}
         </div>
       </div>`;
     const done = MOCK_ORDER.filter((k) => run.os[k]);
@@ -2053,15 +2072,17 @@
       noteEl.innerHTML = noteHTML(o);
       const update = (n) => {
         Object.assign(o, n);
+        if (k === "speaking") run.speakSaved = true; // người dùng đã tự chấm → tính Speaking vào Overall
         if (o.attemptAt) FA.updateAttempt(o.skill, o.test.id, o.attemptAt, Object.assign({ score: o.score, cefr: o.cefr }, n.ans ? { ans: n.ans } : {}));
         const r2 = mockRecord(run, rec.status);
-        Object.assign(rec, { scores: r2.scores, overall: r2.overall, cefr: r2.cefr });
+        Object.assign(rec, { scores: r2.scores, cefrs: r2.cefrs, overall: r2.overall, cefr: r2.cefr, speakPending: r2.speakPending });
         saveMockRec(m.id, rec);
         const sum = app.querySelector("#mockSum .result-hero");
         if (sum) sum.outerHTML = summary();
         noteEl.innerHTML = noteHTML(o);
         const tb = app.querySelector(`[data-mt="${k}"]`);
         if (tb) tb.textContent = `${SKILLS[k].icon} ${short(k)} · ${o.score}/50`;
+        if (rec.status === "done" && k === "speaking" && FA.celebrate) FA.celebrate({ icon: "🏁", title: `Overall ${run.m.title}: ${rec.overall}/200`, sub: `Đã gồm Speaking — bậc CEFR ước lượng ${rec.cefr}.`, confetti: false });
       };
       watchReports(rv, k, o.test);
       o.review(rv, update);
@@ -2127,7 +2148,7 @@
     onFS() { if (lock.on && lock.fsOK() && !lock.inFS()) lock.strike("Bạn đã thoát chế độ toàn màn hình."); },
     onKey(e) {
       const k = (e.key || "").toLowerCase(), mod = e.ctrlKey || e.metaKey;
-      const bad = k === "f12" || (mod && e.shiftKey && ["i", "j", "c", "k"].includes(k)) || (mod && !e.shiftKey && ["u", "s", "p", "c", "x", "v"].includes(k));
+      const bad = k === "f12" || k === "f5" || (mod && e.shiftKey && ["i", "j", "c", "k", "r"].includes(k)) || (mod && !e.shiftKey && ["u", "s", "p", "c", "x", "v", "r"].includes(k));
       if (!bad) return;
       e.preventDefault();
       e.stopPropagation();
