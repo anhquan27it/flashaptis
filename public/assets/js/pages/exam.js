@@ -1428,7 +1428,10 @@
 
     async function getMic() {
       if (st.stream || !navigator.mediaDevices || !window.MediaRecorder) return;
-      try { st.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); cleanup.push(() => st.stream && st.stream.getTracks().forEach((t) => t.stop())); }
+      try {
+        st.stream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true } });
+        cleanup.push(() => st.stream && st.stream.getTracks().forEach((t) => t.stop()));
+      }
       catch (e) { FA.toast("Không có quyền micro — bạn vẫn luyện được nhưng không ghi âm."); }
     }
     const recDone = []; // mỗi lần ghi âm một promise, xong khi MediaRecorder.onstop chạy (finish() chờ để không mất bản ghi câu cuối)
@@ -1486,6 +1489,16 @@
         };
         r.onend = () => { if (recogOn && recog === r) { try { mk(); } catch (e) { recogOn = false; } } }; // Chrome tự ngắt khi im lặng → bật lại cho tới khi hết câu
         recog = r;
+        // Dùng cùng track với bản ghi để bộ nhận dạng cũng nhận âm thanh đã lọc.
+        const track = st.stream?.getAudioTracks().find((t) => t.readyState === "live");
+        if (track) {
+          try {
+            r.start(track);
+            return;
+          } catch (e) {
+            // Trình duyệt không nhận track trực tiếp: dùng mic mặc định như trước.
+          }
+        }
         try { r.start(); } catch (e) { recogOn = false; }
       };
       mk();
