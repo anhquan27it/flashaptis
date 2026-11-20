@@ -552,6 +552,7 @@
      ====================================================== */
   /* kỷ lục / bậc CEFR cao nhất trước lượt này của một kỹ năng */
   const LV_RANK = ["A0", "A1", "A2", "B1", "B2", "C"];
+  const ACE_SCORE = 45; // 90% của thang 50 → pháo giấy chúc mừng
   function skillPrev(skill) {
     const all = FA.store.get("attempts", {});
     let n = 0, best = null, lv = -1;
@@ -565,7 +566,11 @@
   function celebrateResult(skill, score, prev) {
     if (!FA.celebrate) return;
     const nm = short(skill), lvl = FA.toCEFR(skill, score), rank = LV_RANK.indexOf(lvl);
-    if (!prev.n) FA.celebrate({ icon: SKILLS[skill].icon, title: `Bài ${nm} đầu tiên — ${score}/50!`, sub: "Đây là điểm xuất phát của bạn. Làm thêm đề để thấy mình tiến bộ.", confetti: false });
+    // đúng từ 90% trở lên (≥ 45/50) → luôn bắn pháo giấy, gộp luôn thông tin kỷ lục / lên bậc vào một banner
+    if (score >= ACE_SCORE) {
+      const extra = !prev.n ? "Bài đầu tiên mà đã quá đỉnh!" : FA.CEFR[skill] && rank > prev.lv && rank > 0 ? `Lên bậc ${lvl} ${nm}!` : score > prev.best ? `Kỷ lục mới (trước đây ${prev.best}/50).` : "Giữ phong độ này nhé!";
+      FA.celebrate({ icon: "🎆", title: `Xuất sắc! ${nm} ${score}/50 — đúng ${Math.round((score / 50) * 100)}%`, sub: extra, confetti: true });
+    } else if (!prev.n) FA.celebrate({ icon: SKILLS[skill].icon, title: `Bài ${nm} đầu tiên — ${score}/50!`, sub: "Đây là điểm xuất phát của bạn. Làm thêm đề để thấy mình tiến bộ.", confetti: false });
     else if (FA.CEFR[skill] && rank > prev.lv && rank > 0) FA.celebrate({ icon: "⬆️", title: `Lên bậc ${lvl} ${nm}!`, sub: score > prev.best ? `Kỷ lục mới ${score}/50 (trước đây cao nhất ${prev.best}/50)` : `${score}/50 — lần đầu bạn đạt bậc này` });
     else if (score > prev.best) FA.celebrate({ icon: "🏆", title: `Kỷ lục mới ${nm}: ${score}/50`, sub: `Hơn kỷ lục cũ ${score - prev.best} điểm (${prev.best}/50). Tiếp tục nhé!` });
     if (FA.roadmap) FA.roadmap.celebrateStages();
@@ -1728,6 +1733,7 @@
           <h2 class="mt-2">${correct === items.length ? "Hoàn hảo! 🎉" : "Xong một hiệp! 💪"}</h2><p class="muted">${fromWrong ? "Câu đúng đã được gỡ khỏi Sổ câu sai." : "Câu sai đã được lưu vào Sổ câu sai."}</p>
           <div class="row" style="justify-content:center"><a class="btn btn-primary" href="${fromWrong ? "#/gym/wrong" : "#/gym"}" id="again">Tập tiếp</a></div></div>`;
         body.querySelector("#again").onclick = (e) => { e.preventDefault(); viewGym(fromWrong); };
+        if (items.length >= 5 && correct / items.length >= 0.9 && FA.celebrate) FA.celebrate({ icon: "🎆", title: `Xuất sắc! Đúng ${correct}/${items.length} câu`, sub: correct === items.length ? "Không sai câu nào — hoàn hảo!" : "Đạt từ 90% trở lên — tiếp tục nhé!", confetti: true });
         return;
       }
       const it = items[i];
@@ -1772,7 +1778,7 @@
   const mockTest = (m, k) => SKILLS[k].data.find((t) => t.id === m.parts[k]);
   const MOCKS = (window.FA_MOCK || []).filter((m) => m && m.parts && MOCK_ORDER.every((k) => mockTest(m, k)));
   const mockLocked = (m) => MOCK_ORDER.some((k) => isLocked(k, mockTest(m, k))); // khóa nếu có đề thành phần là đề Pro
-  const MOCK_MAX_STRIKES = 3;
+  const MOCK_MAX_STRIKES = 2; // lần rời màn hình thi (đổi tab, sang ứng dụng khác, thoát toàn màn hình) thứ 1 → cảnh báo; thứ 2 → tự nộp bài và kết thúc
   const MOCK_MIN = MOCK_ORDER.reduce((n, k) => n + SKILLS[k].time, 0);
   const MOCK_STATUS = { done: "✅ Hoàn thành", aborted: "⏹ Kết thúc sớm", terminated: "⛔ Bị dừng (rời màn hình)" };
   const mockHist = (id) => ((FA.store.get("mock", {}) || {})[id] || []).slice().sort((a, b) => b.at - a.at);
@@ -1809,7 +1815,9 @@
     return `<div class="mock-strip">
       <b class="mock-name">🏁 ${esc(r.m.title)}</b>
       <div class="mock-steps">${MOCK_ORDER.map((k, i) => `<span class="${i < r.idx ? "done" : i === r.idx ? "cur" : ""}">${i < r.idx ? "✓" : i + 1}. ${esc(short(k))}</span>`).join("")}</div>
-      <span class="mock-warn ${r.strikes ? "on" : ""}" id="mockStrikes" title="Số lần rời màn hình thi — tới ${MOCK_MAX_STRIKES} lần bài thi tự nộp">⚠️ ${r.strikes}/${MOCK_MAX_STRIKES}</span>
+      ${MOCK_MAX_STRIKES === 1
+        ? `<span class="mock-warn on" title="Rời màn hình thi (đổi tab, sang ứng dụng khác, thoát toàn màn hình) là bài thi tự nộp ngay">🔒 Không rời màn hình</span>`
+        : `<span class="mock-warn ${r.strikes ? "on" : ""}" id="mockStrikes" title="Số lần rời màn hình thi — tới ${MOCK_MAX_STRIKES} lần bài thi tự nộp">⚠️ ${r.strikes}/${MOCK_MAX_STRIKES}</span>`}
     </div>`;
   }
 
@@ -1862,7 +1870,9 @@
   const MOCK_RULES = [
     "Làm liền 5 phần theo thứ tự <b>Grammar & Vocabulary → Listening → Reading → Writing → Speaking</b>; mỗi phần có đồng hồ riêng, hết giờ tự nộp. Nộp phần nào là khóa phần đó (không quay lại được).",
     "Phòng thi mở ở <b>tab mới, toàn màn hình</b>. Thanh menu, nút hỗ trợ, chuột phải, sao chép/dán và phím mở công cụ nhà phát triển bị tắt.",
-    `Mỗi lần <b>rời khỏi màn hình thi</b> (đổi tab, bấm sang ứng dụng khác, thoát toàn màn hình) bị tính 1 lần vi phạm. Đến <b>lần thứ ${MOCK_MAX_STRIKES}</b> bài thi tự nộp phần đang làm và kết thúc — các phần chưa làm tính 0 điểm.`,
+    MOCK_MAX_STRIKES === 1
+      ? `<b>Rời khỏi màn hình thi dù chỉ 1 lần</b> (đổi tab, bấm sang ứng dụng/cửa sổ khác, thoát toàn màn hình) là bài thi <b>tự nộp ngay và kết thúc</b> — các phần chưa làm tính 0 điểm. Không có cảnh báo trước.`
+      : `Mỗi lần <b>rời khỏi màn hình thi</b> (đổi tab, bấm sang ứng dụng khác, thoát toàn màn hình) bị tính 1 lần vi phạm. Đến <b>lần thứ ${MOCK_MAX_STRIKES}</b> bài thi tự nộp phần đang làm và kết thúc — các phần chưa làm tính 0 điểm.`,
     "Phần Speaking cần <b>micro</b> — hãy kiểm tra micro trước khi vào phòng thi. Nên đeo tai nghe cho phần Listening.",
     "Kết quả: điểm từng phần (/50), <b>Overall = Listening + Reading + Speaking + Writing (/200)</b> và bậc CEFR. Grammar & Vocabulary tính riêng như thi thật.",
   ];
@@ -1907,11 +1917,11 @@
         <div class="card mock-room">
           <span class="eyebrow">Phòng thi</span>
           <h1 class="page-title mb-1">🏁 ${esc(m.title)}</h1>
-          <p class="muted">5 phần · khoảng ${MOCK_MIN} phút · tối đa ${MOCK_MAX_STRIKES - 1} lần cảnh báo rời màn hình.</p>
+          <p class="muted">5 phần · khoảng ${MOCK_MIN} phút · ${MOCK_MAX_STRIKES === 1 ? "<b>rời màn hình thi là tự nộp bài ngay</b>" : `tối đa ${MOCK_MAX_STRIKES - 1} lần cảnh báo rời màn hình`}.</p>
           <ul class="mock-check">
             <li id="ckMic">${micOK ? `🎙️ Micro (bắt buộc kiểm tra — để hộp xin quyền không bật lên giữa giờ thi và bị tính là rời màn hình): <button type="button" class="btn btn-outline btn-sm" id="micBtn">Kiểm tra micro</button> <span id="micSt" class="muted"></span>
               <label class="mock-agree" style="margin-top:6px;font-weight:400"><input type="checkbox" id="noMic"> Tôi không có micro — thi Speaking không ghi âm</label>` : `⚠️ Trình duyệt không hỗ trợ ghi âm — phần Speaking vẫn làm được nhưng không ghi âm (nên dùng Chrome/Edge).`}</li>
-            <li>${fsOK ? "🖥️ Phòng thi sẽ chuyển sang <b>toàn màn hình</b>. Đừng bấm Esc hay chuyển tab." : "⚠️ Trình duyệt này không hỗ trợ toàn màn hình — vẫn thi được, nhưng mọi lần chuyển tab/ứng dụng đều bị ghi lại."}</li>
+            <li>${fsOK ? `🖥️ Phòng thi sẽ chuyển sang <b>toàn màn hình</b>. ${lock.kbOK() ? "Phím <b>Esc bị khóa</b> (muốn thoát phải giữ Esc vài giây) — thoát toàn màn hình hay chuyển tab đều bị tính vi phạm." : "Đừng bấm <b>Esc</b> hay chuyển tab — mỗi lần thoát toàn màn hình bị tính 1 lần vi phạm."}` :"⚠️ Trình duyệt này không hỗ trợ toàn màn hình — vẫn thi được, nhưng mọi lần chuyển tab/ứng dụng đều bị ghi lại."}</li>
             <li>🎧 Bật loa/tai nghe cho phần Listening.</li>
           </ul>
           <div class="card intro-box mt-2"><ul>${MOCK_RULES.map((x) => `<li>${x}</li>`).join("")}</ul></div>
@@ -1993,16 +2003,17 @@
   }
 
   /* vi phạm lần cuối → tự nộp phần đang làm (bỏ qua hộp xác nhận) rồi kết thúc */
-  function mockTerminate() {
+  function mockTerminate(reason) {
     const run = mockRun;
     if (!run || run.terminated) return;
     run.terminated = true;
+    run.endReason = reason || "";
     if (running) {
       const b = document.getElementById("submitBtn");
       const c = FA.confirm;
       FA.confirm = () => Promise.resolve(true); // các nút Nộp bài gọi FA.confirm ngay đầu hàm → trả "đồng ý" luôn
       try { if (b) b.click(); else { clearRun(); mockEnd("terminated"); } } finally { FA.confirm = c; }
-      FA.toast(`Bạn đã rời màn hình thi ${MOCK_MAX_STRIKES} lần — bài thi đã tự nộp.`);
+      FA.toast(MOCK_MAX_STRIKES === 1 ? "Bạn đã rời màn hình thi — bài thi đã tự nộp." : `Bạn đã rời màn hình thi ${MOCK_MAX_STRIKES} lần — bài thi đã tự nộp.`);
     } else if (run.inBreak) mockEnd("terminated");
     // đang chấm (Writing/Speaking chờ AI) → mockCollect sẽ kết thúc khi chấm xong
   }
@@ -2021,7 +2032,9 @@
     viewMockResult(run, rec);
     if (status === "done" && FA.celebrate) FA.celebrate(rec.speakPending
       ? { icon: "🏁", title: `Hoàn thành ${run.m.title}!`, sub: "Tự chấm Speaking ở tab bên dưới để có điểm Overall đầy đủ." }
-      : { icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.` });
+      : rec.overall >= 180
+        ? { icon: "🎆", title: `Xuất sắc! ${run.m.title}: ${rec.overall}/200 (${Math.round(rec.overall / 2)}%)`, sub: `Bậc CEFR ước lượng ${rec.cefr} — quá đỉnh!`, confetti: true }
+        : { icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.`, confetti: false });
   }
 
   function viewMockResult(run, rec) {
@@ -2036,7 +2049,7 @@
           <h2 class="mb-0">${rec.status === "done" ? "Hoàn thành bài thi! 🎉" : rec.status === "terminated" ? "Bài thi bị dừng" : "Bài thi kết thúc sớm"}</h2>
           <div class="row mt-1"><span class="cefr-badge">${esc(rec.cefr)}</span><span class="muted">bậc CEFR Overall ước lượng (Listening + Reading + Speaking + Writing)</span></div>
           <div class="mock-scores">${MOCK_ORDER.map((k) => `<div class="${k === "grammar" ? "g" : ""}"><span>${SKILLS[k].icon} ${esc(short(k))}</span><b>${rec.scores[k] == null ? "–" : rec.scores[k]}<small>/50</small></b><em>${tileNote(k)}</em></div>`).join("")}</div>
-          ${rec.status === "terminated" ? `<div class="explain mt-1">⛔ Bạn đã rời màn hình thi ${rec.strikes} lần nên bài thi tự nộp và dừng. Các phần chưa làm tính 0 điểm.</div>` : rec.status === "aborted" ? `<div class="explain mt-1">⏹ Bạn đã kết thúc sớm — các phần chưa làm tính 0 điểm.</div>` : ""}
+          ${rec.status === "terminated" ? `<div class="explain mt-1">⛔ ${rec.strikes > 1 ? `Bạn đã rời màn hình thi ${rec.strikes} lần` : "Bạn đã rời màn hình thi"}${run.endReason ? ` (${esc(run.endReason.replace(/\.$/, ""))})` : ""} nên bài thi tự nộp phần đang làm và dừng. Các phần chưa làm tính 0 điểm.</div>` : rec.status === "aborted" ? `<div class="explain mt-1">⏹ Bạn đã kết thúc sớm — các phần chưa làm tính 0 điểm.</div>` : ""}
           ${rec.strikes && rec.status !== "terminated" ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">⚠️ Ghi nhận ${rec.strikes} lần rời màn hình trong lúc thi.</p>` : ""}
           ${rec.speakPending ? `<div class="explain mt-1">🎙️ <b>Overall đang tạm tính, chưa gồm Speaking.</b> Không có AI chấm nên bạn cần tự chấm: mở tab Speaking bên dưới, nghe lại bản ghi, kéo thanh điểm từng part rồi bấm <b>Lưu điểm</b> — Overall và bậc CEFR sẽ tự cập nhật.</div>`
             : run.os.speaking ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">🎙️ Speaking ${run.os.speaking.selfScore ? "theo điểm bạn tự chấm" : "do AI chấm sẵn"} — có thể chỉnh lại ở tab Speaking (bấm <b>Lưu điểm</b>), Overall tự cập nhật.</p>` : ""}
@@ -2082,7 +2095,7 @@
         noteEl.innerHTML = noteHTML(o);
         const tb = app.querySelector(`[data-mt="${k}"]`);
         if (tb) tb.textContent = `${SKILLS[k].icon} ${short(k)} · ${o.score}/50`;
-        if (rec.status === "done" && k === "speaking" && FA.celebrate) FA.celebrate({ icon: "🏁", title: `Overall ${run.m.title}: ${rec.overall}/200`, sub: `Đã gồm Speaking — bậc CEFR ước lượng ${rec.cefr}.`, confetti: false });
+        if (rec.status === "done" && k === "speaking" && FA.celebrate) FA.celebrate({ icon: rec.overall >= 180 ? "🎆" : "🏁", title: `Overall ${run.m.title}: ${rec.overall}/200`, sub: `Đã gồm Speaking — bậc CEFR ước lượng ${rec.cefr}.${rec.overall >= 180 ? " Xuất sắc!" : ""}`, confetti: rec.overall >= 180 });
       };
       watchReports(rv, k, o.test);
       o.review(rv, update);
@@ -2100,12 +2113,22 @@
     on: false, graceUntil: 0, blurT: 0, ov: null,
     fsOK() { const d = document.documentElement; return !!(d.requestFullscreen || d.webkitRequestFullscreen); },
     inFS() { return !!(document.fullscreenElement || document.webkitFullscreenElement); },
+    /* Keyboard Lock (Chrome/Edge/Brave/Opera… trên máy tính, cần https hoặc localhost): khi đang toàn màn hình,
+       bấm Esc một lần KHÔNG thoát nữa — phải GIỮ Esc ~2 giây (trình duyệt tự hiện hướng dẫn). Firefox/Safari chưa hỗ trợ:
+       Esc vẫn thoát ngay → bị tính 1 lần vi phạm (onFS). Không trình duyệt nào cho web chặn hẳn Esc. */
+    kbOK() { return !!(navigator.keyboard && navigator.keyboard.lock); },
+    kbLock() { if (lock.kbOK() && lock.inFS()) navigator.keyboard.lock(["Escape"]).catch(() => {}); },
     enterFS() {
-      if (!lock.fsOK() || lock.inFS()) return;
+      if (!lock.fsOK()) return;
+      if (lock.inFS()) return lock.kbLock();
       const d = document.documentElement;
-      try { const p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+      try {
+        const p = (d.requestFullscreen || d.webkitRequestFullscreen).call(d, { navigationUI: "hide" });
+        if (p && p.then) p.then(lock.kbLock, () => {});
+      } catch (e) {}
     },
     exitFS() {
+      if (lock.kbOK()) { try { navigator.keyboard.unlock(); } catch (e) {} }
       if (!lock.inFS()) return;
       try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {}
     },
@@ -2166,7 +2189,7 @@
       run.strikes++;
       const b = document.getElementById("mockStrikes");
       if (b) { b.textContent = `⚠️ ${run.strikes}/${MOCK_MAX_STRIKES}`; b.classList.add("on"); }
-      if (run.strikes >= MOCK_MAX_STRIKES) return mockTerminate();
+      if (run.strikes >= MOCK_MAX_STRIKES) return mockTerminate(reason);
       const left = MOCK_MAX_STRIKES - run.strikes;
       const ov = (lock.ov = document.createElement("div"));
       ov.className = "lock-ov";
