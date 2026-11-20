@@ -1020,8 +1020,6 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
 .help-x:hover { background: var(--surface-2); color: var(--ink); }
 .help-txt { margin: 0; font-size: .9rem; color: var(--ink-2); }
 .help-go { width: 100%; justify-content: center; text-align: center; }
-.help-copy { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .82rem; cursor: pointer; padding: 4px; text-decoration: underline; }
-.help-copy:hover { color: var(--orange-700); }
 :root[data-theme="dark"] .help-ava { background: #3a2618; }
 @media (max-width: 560px) {
   .help-fab { right: 14px; bottom: 14px; }

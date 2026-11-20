@@ -512,7 +512,6 @@
           <p class="help-txt">Nhắn cho FlashAptis qua Facebook, mô tả ngắn vấn đề (kèm ảnh chụp màn hình nếu có). Bọn mình sẽ trả lời sớm nhất có thể.</p>
           <a class="btn btn-primary help-go" href="${C.messenger}" target="_blank" rel="noopener">Nhắn tin qua Messenger</a>
           <a class="btn btn-ghost help-go" href="${C.facebook}" target="_blank" rel="noopener">Xem trang Facebook</a>
-          <button class="help-copy" type="button">📋 Sao chép thông tin trang này để gửi kèm</button>
         </div>
         <button class="help-btn" type="button" aria-expanded="false" aria-controls="helpPanel" title="Liên hệ hỗ trợ">
           <span class="help-ic" aria-hidden="true">💬</span><span class="help-lb">Hỗ trợ</span>
@@ -527,12 +526,6 @@
       btn.addEventListener("click", () => set(panel.hidden));
       box.querySelector(".help-x").addEventListener("click", () => set(false));
       box.querySelectorAll(".help-go").forEach((a) => a.addEventListener("click", () => set(false)));
-      box.querySelector(".help-copy").addEventListener("click", () => {
-        const info = `Trang: ${location.href}\nTrình duyệt: ${navigator.userAgent}\nThời gian: ${new Date().toLocaleString("vi-VN")}`;
-        const done = () => FA.toast && FA.toast("Đã sao chép — dán vào tin nhắn giúp mình nhé");
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(info).then(done, () => window.prompt("Sao chép thông tin này:", info));
-        else window.prompt("Sao chép thông tin này:", info);
-      });
       document.addEventListener("click", (e) => { if (!panel.hidden && !e.target.closest(".help-fab")) set(false); });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) set(false); });
     },
