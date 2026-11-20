@@ -2,9 +2,35 @@
 (function () {
   const FA = window.FA, esc = FA.esc;
   const app = document.getElementById("app");
-  // bộ cơ bản (data/vocab.js) + 23 chủ đề × 200 từ (data/vocab-topics.js, group: "topic")
-  const BASIC = window.FA_VOCAB || [], TOPICS = window.FA_VOCAB_TOPICS || [];
-  const DECKS = BASIC.concat(TOPICS);
+  /* Bộ thẻ:
+     - Bộ cơ bản (data/vocab.js, FA_VOCAB) — luôn có sẵn.
+     - Bộ lớn (CEFR A1–C2, 23 chủ đề Aptis): chỉ có danh mục (data/vocab-index.js, FA_VOCAB_INDEX: tên, số thẻ, file);
+       nội dung data/vocab/<id>.js chỉ tải khi mở bộ đó (máy yếu không phải tải ~2,5 MB một lúc). Đã tải → FA_VOCAB_DECKS[id]. */
+  const BASIC = window.FA_VOCAB || [];
+  const INDEX = window.FA_VOCAB_INDEX || [];
+  const SECTIONS = [
+    ["cefr", "Từ vựng theo cấp độ CEFR (A1 → C2)", "Học theo trình độ: bắt đầu từ bậc thấp hơn mục tiêu một bậc. Mỗi từ có nghĩa, loại từ, cách dùng và 2 câu ví dụ. Bộ lớn — bật “Chỉ từ chưa thuộc” để học dần từng đợt."],
+    ["topic", "Từ vựng theo chủ đề Aptis", "Chủ đề hay gặp trong Speaking & Writing, mỗi chủ đề 200 từ — kèm cấu trúc/cách dùng và 2 câu ví dụ."],
+  ];
+  const loadedDecks = () => window.FA_VOCAB_DECKS || {};
+  const metaOf = (id) => BASIC.find((d) => d.id === id) || INDEX.find((d) => d.id === id) || null;
+  const getDeck = (id) => BASIC.find((d) => d.id === id) || loadedDecks()[id] || null;
+  const allLoaded = () => BASIC.concat(Object.values(loadedDecks()));
+  const loading = {};
+  function loadDeck(id) {
+    if (getDeck(id)) return Promise.resolve(getDeck(id));
+    const m = INDEX.find((d) => d.id === id);
+    if (!m) return Promise.resolve(null);
+    return (loading[id] = loading[id] || new Promise((ok, fail) => {
+      const s = document.createElement("script");
+      s.src = m.file;
+      s.onload = () => ok(getDeck(id));
+      s.onerror = () => { delete loading[id]; s.remove(); fail(new Error("load")); };
+      document.head.appendChild(s);
+    }));
+  }
+  const loadAll = (ids) => Promise.all((ids || INDEX.map((d) => d.id)).map((id) => loadDeck(id).catch(() => null)));
+  const deckSize = (d) => (d.cards ? d.cards.length : d.n || 0);
   const known = () => FA.store.get("fc-known", {});
   const isKnown = (deck, w) => !!known()[deck + "|" + w];
   const setKnown = (deck, w, v) => {
@@ -31,7 +57,7 @@
   function starDeck() {
     const st = starred(), cards = [];
     Object.keys(st).sort((a, b) => st[b] - st[a]).forEach((k) => {
-      const i = k.indexOf("|"), d = DECKS.find((x) => x.id === k.slice(0, i));
+      const i = k.indexOf("|"), d = getDeck(k.slice(0, i));
       const c = d && d.cards.find((x) => x.w === k.slice(i + 1));
       if (c) cards.push(Object.assign({ _d: d.id, _dn: d.name }, c));
     });
@@ -45,12 +71,29 @@
     if (fn) document.addEventListener("keydown", fn);
   };
 
-  function route() {
+  let routeSeq = 0;
+  async function route() {
     setKeys(null);
     FA.stopSpeak();
+    const seq = ++routeSeq;
     const [deckId, mode, arg] = location.hash.replace(/^#\/?/, "").split("/");
-    const deck = deckId === STAR_ID ? starDeck() : DECKS.find((d) => d.id === deckId);
     window.scrollTo(0, 0);
+    // bộ chưa tải (hoặc bộ Từ khó có từ thuộc bộ chưa tải) → tải trước, hiện màn chờ
+    const need = deckId === STAR_ID ? Array.from(new Set(Object.keys(starred()).map((k) => k.slice(0, k.indexOf("|"))))).filter((id) => !getDeck(id) && metaOf(id))
+      : deckId && !getDeck(deckId) && metaOf(deckId) ? [deckId] : [];
+    if (need.length) {
+      const m = metaOf(need[0]);
+      app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">${deckId === STAR_ID ? "⭐" : m.emoji}</div><p>Đang tải ${deckId === STAR_ID ? "từ khó của bạn" : `bộ “${esc(m.name)}” (${deckSize(m)} thẻ)`}…</p></div></div></div>`;
+      try { await (deckId === STAR_ID ? loadAll(need) : loadDeck(deckId)); }
+      catch (e) {
+        if (seq !== routeSeq) return;
+        app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">📡</div><p>Không tải được bộ thẻ — kiểm tra kết nối mạng rồi thử lại.</p><div class="row" style="justify-content:center"><button class="btn btn-primary" id="retry">Thử lại</button><a class="btn btn-ghost" href="#">Bộ khác</a></div></div></div></div>`;
+        app.querySelector("#retry").onclick = route;
+        return;
+      }
+      if (seq !== routeSeq) return; // người dùng đã chuyển trang trong lúc tải
+    }
+    const deck = deckId === STAR_ID ? starDeck() : getDeck(deckId);
     if (!deck) return viewDecks();
     if (!deck.cards.length) return viewStarEmpty();
     if (mode === "quiz") return viewQuiz(deck);
@@ -65,16 +108,21 @@
   let deckSearch = "";
   function viewDecks() {
     const K = known();
-    const total = DECKS.reduce((n, d) => n + d.cards.length, 0);
-    const k = DECKS.reduce((n, d) => n + deckKnown(d, K), 0);
+    // số từ đã thuộc mỗi bộ đếm theo khóa "bộ|từ" của fc-known → không cần tải nội dung bộ lớn
+    const knownBy = {};
+    Object.keys(K).forEach((k) => { const id = k.slice(0, k.indexOf("|")); knownBy[id] = (knownBy[id] || 0) + 1; });
+    const kOf = (d) => Math.min(deckSize(d), knownBy[d.id] || 0);
+    const ALL = BASIC.concat(INDEX);
+    const total = ALL.reduce((n, d) => n + deckSize(d), 0);
+    const k = ALL.reduce((n, d) => n + kOf(d), 0);
     const deckCard = (d) => {
-      const n = deckKnown(d, K);
+      const n = kOf(d), size = deckSize(d);
       return `<div class="card deck-card">
         <div class="emoji">${d.emoji}</div>
         <h3 class="mt-1">${esc(d.name)}</h3>
-        ${d.en ? `<div class="muted" style="font-size:.82rem;margin-top:-4px">${esc(d.en)}</div>` : ""}
-        <div class="muted" style="font-size:.9rem">${d.cards.length} thẻ · đã thuộc ${n}</div>
-        <div class="progress bar"><i style="width:${(n / d.cards.length) * 100}%"></i></div>
+        ${d.section === "topic" && d.en ? `<div class="muted" style="font-size:.82rem;margin-top:-4px">${esc(d.en)}</div>` : d.desc ? `<div class="muted" style="font-size:.82rem;margin-top:-4px">${esc(d.desc)}</div>` : ""}
+        <div class="muted" style="font-size:.9rem">${size.toLocaleString("vi-VN")} thẻ · đã thuộc ${n}</div>
+        <div class="progress bar"><i style="width:${size ? (n / size) * 100 : 0}%"></i></div>
         <div class="row mt-2"><a class="btn btn-primary btn-sm" href="#${d.id}">Học thẻ</a><a class="btn btn-outline btn-sm" href="#${d.id}/quiz">Kiểm tra</a></div>
       </div>`;
     };
@@ -90,7 +138,7 @@
         <input class="inp mb-2" id="allSearch" value="${esc(deckSearch)}" placeholder="🔍 Tra nhanh trong ${total.toLocaleString("vi-VN")} từ (tiếng Anh hoặc nghĩa tiếng Việt)…">
         <div id="allRes"></div>
         ${(() => {
-          const sd = starDeck(), n = sd.cards.length, kn = deckKnown(sd, K);
+          const sk = Object.keys(starred()), n = sk.length, kn = sk.filter((x) => K[x]).length;
           return `<div class="card star-deck mb-2">
             <div class="emoji">⭐</div>
             <div style="flex:1;min-width:200px">
@@ -103,19 +151,29 @@
         <h2 class="mt-3 mb-1">Bộ cơ bản</h2>
         <p class="muted mb-2" style="font-size:.92rem">Từ vựng nền tảng, có phiên âm — học trước nếu bạn mới bắt đầu.</p>
         <div class="grid grid-4">${BASIC.map(deckCard).join("")}</div>
-        ${TOPICS.length ? `
-        <h2 class="mt-4 mb-1">Từ vựng theo chủ đề Aptis</h2>
-        <p class="muted mb-2" style="font-size:.92rem">${TOPICS.length} chủ đề hay gặp trong Speaking & Writing, mỗi chủ đề ${Math.round(TOPICS.reduce((n, d) => n + d.cards.length, 0) / TOPICS.length)} từ — kèm cấu trúc/cách dùng và 2 câu ví dụ. Mẹo: bật “Chỉ từ chưa thuộc” để học dần từng đợt.</p>
-        <div class="grid grid-4">${TOPICS.map(deckCard).join("")}</div>` : ""}
+        ${SECTIONS.map(([sec, title, sub]) => {
+          const list = INDEX.filter((d) => d.section === sec);
+          return list.length ? `
+        <h2 class="mt-4 mb-1">${esc(title)}</h2>
+        <p class="muted mb-2" style="font-size:.92rem">${esc(sub)} · ${list.reduce((n, d) => n + d.n, 0).toLocaleString("vi-VN")} từ</p>
+        <div class="grid grid-4">${list.map(deckCard).join("")}</div>` : "";
+        }).join("")}
       </div></div>`;
-    // tra nhanh mọi bộ: hiện tối đa 30 kết quả, bấm để mở danh sách từ của bộ đó
+    // tra nhanh mọi bộ: lần tra đầu tải toàn bộ dữ liệu (≈2,5 MB), hiện tối đa 30 kết quả, bấm để mở danh sách từ của bộ đó
     const inp = app.querySelector("#allSearch"), res = app.querySelector("#allRes");
-    const search = () => {
+    let searchSeq = 0;
+    const search = async () => {
       deckSearch = inp.value;
       const q = deckSearch.trim().toLowerCase();
       if (q.length < 2) { res.innerHTML = ""; return; }
+      const seq = ++searchSeq;
+      if (INDEX.some((d) => !getDeck(d.id))) {
+        res.innerHTML = `<div class="card mb-2" style="padding:10px 14px"><p class="muted mb-0">⏳ Đang tải dữ liệu từ vựng để tra (chỉ lần đầu)…</p></div>`;
+        await loadAll();
+        if (seq !== searchSeq || !res.isConnected) return;
+      }
       const hits = [];
-      for (const d of DECKS) {
+      for (const d of allLoaded()) {
         for (const c of d.cards) {
           if (c.w.toLowerCase().includes(q) || c.m.toLowerCase().includes(q)) hits.push([d, c]);
           if (hits.length >= 31) break;
@@ -291,7 +349,7 @@
   /* ---------- kiểm tra nhanh (trắc nghiệm nghĩa) ---------- */
   function viewQuiz(deck) {
     // bộ ít thẻ (vd. Từ khó mới gắn vài sao) thì lấy nghĩa nhiễu từ mọi bộ
-    const pool = deck.virtual || deck.cards.length < 4 ? DECKS.reduce((a, d) => a.concat(d.cards), []) : deck.cards;
+    const pool = deck.virtual || deck.cards.length < 4 ? allLoaded().reduce((a, d) => a.concat(d.cards), []) : deck.cards;
     const qs = FA.shuffle(deck.cards).slice(0, 10).map((c) => {
       const wrong = FA.shuffle(Array.from(new Set(pool.filter((x) => x.w !== c.w && x.m !== c.m).map((x) => x.m)))).slice(0, 3);
       const o = FA.shuffle([c.m, ...wrong]);

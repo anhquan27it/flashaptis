@@ -1,0 +1,33 @@
+/* Danh sách bộ flashcard tải theo yêu cầu (data/vocab/<id>.js) — sinh tự động bởi tools/build-vocab.js (npm run build:vocab), đừng sửa tay.
+   section: "cefr" (A1–C2) | "topic" (23 chủ đề Aptis). n = số thẻ. Tổng: 9522 thẻ. */
+window.FA_VOCAB_INDEX = [
+  {"id":"c-a1","name":"CEFR A1 · Beginner","en":"A1","emoji":"🌱","desc":"Từ vựng nền tảng: chào hỏi, gia đình, số đếm, đồ vật quen thuộc.","section":"cefr","n":890,"file":"data/vocab/c-a1.js"},
+  {"id":"c-a2","name":"CEFR A2 · Elementary","en":"A2","emoji":"🌿","desc":"Sinh hoạt hằng ngày: mua sắm, đi lại, công việc đơn giản.","section":"cefr","n":792,"file":"data/vocab/c-a2.js"},
+  {"id":"c-b1","name":"CEFR B1 · Intermediate","en":"B1","emoji":"🌳","desc":"Giao tiếp độc lập — mức nhiều trường yêu cầu khi thi Aptis.","section":"cefr","n":688,"file":"data/vocab/c-b1.js"},
+  {"id":"c-b2","name":"CEFR B2 · Upper Intermediate","en":"B2","emoji":"🚀","desc":"Diễn đạt quan điểm, bàn luận chủ đề xã hội.","section":"cefr","n":530,"file":"data/vocab/c-b2.js"},
+  {"id":"c-c1","name":"CEFR C1 · Advanced","en":"C1","emoji":"🏆","desc":"Từ học thuật & công việc chuyên môn — để bứt lên bậc C.","section":"cefr","n":1300,"file":"data/vocab/c-c1.js"},
+  {"id":"c-c2","name":"CEFR C2 · Proficiency","en":"C2","emoji":"👑","desc":"Từ hiếm, sắc thái tinh tế — gần như người bản xứ.","section":"cefr","n":722,"file":"data/vocab/c-c2.js"},
+  {"id":"t-cities","name":"Thành phố & Đời sống đô thị","en":"Cities & Urban Life","emoji":"🏙️","section":"topic","n":200,"file":"data/vocab/t-cities.js"},
+  {"id":"t-crime","name":"Tội phạm & Công lý","en":"Crime & Justice","emoji":"⚖️","section":"topic","n":200,"file":"data/vocab/t-crime.js"},
+  {"id":"t-culture","name":"Văn hóa & Di sản","en":"Culture & Heritage","emoji":"🏛️","section":"topic","n":200,"file":"data/vocab/t-culture.js"},
+  {"id":"t-economy","name":"Kinh tế & Tiêu dùng","en":"Economy & Consumerism","emoji":"💰","section":"topic","n":200,"file":"data/vocab/t-economy.js"},
+  {"id":"t-education","name":"Giáo dục & Học tập","en":"Education & Learning","emoji":"🎓","section":"topic","n":200,"file":"data/vocab/t-education.js"},
+  {"id":"t-energy","name":"Năng lượng & Tài nguyên","en":"Energy & Resources","emoji":"🔋","section":"topic","n":200,"file":"data/vocab/t-energy.js"},
+  {"id":"t-environment","name":"Môi trường & Khí hậu","en":"Environment & Climate","emoji":"🌍","section":"topic","n":200,"file":"data/vocab/t-environment.js"},
+  {"id":"t-equality","name":"Bình đẳng & Thay đổi xã hội","en":"Equality & Social Change","emoji":"🤝","section":"topic","n":200,"file":"data/vocab/t-equality.js"},
+  {"id":"t-family","name":"Gia đình & Trẻ em","en":"Family & Children","emoji":"👨‍👩‍👧","section":"topic","n":200,"file":"data/vocab/t-family.js"},
+  {"id":"t-food","name":"Ẩm thực & Nông nghiệp","en":"Food & Agriculture","emoji":"🌾","section":"topic","n":200,"file":"data/vocab/t-food.js"},
+  {"id":"t-global","name":"Toàn cầu hóa & Thương mại","en":"Globalisation & Trade","emoji":"🌐","section":"topic","n":200,"file":"data/vocab/t-global.js"},
+  {"id":"t-government","name":"Chính phủ & Chính sách","en":"Government & Policy","emoji":"📜","section":"topic","n":200,"file":"data/vocab/t-government.js"},
+  {"id":"t-health","name":"Sức khỏe & Hạnh phúc","en":"Health & Well-Being","emoji":"🩺","section":"topic","n":200,"file":"data/vocab/t-health.js"},
+  {"id":"t-housing","name":"Nhà ở & Cộng đồng","en":"Housing & Communities","emoji":"🏘️","section":"topic","n":200,"file":"data/vocab/t-housing.js"},
+  {"id":"t-language","name":"Ngôn ngữ & Giao tiếp","en":"Language & Communication","emoji":"💬","section":"topic","n":200,"file":"data/vocab/t-language.js"},
+  {"id":"t-media","name":"Truyền thông & Quảng cáo","en":"Media & Advertising","emoji":"📺","section":"topic","n":200,"file":"data/vocab/t-media.js"},
+  {"id":"t-population","name":"Dân số & Di cư","en":"Population & Migration","emoji":"🧳","section":"topic","n":200,"file":"data/vocab/t-population.js"},
+  {"id":"t-science","name":"Khoa học & Nghiên cứu","en":"Science & Research","emoji":"🔬","section":"topic","n":200,"file":"data/vocab/t-science.js"},
+  {"id":"t-sport","name":"Thể thao & Lối sống năng động","en":"Sport & Active Lifestyles","emoji":"⚽","section":"topic","n":200,"file":"data/vocab/t-sport.js"},
+  {"id":"t-tech","name":"Công nghệ & Đời sống số","en":"Technology & Digital Life","emoji":"💻","section":"topic","n":200,"file":"data/vocab/t-tech.js"},
+  {"id":"t-tourism","name":"Du lịch & Lữ hành","en":"Tourism & Travel","emoji":"✈️","section":"topic","n":200,"file":"data/vocab/t-tourism.js"},
+  {"id":"t-transport","name":"Giao thông & Đi lại","en":"Transport & Mobility","emoji":"🚆","section":"topic","n":200,"file":"data/vocab/t-transport.js"},
+  {"id":"t-work","name":"Công việc & Việc làm","en":"Work & Employment","emoji":"👔","section":"topic","n":200,"file":"data/vocab/t-work.js"}
+];

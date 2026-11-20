@@ -7,6 +7,7 @@
     "start": "npx --yes http-server public -a localhost -p 5501 -c-1 -o",
     "test": "node tests/test.js",
     "deploy": "firebase deploy --only hosting,firestore",
-    "deploy:functions": "firebase deploy --only functions"
+    "deploy:functions": "firebase deploy --only functions",
+    "build:vocab": "node tools/build-vocab.js"
   }
 }

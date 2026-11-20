@@ -53,7 +53,7 @@
     header.className = "site-header";
     header.innerHTML = `
       <div class="container">
-        <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
+        <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="70" height="70" alt="" decoding="async"><span class="logo-text"><span class="flash">Flash</span>Aptis</span></a>
         <nav class="nav" aria-label="Điều hướng chính">
           ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
           <a class="btn btn-primary nav-cta" href="exam.html">Làm đề ngay ⚡</a><!-- chỉ hiện trong menu mobile -->
@@ -130,7 +130,7 @@
     footer.innerHTML = `
       <div class="container">
         <div>
-          <a class="logo" href="index.html" style="font-size:1.1rem"><span class="bolt">⚡</span><span class="flash">Flash</span>Aptis</a>
+          <a class="logo logo-foot" href="index.html"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="56" height="56" alt="" decoding="async"><span class="logo-text"><span class="flash">Flash</span>Aptis</span></a>
           <div class="mt-1">Luyện thi Aptis ESOL miễn phí · Học nhanh như tia chớp.</div>
           <div class="mt-1" style="font-size:.8rem">Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Điểm trên web chỉ mang tính ước lượng.</div>
         </div>
