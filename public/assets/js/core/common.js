@@ -107,6 +107,7 @@
     }
     if (FA.daily) FA.daily.paint();
     if (FA.cloud && FA.cloud.paint) FA.cloud.paint(); // vẽ ô tài khoản ngay (cloud.js dùng hồ sơ đã nhớ), tránh nháy khi chuyển trang
+    FA.contact.mount();
     menuBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const open = nav.classList.toggle("open");
@@ -486,6 +487,53 @@
   // Speaking: 4 part × 0–5 = tối đa 20 → thang 50
   FA.SPEAKING_MAX_RAW = 20;
   FA.speakingTo50 = (raw) => Math.round((raw / FA.SPEAKING_MAX_RAW) * 50);
+
+  /* ---------- Nút liên hệ hỗ trợ (góc dưới phải, mọi trang có header) ---------- */
+  FA.CONTACT = {
+    facebook: "https://www.facebook.com/ho.dung.411021/",
+    messenger: "https://m.me/ho.dung.411021",
+  };
+  FA.contact = {
+    mount() {
+      if (typeof document === "undefined" || document.querySelector(".help-fab")) return;
+      const C = FA.CONTACT;
+      const box = document.createElement("div");
+      box.className = "help-fab";
+      box.innerHTML = `
+        <div class="help-panel" id="helpPanel" role="dialog" aria-label="Liên hệ hỗ trợ" hidden>
+          <div class="help-head">
+            <span class="help-ava">💬</span>
+            <div><b>Gặp vấn đề khi học?</b><small>Lỗi đề, lỗi chấm điểm, đăng nhập, thanh toán…</small></div>
+            <button class="help-x" type="button" aria-label="Đóng">✕</button>
+          </div>
+          <p class="help-txt">Nhắn cho FlashAptis qua Facebook, mô tả ngắn vấn đề (kèm ảnh chụp màn hình nếu có). Bọn mình sẽ trả lời sớm nhất có thể.</p>
+          <a class="btn btn-primary help-go" href="${C.messenger}" target="_blank" rel="noopener">Nhắn tin qua Messenger</a>
+          <a class="btn btn-ghost help-go" href="${C.facebook}" target="_blank" rel="noopener">Xem trang Facebook</a>
+          <button class="help-copy" type="button">📋 Sao chép thông tin trang này để gửi kèm</button>
+        </div>
+        <button class="help-btn" type="button" aria-expanded="false" aria-controls="helpPanel" title="Liên hệ hỗ trợ">
+          <span class="help-ic" aria-hidden="true">💬</span><span class="help-lb">Hỗ trợ</span>
+        </button>`;
+      document.body.appendChild(box);
+      const panel = box.querySelector(".help-panel"), btn = box.querySelector(".help-btn");
+      const set = (open) => {
+        panel.hidden = !open;
+        box.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", String(open));
+      };
+      btn.addEventListener("click", () => set(panel.hidden));
+      box.querySelector(".help-x").addEventListener("click", () => set(false));
+      box.querySelectorAll(".help-go").forEach((a) => a.addEventListener("click", () => set(false)));
+      box.querySelector(".help-copy").addEventListener("click", () => {
+        const info = `Trang: ${location.href}\nTrình duyệt: ${navigator.userAgent}\nThời gian: ${new Date().toLocaleString("vi-VN")}`;
+        const done = () => FA.toast && FA.toast("Đã sao chép — dán vào tin nhắn giúp mình nhé");
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(info).then(done, () => window.prompt("Sao chép thông tin này:", info));
+        else window.prompt("Sao chép thông tin này:", info);
+      });
+      document.addEventListener("click", (e) => { if (!panel.hidden && !e.target.closest(".help-fab")) set(false); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) set(false); });
+    },
+  };
 
   /* ---------- Hiệu ứng chuyển tab / chuyển màn cho mượt ----------
      - Đổi trang (menu header): CSS @view-transition (Chrome/Edge), xem style.css.
