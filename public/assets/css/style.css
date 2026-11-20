@@ -1030,3 +1030,14 @@ kbd { background: #fff; border: 1px solid var(--line-2); border-bottom-width: 2p
 }
 @media print { .help-fab { display: none; } }
 @media (prefers-reduced-motion: reduce) { .help-panel { animation: none; } .help-btn { transition: none; } }
+/* Trình duyệt không có hiệu ứng gốc / máy yếu (fx.js gắn class lên <html>) */
+html.fx-fade main:not(.fx-in) { animation: page-in .24s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+html.fx-fade main { transition: opacity .12s ease-in; }
+html.fx-leaving main { opacity: 0; }
+/* chế độ nhẹ: chỉ đổi opacity (GPU làm, không tính lại bố cục), ngắn hơn */
+html.fx-lite main:not(.fx-in) { animation: page-in-lite .16s ease-out both; }
+html.fx-lite .fx-in { animation: page-in-lite .16s ease-out both; }
+@keyframes page-in-lite { from { opacity: 0; } }
+html.fx-lite .tab { transition-duration: .1s; }
+@media (prefers-reduced-motion: reduce) { html.fx-fade main:not(.fx-in), html.fx-lite .fx-in { animation: none; } }
