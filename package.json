@@ -8,6 +8,7 @@
     "test": "node tests/test.js",
     "deploy": "firebase deploy --only hosting,firestore",
     "deploy:functions": "firebase deploy --only functions",
-    "build:vocab": "node tools/build-vocab.js"
+    "build:vocab": "node tools/build-vocab.js",
+    "build:grammar": "python tools/build-grammar.py"
   }
 }

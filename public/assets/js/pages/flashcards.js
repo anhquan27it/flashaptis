@@ -133,7 +133,7 @@
         <p class="page-sub">Lật thẻ để xem nghĩa, nghe phát âm, đánh dấu từ đã thuộc. Từ chưa nhớ sẽ quay lại cuối bộ để bạn ôn thêm.</p>
         <div class="card mb-2" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
           <div class="ring" style="--p:${Math.round((k / total) * 100)}" data-label="${Math.round((k / total) * 100)}%"></div>
-          <div><b style="font-family:var(--font-head);font-size:1.2rem">${k}/${total} từ đã thuộc</b><div class="muted">Tiến độ được lưu trên máy của bạn.</div></div>
+          <div><b style="font-family:var(--font-head);font-size:1.2rem">${k}/${total} từ đã thuộc</b><div class="muted">Đăng nhập thì tiến độ được đồng bộ theo tài khoản giữa các thiết bị; chưa đăng nhập thì chỉ lưu trên trình duyệt này.</div></div>
         </div>
         <input class="inp mb-2" id="allSearch" value="${esc(deckSearch)}" placeholder="🔍 Tra nhanh trong ${total.toLocaleString("vi-VN")} từ (tiếng Anh hoặc nghĩa tiếng Việt)…">
         <div id="allRes"></div>
@@ -199,9 +199,22 @@
     let onlyNew = deck.cards.some((c) => !K0[did(deck, c) + "|" + c.w]) && deckKnown(deck, K0) > 0;
     let reverse = false, showList = !!(opt && opt.list), search = (opt && opt.search) || "", slide = false;
     let queue, flipped = false;
+    // 🔀 trộn thẻ: bật = thứ tự ngẫu nhiên, tắt = đúng thứ tự trong bộ (nhớ lựa chọn trên máy)
+    let shuffleOn = FA.store.get("fc-shuffle", true) !== false;
+    const order = new Map(deck.cards.map((c, i) => [c, i]));
+    const arrange = (list) => (shuffleOn ? FA.shuffle(list.slice()) : list.slice().sort((a, b) => order.get(a) - order.get(b)));
     const build = () => {
       const K = known();
-      queue = FA.shuffle(deck.cards.filter((c) => !onlyNew || !K[did(deck, c) + "|" + c.w]));
+      queue = arrange(deck.cards.filter((c) => !onlyNew || !K[did(deck, c) + "|" + c.w]));
+    };
+    const reshuffle = () => {
+      if (queue.length < 2) return;
+      const cur = queue[0];
+      queue = FA.shuffle(queue.slice());
+      if (queue[0] === cur) queue.push(queue.shift()); // trộn xong phải đổi thẻ đang hiện
+      slide = true;
+      FA.toast("🔀 Đã trộn lại " + queue.length + " thẻ");
+      draw();
     };
     build();
 
@@ -277,7 +290,7 @@
       const back = reverse ? `<div class="fc-word" style="font-size:2rem">${esc(c.w)}</div>${c.p ? `<div class="fc-ipa">${esc(c.p)}</div>` : ""}${usage}<div class="fc-ex mt-2">${exHTML(c)}</div>`
         : `<div class="fc-mean">${esc(c.m)}</div>${usage}<div class="fc-ex">${exHTML(c)}</div>`;
       app.innerHTML = shell(`
-        <div class="progress-meta" style="max-width:720px;margin:0 auto 10px"><span>Còn ${queue.length} thẻ${c._dn ? ` · ${esc(c._dn)}` : ""}</span><span>${isKnown(did(deck, c), c.w) ? "✅ Đã thuộc" : ""}</span></div>
+        <div class="progress-meta" style="max-width:720px;margin:0 auto 10px;align-items:center"><span>Còn ${queue.length} thẻ${c._dn ? ` · ${esc(c._dn)}` : ""}${isKnown(did(deck, c), c.w) ? " · ✅ Đã thuộc" : ""}</span>${queue.length > 1 ? `<button type="button" class="fc-reshuf" id="reshuf" title="Xáo ngẫu nhiên các thẻ còn lại (phím R)">🔀 Trộn lại</button>` : ""}</div>
         <div class="fc-wrap">
           <div class="fc ${slide ? "fc-slide" : ""}" id="fc">
             <div class="fc-face fc-front">${starBtn(deck, c)}<button class="speak-btn" title="Nghe phát âm">🔊</button>${front}<div class="fc-hint">Bấm vào thẻ hoặc phím <kbd>Space</kbd> để lật</div></div>
@@ -305,12 +318,15 @@
       app.querySelector("#flip").onclick = flip;
       app.querySelector("#again").onclick = again;
       app.querySelector("#got").onclick = got;
+      const rs = app.querySelector("#reshuf");
+      if (rs) rs.onclick = reshuffle;
       setKeys((e) => {
-        if (e.target.matches("input,textarea,select")) return;
+        if (e.target.matches("input,textarea,select") || e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.code === "Space") { e.preventDefault(); flip(); }
         else if (e.key === "1") again();
         else if (e.key === "2") got();
         else if (e.key === "s" || e.key === "S") star();
+        else if (e.key === "r" || e.key === "R") reshuffle();
       });
       bindTop();
     }
@@ -322,6 +338,7 @@
           <button class="tab ${!showList && !reverse ? "active" : ""}" data-rev="0">Anh → Việt</button>
           <button class="tab ${!showList && reverse ? "active" : ""}" data-rev="1">Việt → Anh</button>
           <button class="tab ${!showList && onlyNew ? "active" : ""}" id="onlyNew">Chỉ từ chưa thuộc</button>
+          <button class="tab ${!showList && shuffleOn ? "active" : ""}" id="shufTab" title="Bật: thẻ ra ngẫu nhiên · Tắt: theo thứ tự trong bộ">🔀 Trộn thẻ${shuffleOn ? "" : ": tắt"}</button>
           <button class="tab ${showList ? "active" : ""}" id="listTab">📖 Danh sách từ (${deck.cards.length})</button>
         </div>
         ${inner}
@@ -331,6 +348,16 @@
       app.querySelectorAll("[data-rev]").forEach((b) => (b.onclick = () => { showList = false; reverse = b.dataset.rev === "1"; draw(); }));
       const on = app.querySelector("#onlyNew");
       if (on) on.onclick = () => { showList = false; onlyNew = !onlyNew; build(); draw(); };
+      const sh = app.querySelector("#shufTab");
+      if (sh) sh.onclick = () => {
+        showList = false;
+        shuffleOn = !shuffleOn;
+        FA.store.set("fc-shuffle", shuffleOn);
+        queue = arrange(queue); // chỉ sắp lại các thẻ còn lại, không mất tiến độ đang học
+        slide = true;
+        FA.toast(shuffleOn ? "🔀 Đã bật trộn thẻ — thẻ ra ngẫu nhiên" : "Đã tắt trộn — học theo thứ tự trong bộ");
+        draw();
+      };
       const lt = app.querySelector("#listTab");
       if (lt) lt.onclick = () => { showList = !showList; draw(); };
     }

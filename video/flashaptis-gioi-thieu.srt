@@ -1,0 +1,155 @@
+1
+00:00:00,264 --> 00:00:04,834
+FlashAptis — luyện thi Aptis online, chấm điểm liền tay. Cùng xem cách dùng trong ba phút nhé!
+
+2
+00:00:04,834 --> 00:00:08,994
+Lần đầu vào làm đề, web yêu cầu đăng nhập bằng Google hoặc email (miễn phí)
+
+3
+00:00:08,994 --> 00:00:12,174
+Đăng nhập xong, lịch sử làm bài, chuỗi ngày và lộ trình được đồng bộ theo tài khoản
+
+4
+00:00:12,174 --> 00:00:16,284
+Đây là FlashAptis — web luyện thi Aptis ESOL đủ 5 kỹ năng
+
+5
+00:00:16,284 --> 00:00:20,374
+Thử ngay một câu Grammar mẫu ngay trên trang chủ
+
+6
+00:00:20,374 --> 00:00:25,044
+Kho đề lớn: 1.400 câu Grammar, 13 đề Reading, 24 đề Listening, 9.642 thẻ từ vựng
+
+7
+00:00:25,044 --> 00:00:27,674
+Bấm ⚡ Luyện đề trên menu để vào kho đề
+
+8
+00:00:27,674 --> 00:00:32,188
+Web tự gợi ý đề nên làm và ước lượng điểm Overall của bạn
+
+9
+00:00:32,188 --> 00:00:37,149
+Một buổi thi Aptis gồm 5 phần: Grammar → Listening → Reading → Writing → Speaking
+
+10
+00:00:37,149 --> 00:00:42,672
+Mỗi kỹ năng có tiến độ, điểm cao nhất và bậc CEFR — kèm Full Test thi thử trọn bộ
+
+11
+00:00:42,672 --> 00:00:48,322
+Chọn kỹ năng → chọn đề. Gói Free làm được 2 đề đầu mỗi kỹ năng
+
+12
+00:00:48,322 --> 00:00:52,122
+Đọc hướng dẫn rồi bấm Bắt đầu tính giờ — đồng hồ 25 phút như thi thật
+
+13
+00:00:52,122 --> 00:00:57,292
+Mỗi lần một câu, đúng format thi trên máy. Chọn đáp án rồi bấm Tiếp →
+
+14
+00:00:57,292 --> 00:01:02,640
+Câu chưa chắc? Bấm 🏳️ Đánh dấu để xem lại trước khi nộp
+
+15
+00:01:02,640 --> 00:01:04,830
+⏩ Tua nhanh đến câu cuối…
+
+16
+00:01:04,830 --> 00:01:07,774
+Xong thì bấm Nộp bài — có điểm ngay trên thang 0–50
+
+17
+00:01:07,774 --> 00:01:10,819
+Kết quả: điểm từng phần, và đạt điểm cao còn có pháo giấy chúc mừng 🎆
+
+18
+00:01:10,819 --> 00:01:16,511
+Bên dưới là đáp án + giải thích từng câu; câu sai tự vào Sổ câu sai
+
+19
+00:01:16,511 --> 00:01:22,333
+Writing: viết thẳng trên web, có đếm số từ theo từng câu
+
+20
+00:01:22,333 --> 00:01:27,723
+Nộp bài, web tự chấm: chính tả, ngữ pháp, độ dài và mức bám sát câu hỏi (có AI hỗ trợ)
+
+21
+00:01:27,723 --> 00:01:34,230
+Ôn tập nhanh: mỗi ngày 10 câu, không bấm giờ — chọn là biết đúng sai ngay
+
+22
+00:01:34,230 --> 00:01:38,847
+Có giải thích sau mỗi câu; câu sai được lưu để ôn lại
+
+23
+00:01:38,847 --> 00:01:45,688
+Flashcard: 6 bộ theo bậc CEFR A1–C2 và 23 chủ đề Aptis
+
+24
+00:01:45,688 --> 00:01:49,417
+Bấm vào thẻ để lật xem nghĩa, có phát âm và ví dụ
+
+25
+00:01:49,417 --> 00:01:57,050
+Nhớ rồi thì bấm ✅ Đã thuộc, từ khó thì gắn ⭐ để ôn riêng
+
+26
+00:01:57,050 --> 00:02:03,588
+Học ngữ pháp: 101 chủ điểm từ A1 đến C2, giảng bằng tiếng Việt
+
+27
+00:02:03,588 --> 00:02:09,617
+Mỗi bài có trọng tâm, cấu trúc câu, ví dụ giảng giải và phần tự sửa lỗi
+
+28
+00:02:09,617 --> 00:02:13,832
+Dashboard lộ trình: đặt bậc mục tiêu (B1/B2/C1) và ngày thi
+
+29
+00:02:13,832 --> 00:02:19,972
+Web tự tick từng việc theo bài bạn đã làm và cho biết nên học gì tiếp theo
+
+30
+00:02:19,972 --> 00:02:25,398
+🔥 Chuỗi ngày học và biểu đồ 14 ngày giữ động lực mỗi ngày
+
+31
+00:02:25,398 --> 00:02:31,816
+Tính điểm: quy đổi điểm 4 kỹ năng sang Overall /200 và bậc CEFR
+
+32
+00:02:31,816 --> 00:02:36,537
+Full Test: thi thử trọn bộ 5 phần liên tiếp, giống một buổi thi thật
+
+33
+00:02:36,537 --> 00:02:43,405
+Làm liền 5 phần, mỗi phần có đồng hồ riêng; nộp phần nào là khóa phần đó
+
+34
+00:02:43,405 --> 00:02:50,964
+Vào phòng thi: kiểm tra micro và cam kết tự làm bài, không tra cứu hay dùng AI
+
+35
+00:02:50,964 --> 00:02:58,020
+Phòng thi chuyển toàn màn hình, khóa menu, chuột phải, sao chép/dán và phím tắt
+
+36
+00:02:58,020 --> 00:03:04,612
+Cố tình chuyển tab hay thoát toàn màn hình? Lần 1 sẽ bị cảnh báo
+
+37
+00:03:04,612 --> 00:03:12,411
+Vi phạm lần 2: bài thi tự nộp và dừng ngay lập tức, phần chưa làm tính 0 điểm
+
+38
+00:03:12,411 --> 00:03:16,212
+Gói Free dùng ngay; Pro mở toàn bộ đề và thêm lượt AI chấm bài
+
+39
+00:03:16,212 --> 00:03:22,722
+Luyện mỗi ngày một chút, đỗ Aptis nhẹ nhàng. Vào flashaptis chấm web chấm app để bắt đầu ngay hôm nay!

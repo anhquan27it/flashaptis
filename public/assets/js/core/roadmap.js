@@ -1,5 +1,6 @@
 /* FlashAptis — tính toán Lộ trình học (dashboard.html). Thuần dữ liệu, không đụng DOM → kiểm thử được bằng Node (tests/test.js).
-   Nguồn dữ liệu: lượt làm bài (FA.store "attempts"), flashcard đã thuộc ("fc-known"), mẹo đã xong ("tips-done"), mục tiêu người dùng ("roadmap").
+   Nguồn dữ liệu: lượt làm bài (FA.store "attempts"), flashcard đã thuộc ("fc-known"), mẹo đã xong ("tips-done"), mục tiêu người dùng ("roadmap"),
+   và (nếu trang nạp) chủ điểm ngữ pháp đã học ("grammar-done" + FA_GRAMMAR_INDEX), lượt Full Test ("mock" + FA_MOCK).
    Mục tiêu = bậc CEFR (B1/B2/C1) → ngưỡng điểm từng kỹ năng + Overall lấy từ FA.CEFR (common.js), nên đổi thang điểm ở đó là đủ. */
 (function () {
   const FA = (window.FA = window.FA || {});
@@ -74,20 +75,36 @@
     const name = { listening: "Listening", reading: "Reading", speaking: "Speaking", writing: "Writing", grammar: "Grammar & Vocabulary" };
     const task = (id, label, have, needN, to) => ({ id, label, have: Math.min(have, needN), need: needN, done: needN > 0 ? have >= needN : true, href: to });
 
+    /* --- học liệu mới (chỉ thêm việc khi trang truyền dữ liệu vào → tương thích dữ liệu/test cũ) ---
+       inp.grammarIndex = FA_GRAMMAR_INDEX (mục lục Học ngữ pháp), inp.grammarDone = "grammar-done" {idChủĐiểm: ts}
+       inp.mockDone = số lượt Full Test hoàn thành đủ 5 phần, inp.mockAvail = số Full Test đang có */
+    const GI = Array.isArray(inp.grammarIndex) ? inp.grammarIndex : null;
+    const gDone = inp.grammarDone || {};
+    const below = { B1: "A2", B2: "B1", C1: "B2" }[T.level]; // ôn chắc cấp dưới mục tiêu một bậc
+    const gLevel = (lv) => (GI ? GI.find((L) => L.lv === lv) : null);
+    const gCount = (lv) => { const L = gLevel(lv); return L ? L.topics.filter((t) => gDone[t.id]).length : 0; };
+    const gNext = (lv) => { const L = gLevel(lv); const t = L && L.topics.find((x) => !gDone[x.id]); return "grammar.html#" + (t ? t.id : lv.toLowerCase()); };
+    const grammarN = GI ? GI.reduce((n, L) => n + L.topics.filter((t) => gDone[t.id]).length, 0) : 0;
+    const grammarTotal = GI ? GI.reduce((n, L) => n + L.topics.length, 0) : 0;
+    const vocabDeck = "flashcards.html#c-" + (below || "b1").toLowerCase();
+
     const stages = [
-      { id: "s1", icon: "🌱", title: "Nền tảng", weeks: "Tuần 1", desc: "Làm quen định dạng đề, nạp từ vựng và mẹo cơ bản.", tasks: [
+      { id: "s1", icon: "🌱", title: "Nền tảng", weeks: "Tuần 1", desc: GI ? "Làm quen định dạng đề, ôn ngữ pháp nền, nạp từ vựng và mẹo cơ bản." : "Làm quen định dạng đề, nạp từ vựng và mẹo cơ bản.", tasks: [
         task("g1", "Làm 1 đề Grammar & Vocabulary", (skills.grammar || {}).done || 0, need("grammar", 1), href("grammar")),
         task("fc", "Thuộc 30 flashcard", fcN, Math.min(30, inp.vocabTotal || 30), "flashcards.html"),
         task("tip", "Hoàn thành 5 mẹo đầu", tipN, Math.min(5, inp.tipsTotal || 5), "tips.html"),
-      ] },
+      ].concat(GI && gLevel(below) ? [task("gr1", "Học 5 chủ điểm ngữ pháp " + below, gCount(below), Math.min(5, gLevel(below).topics.length), gNext(below))] : []) },
       { id: "s2", icon: "🧭", title: "Khởi động 4 kỹ năng", weeks: "Tuần 2", desc: "Thử đủ Listening, Reading, Speaking, Writing để biết điểm xuất phát.",
         tasks: CORE.map((k) => task("w1" + k, "Làm 1 đề " + name[k], (skills[k] || {}).done || 0, need(k, 1), href(k))) },
-      { id: "s3", icon: "🏋️", title: "Luyện sâu", weeks: "Tuần 3–6", desc: "Làm nhiều đề mỗi kỹ năng, ôn lại câu sai để nâng điểm yếu.",
-        tasks: CORE.map((k) => task("w3" + k, "Làm 3 đề " + name[k], (skills[k] || {}).done || 0, need(k, 3), href(k))) },
-      { id: "s4", icon: "🎯", title: "Chạm mục tiêu " + T.level, weeks: "Tuần 7+", desc: "Thi thử đủ 4 kỹ năng, mỗi kỹ năng đạt ngưỡng " + T.level + " ở lần làm gần nhất.",
+      { id: "s3", icon: "🏋️", title: "Luyện sâu", weeks: "Tuần 3–6", desc: GI ? "Làm nhiều đề mỗi kỹ năng, học hết ngữ pháp cấp nền, mở rộng vốn từ và ôn lại câu sai." : "Làm nhiều đề mỗi kỹ năng, ôn lại câu sai để nâng điểm yếu.",
+        tasks: CORE.map((k) => task("w3" + k, "Làm 3 đề " + name[k], (skills[k] || {}).done || 0, need(k, 3), href(k))).concat(GI && gLevel(below) ? [
+          task("gr3", "Học hết " + gLevel(below).topics.length + " chủ điểm ngữ pháp " + below, gCount(below), gLevel(below).topics.length, gNext(below)),
+          task("fc3", "Thuộc 150 flashcard (gợi ý bộ CEFR " + below + ")", fcN, 150, vocabDeck),
+        ] : []) },
+      { id: "s4", icon: "🎯", title: "Chạm mục tiêu " + T.level, weeks: "Tuần 7+", desc: "Luyện đề đủ 4 kỹ năng, mỗi kỹ năng đạt ngưỡng " + T.level + " ở lần làm gần nhất" + (inp.mockAvail ? ", và vượt qua một Full Test như thi thật." : "."),
         tasks: CORE.map((k) => task("t" + k, name[k] + " ≥ " + T.skills[k] + "/50", (skills[k] || {}).reached ? 1 : 0, 1, href(k))).concat([
           task("tov", "Overall ≥ " + T.overall + "/200", overall.reached ? 1 : 0, 1, "exam.html#/progress"),
-        ]) },
+        ]).concat(inp.mockAvail ? [task("mock", "Hoàn thành 1 Full Test đủ 5 phần", inp.mockDone || 0, 1, "exam.html#/mock")] : []) },
     ];
     stages.forEach((s) => {
       s.doneTasks = s.tasks.filter((t) => t.done).length;
@@ -136,8 +153,15 @@
       target: T, skills, overall, stages, currentStage: cur, complete: cur === -1,
       pct: totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0, doneTasks, totalTasks,
       days, streak, activeDays: days.filter((d) => d.n).length, daysLeft, pace, remainingTests, weakest, next,
-      fcN, tipN,
+      fcN, tipN, grammarN, grammarTotal, grammarBelow: below, grammarNext: GI && below ? gNext(below) : null,
     };
+  }
+  /* học liệu mới từ FA.store / biến global (dùng chung cho dashboard.js và fromStore) */
+  function extras() {
+    const mocks = window.FA_MOCK || [];
+    const hist = FA.store.get("mock", {}) || {};
+    const mockDone = mocks.reduce((n, m) => n + (hist[m.id] || []).filter((r) => r.status === "done").length, 0);
+    return { grammarIndex: window.FA_GRAMMAR_INDEX || null, grammarDone: FA.store.get("grammar-done", {}) || {}, mockDone, mockAvail: mocks.length };
   }
 
   /* tính lộ trình từ dữ liệu đang có trên trang (cần đủ 5 ngân hàng đề global) — null nếu trang không nạp đề */
@@ -149,12 +173,12 @@
       banks[k] = G[k].map((t) => t.id);
       openCount[k] = G[k].filter((t, i) => !(FA.plan && FA.plan.locked(i))).length;
     });
-    return compute({
+    return compute(Object.assign(extras(), {
       goal: Object.assign({ target: "B2", examDate: "" }, FA.store.get("roadmap", {})), banks, openCount,
       attempts: FA.store.get("attempts", {}), fcKnown: FA.store.get("fc-known", {}), tipsDone: FA.store.get("tips-done", []),
       vocabTotal: (window.FA_VOCAB || []).reduce((n, d) => n + d.cards.length, 0) || undefined, tipsTotal: 20,
       activity: FA.daily ? FA.daily.perDay() : undefined, now: now || Date.now(),
-    });
+    }));
   }
   /* giai đoạn vừa hoàn thành từ lần kiểm tra trước (lưu "roadmap-seen" trên máy). Lần đầu chỉ ghi nhận, không báo —
      tránh ăn mừng lại những giai đoạn người dùng đã xong từ trước khi có tính năng này. Giai đoạn 4 gắn với bậc mục tiêu. */
@@ -176,5 +200,5 @@
     newlyDone(r).forEach((s) => FA.celebrate({ icon: s.icon, title: "Hoàn thành giai đoạn: " + s.title, sub: s.id === "s4" ? "Bạn đã chạm mục tiêu " + (r || fromStore()).target.level + " — tuyệt vời!" : "Giai đoạn tiếp theo đã mở trong Lộ trình học." }));
   }
 
-  FA.roadmap = { CORE, LEVELS, targets, compute, fromStore, newlyDone, primeSeen, celebrateStages };
+  FA.roadmap = { CORE, LEVELS, targets, compute, extras, fromStore, newlyDone, primeSeen, celebrateStages };
 })();

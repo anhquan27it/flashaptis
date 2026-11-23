@@ -30,11 +30,36 @@
       banks[k] = SKILLS[k].data.map((t) => t.id);
       openCount[k] = SKILLS[k].data.filter((t, i) => !(FA.plan && FA.plan.locked(i))).length;
     });
-    return FA.roadmap.compute({
+    return FA.roadmap.compute(Object.assign(FA.roadmap.extras(), {
       goal: goalNow(), banks, openCount,
       attempts: FA.store.get("attempts", {}), fcKnown: FA.store.get("fc-known", {}), tipsDone: FA.store.get("tips-done", []),
       vocabTotal: VOCAB_TOTAL, tipsTotal: TIPS_TOTAL, now: Date.now(), activity: FA.daily ? FA.daily.perDay() : undefined,
-    });
+    }));
+  }
+
+  /* ---- kho học liệu: mỗi khu vực của web kèm tiến độ người học (luyện đề, Full Test, ngữ pháp, từ vựng, từ khó, câu sai, mẹo) ---- */
+  function library(r) {
+    const all = FA.store.get("attempts", {});
+    const testsTotal = Object.keys(SKILLS).reduce((n, k) => n + SKILLS[k].data.length, 0);
+    const testsDone = Object.keys(SKILLS).reduce((n, k) => n + SKILLS[k].data.filter((t) => (all[k + ":" + t.id] || []).length).length, 0);
+    const mh = FA.store.get("mock", {}) || {};
+    const mDone = (window.FA_MOCK || []).flatMap((m) => mh[m.id] || []).filter((x) => x.status === "done" && !x.speakPending);
+    const vocabAll = VOCAB_TOTAL + (window.FA_VOCAB_INDEX || []).reduce((n, d) => n + d.n, 0);
+    const starN = Object.keys(FA.store.get("fc-starred", {}) || {}).length;
+    const wrongN = FA.store.get("wrongbook", []).length;
+    const tile = (href, ic, name, val, sub, pct) => `<a class="card rm-lib" href="${href}">
+        <span class="rm-lib-ic">${ic}</span>
+        <div style="min-width:0;flex:1"><b>${name}</b><div class="rm-lib-val">${val}</div><div class="muted rm-lib-sub">${sub}</div>
+        ${pct != null ? `<div class="progress bar"><i style="width:${Math.min(100, pct)}%"></i></div>` : ""}</div></a>`;
+    return [
+      tile("exam.html", "⚡", "Luyện đề", `${testsDone}<small>/${testsTotal} đề</small>`, "Đề lẻ 5 kỹ năng, chấm ngay", (testsDone / testsTotal) * 100),
+      tile("exam.html#/mock", "🏁", "Full Test", mDone.length ? `${Math.max(...mDone.map((x) => x.overall))}<small>/200</small>` : `<small>Chưa thử</small>`, mDone.length ? `Overall cao nhất · ${mDone.length} lượt` : "Thi trọn 5 phần như thật", null),
+      r.grammarTotal ? tile(r.grammarNext || "grammar.html", "📘", "Ngữ pháp", `${r.grammarN}<small>/${r.grammarTotal} chủ điểm</small>`, r.grammarBelow ? `Nên ôn chắc cấp ${r.grammarBelow}` : "A1 → C2", (r.grammarN / r.grammarTotal) * 100) : "",
+      tile("flashcards.html", "🃏", "Từ vựng", `${r.fcN.toLocaleString("vi-VN")}<small>/${vocabAll.toLocaleString("vi-VN")} từ</small>`, "Bộ CEFR A1–C2 + 23 chủ đề", (r.fcN / vocabAll) * 100),
+      tile(starN ? "flashcards.html#starred" : "flashcards.html", "⭐", "Từ khó của tôi", `${starN}<small> từ</small>`, starN ? "Ôn riêng các từ đã gắn sao" : "Bấm ☆ khi học thẻ để gom vào", null),
+      tile(wrongN ? "exam.html#/gym/wrong" : "exam.html#/gym", "📒", "Sổ câu sai", `${wrongN}<small> câu</small>`, wrongN ? "Ôn lại đến khi làm đúng" : "Câu làm sai sẽ tự lưu vào đây", null),
+      tile("tips.html", "💡", "Lộ trình mẹo", `${r.tipN}<small>/${TIPS_TOTAL} mẹo</small>`, "Mẹo làm bài từng kỹ năng", (r.tipN / TIPS_TOTAL) * 100),
+    ].join("");
   }
 
   /* bài đang làm dở (bản nháp ≤ 24 giờ, xem getDraft trong exam.js) */
@@ -56,7 +81,7 @@
           <div class="big">${checking ? "⏳" : "🔐"}</div>
           <h2>Lộ trình học & tiến độ</h2>
           ${checking ? `<p>Đang kiểm tra đăng nhập…</p>` : `
-          <p>Hãy <b>đăng nhập</b> để đặt mục tiêu, theo dõi lộ trình và làm bài. Mọi tiến trình được lưu theo tài khoản và <b>đồng bộ giữa các thiết bị</b>.</p>
+          <p>Hãy <b>đăng nhập</b> để đặt mục tiêu, theo dõi lộ trình và làm bài. Lịch sử làm bài, mục tiêu, flashcard, ngữ pháp, mẹo, sổ câu sai và chuỗi ngày được lưu theo tài khoản và <b>đồng bộ giữa các thiết bị</b>. Riêng bản nháp bài làm dở và cài đặt giao diện chỉ lưu trên trình duyệt đang dùng.</p>
           <p class="muted" style="font-size:.9rem">Đăng nhập bằng Google hoặc email — miễn phí, chỉ mất vài giây.</p>
           <div class="row" style="justify-content:center"><button class="btn btn-primary" id="loginBtn">Đăng nhập</button><button class="btn btn-outline" id="signupBtn">Tạo tài khoản</button></div>`}
         </div>
@@ -107,7 +132,7 @@
                 <div class="row" style="align-items:baseline;gap:8px"><b style="font-family:var(--font-head);font-size:1.7rem;color:var(--orange-600)">${r.overall.latest}</b><span class="muted">/200 ước lượng gần nhất${r.overall.scored < 4 ? ` · mới có điểm ${r.overall.scored}/4 kỹ năng` : ""}</span>${r.overall.reached ? `<span class="pill green">✓ Đạt mục tiêu</span>` : ""}</div>
                 <div class="progress mt-1" title="So với mục tiêu ${r.target.overall}"><i style="width:${r.overall.pct}%"></i></div>
               </div>
-              ${r.complete ? `<p class="mt-2 mb-0"><b>🎉 Bạn đã hoàn thành toàn bộ lộ trình!</b> Hãy duy trì bằng cách thi thử đều đặn.</p>`
+              ${r.complete ? `<p class="mt-2 mb-0"><b>🎉 Bạn đã hoàn thành toàn bộ lộ trình!</b> Hãy duy trì bằng cách luyện đề đều đặn.</p>`
                 : r.pace ? `<p class="muted mt-2 mb-0" style="font-size:.92rem">Để kịp ngày thi, nên làm khoảng <b>${r.pace} đề/tuần</b> (còn ${r.remainingTests} đề ở giai đoạn Luyện sâu).</p>` : ""}
             </div>
           </div>
@@ -143,6 +168,10 @@
             </div>`).join("")}
         </div>` : ""}
 
+        <h2 class="mt-4">📚 Kho học liệu của bạn</h2>
+        <p class="muted" style="font-size:.92rem;margin-top:-4px">Mọi khu vực học trên FlashAptis và tiến độ của bạn ở từng nơi — bấm để vào học tiếp.</p>
+        <div class="rm-libs">${library(r)}</div>
+
         <h2 class="mt-4">Các giai đoạn lộ trình</h2>
         <div class="road rm-road">
           ${r.stages.map((s, i) => `
@@ -175,7 +204,7 @@
                 <span class="muted">Mục tiêu <b>${s.target}</b>/50</span>
               </div>
               <div class="muted mt-1" style="font-size:.84rem">Đã làm ${s.done}/${s.total} đề${s.cap < s.total ? ` (gói của bạn mở ${s.cap} đề)` : ""}</div>
-              <a class="btn btn-outline btn-sm mt-2" href="exam.html#/${k}${s.nextId ? "/" + esc(s.nextId) : ""}">${s.done ? "Làm đề tiếp theo →" : "Thi thử ngay →"}</a>
+              <a class="btn btn-outline btn-sm mt-2" href="exam.html#/${k}${s.nextId ? "/" + esc(s.nextId) : ""}">${s.done ? "Làm đề tiếp theo →" : "Luyện đề ngay →"}</a>
             </div>`;
           }).join("")}
         </div>
@@ -183,16 +212,14 @@
 
         <h2 class="mt-4">Hoạt động 14 ngày gần đây</h2>
         <div class="card">
-          <div class="rm-bars" role="img" aria-label="Số hoạt động học mỗi ngày trong 14 ngày gần nhất">
-            ${r.days.map((d) => `<div class="rm-bar-col" title="${esc(wk[new Date(d.ts).getDay()])} ${new Date(d.ts).getDate()}/${new Date(d.ts).getMonth() + 1}: ${d.n} hoạt động">
+          ${FA.daily ? `<div class="row mb-2" style="gap:8px"><span class="pill ${FA.daily.today() >= FA.daily.goal() ? "green" : "hot"}">🎯 Hôm nay ${FA.daily.today()}/${FA.daily.goal()} điểm học${FA.daily.today() >= FA.daily.goal() ? " ✓" : ""}</span><span class="pill gray">🏅 Chuỗi dài nhất ${FA.daily.bestStreak()} ngày</span></div>` : ""}
+          <div class="rm-bars" role="img" aria-label="Điểm học mỗi ngày trong 14 ngày gần nhất">
+            ${r.days.map((d) => `<div class="rm-bar-col" title="${esc(wk[new Date(d.ts).getDay()])} ${new Date(d.ts).getDate()}/${new Date(d.ts).getMonth() + 1}: ${d.n} điểm học">
               <div class="rm-bar ${d.n ? "on" : ""}" style="height:${d.n ? Math.max(12, Math.round((d.n / maxDay) * 100)) : 4}%"></div>
               <span>${new Date(d.ts).getDate()}</span></div>`).join("")}
           </div>
           <div class="row mt-2" style="font-size:.88rem">
-            <span class="muted">Hoạt động = lượt nộp bài + flashcard mới thuộc.</span><div class="spacer"></div>
-            <a class="btn btn-ghost btn-sm" href="flashcards.html">⚡ Flashcard (${r.fcN})</a>
-            <a class="btn btn-ghost btn-sm" href="tips.html">💡 Mẹo (${r.tipN}/${TIPS_TOTAL})</a>
-            <a class="btn btn-ghost btn-sm" href="exam.html#/gym/wrong">📒 Sổ câu sai (${wrongN})</a>
+            <span class="muted">Điểm học: nộp 1 đề = 10 · học 1 chủ điểm ngữ pháp = 3 · 1 thẻ flashcard / 1 câu ôn tập = 1.</span><div class="spacer"></div>
             <a class="btn btn-ghost btn-sm" href="exam.html#/progress">📊 Lịch sử chi tiết</a>
           </div>
         </div>

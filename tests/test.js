@@ -262,6 +262,32 @@ test("Flashcard CEFR + chủ đề (data/vocab-index.js + data/vocab/*.js): đ�
   }
 });
 
+
+test("Học ngữ pháp (data/grammar-index.js + data/grammar-lessons/*.js): 6 cấp, đủ chủ điểm, mỗi bài đủ 6 mục & 3 bảng, không có dòng ghi nguồn", () => {
+  const sb3 = createSandbox();
+  loadScripts(sb3, ["public/data/grammar-index.js"]);
+  const IDX = sb3.FA_GRAMMAR_INDEX;
+  assert.equal(IDX.map((L) => L.lv + ":" + L.topics.length).join(","), "A1:19,A2:16,B1:21,B2:16,C1:21,C2:8");
+  loadScripts(sb3, IDX.map((L) => "public/" + L.file));
+  const ids = new Set();
+  for (const L of IDX) {
+    const ts = sb3.FA_GRAMMAR_LESSONS[L.lv];
+    assert.equal(ts.length, L.topics.length, L.lv + ": số chủ điểm khác mục lục");
+    ts.forEach((tp, i) => {
+      assert.equal(tp.n, i + 1, tp.id + ": sai thứ tự");
+      assert.ok(!ids.has(tp.id), "trùng id " + tp.id);
+      ids.add(tp.id);
+      assert.equal(tp.sections.length, 6, tp.id + ": cần 6 mục");
+      const tabs = tp.sections.flatMap((s) => s.items.filter((x) => x.table));
+      assert.equal(tabs.length, 3, tp.id + ": cần 3 bảng");
+      tabs.forEach((tb) => tb.table.forEach((r) => assert.equal(r.length, tb.table[0].length, tp.id + ": bảng lệch cột")));
+      const txt = JSON.stringify(tp);
+      assert.ok(!/forum/i.test(txt), tp.id + ": còn dòng ghi nguồn tài liệu gốc");
+      assert.ok(/Chưa đúng:/.test(txt), tp.id + ": thiếu phần lỗi thường gặp");
+    });
+  }
+});
+
 console.log("\n2. Kiểm tra hàm quy đổi CEFR & chấm nội dung:");
 
 test("FA.toCEFR và FA.speakingTo50 đúng ngưỡng quy đổi", () => {
@@ -482,6 +508,25 @@ test("FA.roadmap.newlyDone: lần đầu chỉ ghi nhận, sau đó báo đúng 
   assert.equal(fresh.length, 1);
   assert.equal(fresh[0].id, "s1");
   assert.equal(F2.roadmap.newlyDone().length, 0); // không báo lại
+});
+
+
+test("FA.roadmap: có dữ liệu Học ngữ pháp + Full Test thì thêm việc tương ứng và tick theo tiến độ thật", () => {
+  const banks = { listening: ["l1"], reading: ["r1"], speaking: ["s1"], writing: ["w1"], grammar: ["g1"] };
+  const GI = [{ lv: "B1", topics: Array.from({ length: 6 }, (_, i) => ({ id: "b1-0" + (i + 1) })) }];
+  const base = { goal: { target: "B2" }, banks, attempts: {}, fcKnown: {}, tipsDone: [], now: Date.now() };
+  const old = FA.roadmap.compute(base);
+  assert.equal(old.stages[0].tasks.length, 3, "không có dữ liệu mới → giữ nguyên lộ trình cũ");
+  const r = FA.roadmap.compute(Object.assign({}, base, { grammarIndex: GI, grammarDone: { "b1-01": 1, "b1-02": 1 }, mockAvail: 2, mockDone: 0 }));
+  const find = (id) => r.stages.flatMap((s) => s.tasks).find((x) => x.id === id);
+  assert.equal(find("gr1").have, 2);
+  assert.equal(find("gr1").need, 5);
+  assert.equal(find("gr1").href, "grammar.html#b1-03", "gợi ý chủ điểm chưa học đầu tiên của cấp dưới mục tiêu");
+  assert.equal(find("gr3").need, 6);
+  assert.equal(find("mock").done, false);
+  assert.equal(r.grammarN, 2);
+  const r2 = FA.roadmap.compute(Object.assign({}, base, { grammarIndex: GI, grammarDone: {}, mockAvail: 2, mockDone: 1 }));
+  assert.equal(r2.stages[3].tasks.find((x) => x.id === "mock").done, true);
 });
 
 if (process.exitCode) {

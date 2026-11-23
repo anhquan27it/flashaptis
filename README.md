@@ -1,120 +1,155 @@
 # ⚡ FlashAptis
 
-Web luyện thi chứng chỉ **Aptis ESOL** — tông cam & trắng, miễn phí, không cần đăng ký.
-Web tĩnh thuần HTML/CSS/JS, không cần build, triển khai trên Firebase Hosting.
+Web luyện thi chứng chỉ **Aptis ESOL** — tông cam & trắng. Luyện đề 5 kỹ năng có chấm điểm, Full Test, flashcard từ vựng, học ngữ pháp, lộ trình học theo mục tiêu.
+Web tĩnh thuần HTML/CSS/JS, không cần build, triển khai trên Firebase Hosting (đăng nhập + đồng bộ bằng Firebase Auth/Firestore).
+
+> **Trạng thái:** đang thử nghiệm nội bộ. Chưa đủ điều kiện mở công khai — xem mục [Định hướng trước khi công khai](#-định-hướng-trước-khi-công-khai).
 
 ## Cấu trúc thư mục
 
 ```
 flashaptis/
 ├── public/                     # Web tĩnh — CHỈ thư mục này được deploy lên Firebase Hosting
-│   ├── index.html  exam.html  flashcards.html  tips.html  guide.html
-│   ├── calculator.html  pricing.html  admin.html
+│   ├── index.html  exam.html  flashcards.html  grammar.html  tips.html  guide.html
+│   ├── calculator.html  pricing.html  dashboard.html  admin.html
 │   ├── assets/
 │   │   ├── css/style.css
+│   │   ├── img/                brand/ (logo, favicon), speaking/ (ảnh đề Speaking)
 │   │   └── js/
-│   │       ├── core/           common.js — namespace FA, header/footer, lưu trữ, CEFR
+│   │       ├── core/           common.js (namespace FA, header/footer, lưu trữ, CEFR) · roadmap.js (lộ trình) · fx.js (hiệu ứng chuyển trang)
 │   │       ├── firebase/       firebase-config.js, cloud.js (đăng nhập + đồng bộ), plan.js (Free/Pro)
-│   │       ├── grading/        ai-grader.js, relevance.js, spellcheck.js, ai-config.example.js
-│   │       └── pages/          exam.js, flashcards.js — logic riêng của từng trang
-│   └── data/                   Ngân hàng đề: grammar, reading, listening, writing (+ writing-rel), speaking, vocab
-├── functions/                  Cloud Function gradeWriting (Node 20) — proxy AI giữ API key
+│   │       ├── grading/        ai-grader.js, speaking-grader.js, relevance.js, spellcheck.js, ai-config.example.js
+│   │       └── pages/          exam.js, flashcards.js, grammar.js, dashboard.js — logic riêng của từng trang
+│   └── data/                   Ngân hàng đề + học liệu: grammar, reading, listening, writing (+ writing-rel), speaking, mock,
+│                               vocab (+ vocab-index, vocab/*), grammar-index (+ grammar-lessons/*)
+├── functions/                  Cloud Function gradeWriting / gradeSpeaking (Node 20) — proxy AI giữ API key
+├── tools/                      build-vocab.js, xlsx-to-json.py, build-grammar.py — sinh dữ liệu từ file nguồn
+├── tests/test.js               kiểm thử dữ liệu + logic thuần (npm test)
 ├── firebase.json  .firebaserc  firestore.rules
-├── package.json                npm start · npm run deploy · npm run deploy:functions
-└── README.md  CLAUDE.md
+├── package.json
+└── README.md  CLAUDE.md        (CLAUDE.md mô tả kiến trúc chi tiết)
 ```
 
 ## Tính năng
 
 | Trang | Nội dung |
 |---|---|
-| `index.html` | Trang chủ, giới thiệu, chọn nhanh kỹ năng |
-| `exam.html` | Thi thử 5 kỹ năng có đồng hồ, chấm điểm 0–50, quy đổi CEFR ước lượng, xem lại + giải thích |
-| `exam.html#/gym` | Ôn tập: luyện 10 câu không bấm giờ + **Sổ câu sai** |
-| `flashcards.html` | 8 bộ flashcard theo chủ đề (120 thẻ), lật thẻ, nghe phát âm, kiểm tra nhanh |
+| `index.html` | Trang chủ, giới thiệu, chọn nhanh kỹ năng, câu hỏi thường gặp |
+| `exam.html` | **Luyện đề** 5 kỹ năng có đồng hồ, chấm 0–50, quy đổi CEFR ước lượng, xem lại + giải thích, báo lỗi câu hỏi |
+| `exam.html#/mock` | **Full Test**: 5 phần liên tiếp như buổi thi thật, khóa trình duyệt mức web, Overall /200 |
+| `exam.html#/gym` | Ôn tập nhanh 10/20 câu (từ đề + từ vựng CEFR A1–C2) + **Sổ câu sai** |
+| `flashcards.html` | 8 bộ cơ bản + 6 bộ CEFR A1–C2 (4.922 từ) + 23 chủ đề Aptis (4.600 từ); lật thẻ, phát âm, kiểm tra, ⭐ từ khó |
+| `grammar.html` | 101 chủ điểm ngữ pháp A1–C2, mỗi bài 6 mục + bảng, đánh dấu đã học |
+| `dashboard.html` | Lộ trình học theo bậc mục tiêu B1/B2/C1 + ngày thi, 4 giai đoạn tự tick, biểu đồ 14 ngày |
 | `tips.html` | Lộ trình 20 mẹo có nhiệm vụ, mở khóa lần lượt |
-| `guide.html` | Cấu trúc bài thi Aptis |
-| `calculator.html` | Tính điểm Aptis → CEFR |
-| `pricing.html` | Gói Free / Pro, thanh toán Pro bằng QR chuyển khoản |
-| `admin.html` | (Admin) duyệt thanh toán, cấp Pro thủ công |
+| `guide.html` · `calculator.html` | Cấu trúc bài thi Aptis · Tính điểm → CEFR |
+| `pricing.html` · `admin.html` | Gói Free/Pro, thanh toán VietQR · (Admin) duyệt thanh toán, xử lý báo lỗi đề |
 
-**Gói tài khoản:** Free (0đ) làm được 2 đề đầu mỗi kỹ năng, AI chấm Writing 3 lượt/ngày (cần đăng nhập). Pro (50.000đ / 30 ngày) mở toàn bộ đề, AI 6 lượt/ngày. Người dùng quét VietQR → bấm "Tôi đã chuyển khoản" → admin đối chiếu app ngân hàng và duyệt ở `admin.html`. Cấu hình gói và tài khoản nhận tiền ở `FA.PLAN` trong `public/assets/js/firebase/plan.js`. Đây là chặn phía trình duyệt — nội dung đề Pro vẫn nằm trong `data/*.js`.
+**Ngân hàng đề:** 28 Grammar & Vocabulary · 13 Reading · 24 Listening · 28 Writing · 27 Speaking · 2 Full Test.
 
-- **Grammar & Vocabulary**: 2 đề × 50 câu, có giải thích tiếng Việt.
-- **Reading**: 2 đề đủ 5 part (điền từ, sắp xếp câu ×2, ghép ý kiến, chọn tiêu đề).
-- **Listening**: 2 đề đủ 4 part / 17 câu, đọc bằng giọng máy của trình duyệt (Web Speech API), giới hạn 2 lần nghe, transcript tô câu chốt.
-- **Writing**: 3 đề đủ 4 part, đếm từ, điểm ước lượng tự động, bài mẫu + checklist.
-- **Speaking**: 2 đề đủ 4 part, máy đọc câu hỏi, đếm ngược, ghi âm bằng micro, nghe lại, bài mẫu, tự chấm theo 5 tiêu chí.
+- **Listening**: 4 part / 17 câu hỏi (25 ý chấm điểm), đọc bằng giọng máy của trình duyệt (Web Speech API), tối đa 2 lần nghe, transcript tô câu chốt.
+- **Speaking**: máy đọc câu hỏi, đếm ngược, ghi âm để nghe lại (không lưu bản ghi), tự chấm 4 part × 0–5; nếu bật AI thì nhận dạng giọng nói thành chữ rồi AI chấm sẵn (người dùng vẫn chỉnh được).
+- **Writing** = chất lượng văn bản × hệ số chính tả × hệ số ngữ pháp × hệ số nội dung:
+  - Chính tả/ngữ pháp bằng [Harper](https://github.com/Automattic/harper) (Apache-2.0, WebAssembly chạy trên máy, nạp từ jsDelivr). Không tải được thì không trừ điểm.
+  - Nội dung bám câu hỏi: kiểm tra từ khóa offline (`relevance.js` + `data/writing-rel.js`), hoặc AI chấm nếu được cấu hình. AI lỗi → tự quay về từ khóa. ⚠️ Khi bật AI, **nội dung bài viết được gửi tới máy chủ AI**.
 
-- **Chấm điểm Writing theo 3 tiêu chí** (ngoài độ dài, dấu câu, từ nối, từ vựng):
-  - **Chính tả** — kiểm tra bằng [Harper](https://github.com/Automattic/harper) (Apache-2.0, chạy bằng WebAssembly ngay trên máy, chính tả Anh-Anh). Part 1: câu sai chính tả không được điểm; Part 2–4: nhân hệ số theo tỉ lệ lỗi/số từ (tối thiểu 30%).
-  - **Ngữ pháp** — cũng do Harper (các loại lỗi Agreement, Grammar, Miscellaneous, Repetition, WordChoice, BoundaryError), trừ nhẹ hơn chính tả (hệ số tối thiểu 60%), chỉ áp dụng Part 2–4. Lỗi viết hoa/dấu câu/gợi ý văn phong chỉ hiển thị tham khảo.
-  - **Nội dung bám sát câu hỏi** — Harper *không* làm việc này (nó chỉ kiểm tra ngôn ngữ). FlashAptis tự kiểm tra bằng từ khóa, chạy offline (`public/assets/js/grading/relevance.js` + tiêu chí từng đề ở `public/data/writing-rel.js`): Part 1 xét kiểu câu trả lời (hỏi tuổi → phải có số, hỏi thời tiết → từ chỉ thời tiết, “yes/no” → không điểm…); Part 2–4 xét các “ý” bắt buộc của từng đề và phạt chép lại câu hỏi/thông báo. Đây chỉ là kiểm tra từ khóa, không hiểu nghĩa như giám khảo hay AI.
-  - **AI chấm nội dung (tùy chọn):** nếu có file `public/assets/js/grading/ai-config.js` (sao chép từ `ai-config.example.js`, điền `endpoint`, `apiKey`, `model` của một API tương thích OpenAI) thì phần “bám sát câu hỏi” do model AI chấm thay cho từ khóa — một request cho cả bài, AI chỉ xét nội dung (không xét chính tả/ngữ pháp để khỏi trừ điểm hai lần) và được dặn bỏ qua mọi lệnh chèn trong bài viết. Lỗi mạng/quá giờ thì tự quay về kiểm tra từ khóa. ⚠️ Khi bật, **nội dung bài viết được gửi tới máy chủ AI đó**. `ai-config.js` chứa API key và đã nằm trong `.gitignore` — đừng commit hay đưa lên GitHub Pages (key trong file JS tĩnh ai cũng đọc được; muốn công khai thì phải qua một server trung gian giữ key).
-  - Harper báo nhầm tên riêng/câu đúng? Bấm “✕ bỏ qua” ở màn hình xem lại, điểm tính lại ngay (từ chính tả được nhớ lâu dài, lỗi ngữ pháp chỉ trong phiên này). Mỗi mục có ghi rõ lý do bị trừ điểm nội dung.
-  - Nếu không tải được Harper thì không trừ điểm chính tả/ngữ pháp (phần nội dung vẫn chấm). Harper cần **có mạng và chạy qua server http** (xem mục “Chạy trên máy”, ví dụ `python -m http.server 5500`); thư viện `harper.js@3.0.0` nạp từ jsDelivr (~8 MB lần đầu). Mở thẳng file `index.html` thì bỏ qua bước này.
+**Thang điểm** (theo bảng tham khảo của [prepedu.com](https://prepedu.com/vi/blog/thang-diem-aptis), không phải bảng chính thức của British Council): Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200; Grammar & Vocabulary (50 câu) **không cộng vào tổng**. Listening/Reading: B1/B2/C từ 12/17/21 và 13/19/23 ý đúng trên 25 ý (Listening: 17 câu hỏi = 25 ý). Speaking 4 part × 0–5 = 20, quy ra thang 50. Overall: <40 A1 · 40–79 A2 · 80–119 B1 · 120–159 B2 · 160–180 C1 · >180 C2. Bảng ở `FA.CEFR` trong `public/assets/js/core/common.js`.
 
-**Thang điểm** (theo bảng tham khảo của [prepedu.com](https://prepedu.com/vi/blog/thang-diem-aptis), không phải bảng chính thức của British Council): Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200; Grammar & Vocabulary (50 câu) **không cộng vào tổng**. Listening/Reading: B1/B2/C từ 12/17/21 và 13/19/23 câu đúng trên 25 câu. Speaking tự chấm 4 part × 0–5 = 20, quy ra thang 50. Overall: <40 A1 · 40–79 A2 · 80–119 B1 · 120–159 B2 · 160–180 C1 · >180 C2. Bảng ở `FA.CEFR` trong `public/assets/js/core/common.js`.
+**Gói tài khoản:** Free (0đ) làm được 2 đề đầu mỗi kỹ năng, AI chấm 3 lượt/ngày. Pro (50.000đ / 30 ngày) mở toàn bộ đề, AI 6 lượt/ngày. Thanh toán: quét VietQR → "Tôi đã chuyển khoản" → admin đối chiếu và duyệt ở `admin.html`. Cấu hình ở `FA.PLAN` (`public/assets/js/firebase/plan.js`).
 
-Lịch sử làm bài, sổ câu sai, tiến độ flashcard & mẹo được lưu trong `localStorage` của trình duyệt. Nếu **đăng nhập Google** (nút ở góc phải header) thì dữ liệu này còn được đồng bộ lên Firebase Firestore để dùng chung giữa các thiết bị; không đăng nhập vẫn dùng bình thường.
+### Đăng nhập và dữ liệu
+- **Bắt buộc đăng nhập** (Google hoặc email/mật khẩu): Luyện đề, Full Test, Ôn tập, Dashboard. **Dùng tự do**: Flashcard, Ngữ pháp, Mẹo, Cấu trúc đề, Tính điểm.
+- `localStorage` là nơi lưu chính; khi đã đăng nhập thì các mục sau được **đồng bộ theo tài khoản** (Firestore `users/{uid}`): lịch sử làm bài (đề đã làm/chưa làm, điểm, bài làm để xem lại), Full Test, sổ câu sai, mục tiêu lộ trình, chuỗi ngày & mục tiêu ngày, flashcard đã thuộc / từ khó, chủ điểm ngữ pháp đã học, mẹo đã làm.
+- **Chỉ lưu trên trình duyệt đang dùng**: bản nháp bài làm dở (24 giờ — chưa sang được thiết bị khác), sáng/tối, bộ lọc, từ "bỏ qua" chính tả. Đăng xuất thì xóa bản sao cục bộ của dữ liệu đồng bộ và cả bản nháp bài làm dở.
 
 ## Chạy trên máy (dành cho người cùng phát triển)
 
-Cần Node.js. **Không cần cài hay cấu hình gì về Firebase** — `public/assets/js/firebase/firebase-config.js` đã nằm trong repo (config web là công khai, không phải bí mật), nên chạy local là tự kết nối vào project Firebase `flashaptis`.
+Cần Node.js. **Không cần cấu hình Firebase** — `public/assets/js/firebase/firebase-config.js` đã nằm trong repo (config web là công khai, không phải bí mật).
 
 ```bash
 git clone <repo> && cd flashaptis
-git checkout <branch>      # vd. firebase
-npm start                  # http-server cổng 5501, tự mở trình duyệt
+git checkout <branch>
+npm start                  # http-server cổng 5501, tắt cache, tự mở trình duyệt
+npm test                   # kiểm thử dữ liệu đề + logic thuần
 ```
 
-- Phải mở qua **`http://localhost:5501`** (đừng dùng `127.0.0.1`, IP LAN hay mở thẳng file `index.html`): Firebase đăng nhập chỉ cho phép `localhost` và `flashaptis.web.app`; Harper và `fetch` AI không chạy ở `file://`. Cần có mạng (Firebase SDK và Harper nạp từ CDN).
-- Cách khác nếu không dùng npm: `cd public && python -m http.server 5500` rồi vào http://localhost:5500 (đăng nhập vẫn chạy vì là `localhost`).
-- Đăng nhập thử bằng **tài khoản Google của chính bạn**; dữ liệu thử nằm riêng theo tài khoản, không lẫn của người khác. Nên dùng Chrome/Edge để có giọng đọc tiếng Anh tốt nhất.
-- AI chấm Writing: `public/assets/js/grading/ai-config.js` **không có trong repo** (chứa API key). Muốn thử thì sao chép từ `ai-config.example.js` và điền key của bạn; không có thì web chấm nội dung bằng từ khóa offline.
+- Phải mở qua **`http://localhost:5501`** (không dùng `127.0.0.1`, IP LAN hay mở thẳng file): Firebase Auth chỉ cho phép `localhost` và `flashaptis.web.app`; Harper và `fetch` AI không chạy ở `file://`. Cần có mạng (Firebase SDK, Harper nạp từ CDN).
+- Cách khác: `cd public && python -m http.server 5500`.
+- Đăng nhập bằng **tài khoản của chính bạn**; dữ liệu tách theo tài khoản. Nên dùng Chrome/Edge (giọng đọc, nhận dạng giọng nói).
+- AI chấm: `public/assets/js/grading/ai-config.js` **không có trong repo** (chứa API key). Muốn thử thì sao chép từ `ai-config.example.js` và điền key của bạn; không có thì chấm offline.
+- Sinh lại dữ liệu (chỉ máy có file nguồn): `npm run build:vocab` (cần Python 3), `npm run build:grammar` (cần `pip install pymupdf`). Đừng sửa tay `data/vocab/*`, `vocab-index.js`, `grammar-index.js`, `grammar-lessons/*`.
 
 ### Quy trình làm việc chung
 1. Mỗi người làm trên **branch riêng**, commit và push lên GitHub.
-2. Trước khi commit chạy `git status`, đảm bảo **không** có `public/assets/js/grading/ai-config.js`.
-3. Người quản trị project (chủ Firebase) pull branch về, thử ở `localhost:5501`, merge rồi mới **deploy** (xem dưới). Người cùng phát triển **không cần quyền Firebase** nếu không tự deploy.
+2. Trước khi commit chạy `git status`, đảm bảo **không** có `ai-config.js` hay file chứa key.
+3. Người quản trị pull branch về, thử ở `localhost:5501`, chạy `npm test`, merge rồi mới deploy.
 
 ## Triển khai lên Firebase (chỉ người quản trị)
 
 Project Firebase: `flashaptis` · Hosting: https://flashaptis.web.app
 
 Thiết lập một lần:
-1. Trên [Firebase Console](https://console.firebase.google.com): **Authentication → Sign-in method → bật Google**; **Firestore Database → Create** (production mode, `asia-southeast1`).
-2. `npm i -g firebase-tools` rồi `firebase login` (đúng tài khoản chủ project). Muốn thêm người deploy: Console → Project settings → Users and permissions → Add member (Editor).
+1. [Firebase Console](https://console.firebase.google.com): **Authentication → Sign-in method → bật Google và Email/Password**; **Firestore Database → Create** (production mode, `asia-southeast1`).
+2. `npm i -g firebase-tools` rồi `firebase login`. Thêm người deploy: Project settings → Users and permissions → Add member (Editor).
 
-Mỗi lần cập nhật web (chạy trên code đã pull/merge, đúng branch):
+Mỗi lần cập nhật (trên code đã merge):
 
 ```bash
 firebase deploy --only hosting            # chỉ đưa web lên
-firebase deploy --only hosting,firestore  # kèm Firestore Rules khi sửa firestore.rules
+npm run deploy                            # = hosting + firestore (khi sửa firestore.rules)
+npm run deploy:functions                  # Cloud Function AI (cần gói Blaze)
 ```
 
-- Hosting chỉ đưa lên thư mục `public/` (`firebase.json` → `"public": "public"`), nên `functions/`, tài liệu, `.git` không bao giờ bị lộ. ⚠️ Tạm thời `ai-config.js` (chứa API key) **được deploy** để test nội bộ — key lộ công khai trên web; trước khi công khai phải thêm `"assets/js/grading/ai-config.js"` lại vào `ignore` của `firebase.json` và dùng Cloud Function. Lệnh tắt: `npm run deploy` (= `firebase deploy --only hosting,firestore`).
-- **AI qua Cloud Function** (tùy chọn, cần gói Blaze): `functions/index.js` giữ API key phía server. Deploy: `firebase functions:secrets:set AI_API_KEY` rồi `firebase deploy --only functions` (nhập `AI_ENDPOINT` — phải là URL public, `AI_MODEL`); sau đó đặt `useCloudAI: true` trong `public/assets/js/firebase/firebase-config.js` và deploy lại hosting. Số lượt/ngày theo gói (Free 3, Pro 6), đếm ở server.
-- **Gói Pro:** điền tài khoản nhận tiền vào `FA.PLAN.bank` (`public/assets/js/firebase/plan.js`: mã ngân hàng, số tài khoản, tên chủ tài khoản không dấu). Cấp quyền admin: mở `admin.html` khi đã đăng nhập để lấy UID → Firestore → collection `admins` → document ID = UID (thêm field bất kỳ). Deploy `hosting,firestore` để rules mới có hiệu lực.
-- Domain khác (domain riêng, GitHub Pages…) muốn đăng nhập được phải thêm ở Authentication → Settings → **Authorized domains**.
+- Hosting chỉ đưa lên thư mục `public/`. ⚠️ **Hiện tại `ai-config.js` (chứa API key) đang được deploy để test nội bộ** — ai mở DevTools cũng lấy được key. Phải xử lý trước khi công khai (xem bên dưới).
+- **AI qua Cloud Function**: `firebase functions:secrets:set AI_API_KEY` → `npm run deploy:functions` → đặt `useCloudAI: true` trong `firebase-config.js` → deploy lại hosting. Lượt AI/ngày đếm ở server (`AI_PER_DAY` phải khớp `FA.PLAN.aiPerDay`).
+- **Admin**: mở `admin.html` khi đã đăng nhập để lấy UID → Firestore → collection `admins` → document ID = UID. Điền tài khoản nhận tiền ở `FA.PLAN.bank`.
+- Domain khác muốn đăng nhập được phải thêm ở Authentication → Settings → **Authorized domains**.
+
+## 🔒 Định hướng trước khi công khai
+
+Hiện web an toàn ở mức "thử nghiệm nội bộ": dữ liệu người dùng được Firestore Rules bảo vệ đúng (mỗi người chỉ đọc/ghi của mình, chỉ admin cấp Pro), nhưng **đề, đáp án, API key và việc chặn gói Pro đều nằm ở phía trình duyệt**. Các việc cần làm, xếp theo mức ưu tiên:
+
+### Bắt buộc (chặn việc mở công khai)
+1. **Gỡ API key khỏi web.**
+   - Thêm `"assets/js/grading/ai-config.js"` vào `hosting.ignore` của `firebase.json`, xóa file khỏi bản đã deploy.
+   - **Thu hồi và tạo lại** mọi key đã từng deploy (OpenRouter, Google AI Studio, key dự phòng) — coi như đã lộ.
+   - Chuyển hẳn sang Cloud Function (`gradeWriting`, `gradeSpeaking` đã có trong `functions/index.js`): bật gói Blaze, đặt secret, `useCloudAI: true`. Đặt **giới hạn ngân sách / cảnh báo chi phí** trên Google Cloud và hạn mức ở nhà cung cấp AI.
+2. **Bật Firebase App Check** (reCAPTCHA Enterprise) cho Firestore và Cloud Functions để chặn script gọi thẳng API ngoài web; Cloud Function kiểm tra thêm độ dài input, chống gọi dồn (rate limit theo uid/IP).
+3. **Bản quyền nội dung đề.** Phần lớn đề (từ đề 4 trở đi mỗi kỹ năng) được chuyển từ tài liệu bên ngoài (thư mục `Đề/`), từ vựng/ngữ pháp sinh từ file nguồn của bên thứ ba. Trước khi công khai — nhất là khi **thu phí** gói Pro — cần xác nhận quyền sử dụng hoặc thay bằng nội dung tự biên soạn, và sửa lại câu "nội dung do FlashAptis tự biên soạn" ở đầu các file `public/data/*.js` cho đúng thực tế (đây là file công khai).
+4. **Chính sách quyền riêng tư & điều khoản**: nêu rõ dữ liệu thu thập (email, tên, lịch sử làm bài), bài viết/bản chữ Speaking được gửi cho nhà cung cấp AI, thời gian lưu, cách xóa tài khoản. Thêm chức năng **xóa tài khoản và dữ liệu**.
+
+### Bảo mật đề và gói Pro
+5. **Không gửi đề Pro cho người không có quyền.** Hiện toàn bộ `data/*.js` (kể cả đề Pro và đáp án) công khai — ai biết URL là tải được. Hướng sửa:
+   - Chuyển đề Pro vào Firestore (`tests/{skill}/{id}`) với rule chỉ cho đọc khi `plans/{uid}.proUntil > request.time` — hoặc phục vụ qua Cloud Function kiểm tra gói.
+   - Tách **đáp án + giải thích** khỏi đề: trình duyệt chỉ nhận câu hỏi; nộp bài thì Cloud Function chấm và trả đáp án. Việc này cũng giúp điểm Full Test đáng tin hơn.
+   - Đề Free có thể giữ tĩnh để tải nhanh và chạy offline.
+6. **Điểm số do người dùng tự ghi** (`users/{uid}/attempts` cho client ghi tự do) → không dùng làm bảng xếp hạng/chứng nhận. Nếu sau này có xếp hạng thì điểm phải do server chấm và ghi.
+7. **Thanh toán tự động**: thay duyệt tay bằng webhook ngân hàng/cổng thanh toán (Casso, SePay, PayOS…) gọi Cloud Function cộng `proUntil`; ghi log giao dịch.
+8. OTP khi tạo tài khoản đang kiểm tra ở trình duyệt (lách được) → chuyển sang Cloud Function hoặc dùng xác minh email của Firebase; bật **email enumeration protection** và giới hạn đăng ký trong Firebase Auth.
+
+### Vận hành & chất lượng
+9. **Domain riêng + HTTPS** (Firebase Hosting hỗ trợ), thêm vào Authorized domains; thêm header bảo mật trong `firebase.json`: `Content-Security-Policy` (chỉ cho gstatic, jsDelivr, endpoint AI), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (chỉ micro).
+10. **Đồng bộ bài làm dở** giữa các thiết bị (hiện bản nháp chỉ nằm trên trình duyệt đang làm; đăng xuất đã xóa nháp).
+11. **Giám sát**: bật Firebase Crashlytics/Analytics hoặc ghi lỗi JS vào Firestore; theo dõi số lượt AI, lỗi 429/503; sao lưu Firestore định kỳ (export lên Cloud Storage).
+12. **Kiểm thử trước mỗi lần deploy**: `npm test` trong CI (GitHub Actions) + kiểm tra trên điện thoại thật (393/360px); thử AI Speaking trên Chrome/Edge thật (mới chỉ thử bằng jsdom).
+13. Xác minh cấu trúc đề và thang điểm với **nguồn chính thức của British Council** (hiện dùng bảng tham khảo prepedu.com) và ghi rõ trên web là điểm ước lượng.
+14. Hiệu năng: nạp Harper (~8 MB) và bộ từ vựng lớn chỉ khi cần (đã làm một phần), cân nhắc Service Worker để học offline.
 
 ## Thêm/sửa đề
-
-Toàn bộ ngân hàng đề nằm trong thư mục `data/`:
 
 - `public/data/grammar.js` — `{ sec, q, o: [...], a: chỉ số đáp án đúng, e: giải thích }`
 - `public/data/reading.js` — các part `gap`, `order`, `opinion`, `heading`
 - `public/data/listening.js` — các part `mcq`, `speakers`, `conv`, `mono` (lời thoại `s: 'm'|'f'`)
-- `public/data/writing.js` (+ `public/data/writing-rel.js`: tiêu chí “bám sát câu hỏi” cho từng đề — đề mới nên khai báo thêm để được chấm nội dung), `public/data/speaking.js`, `public/data/vocab.js`
-
-Thứ tự đáp án trắc nghiệm được xáo trộn tự động mỗi lần tải trang, nên cứ nhập đáp án theo thứ tự bất kỳ.
+- `public/data/writing.js` + `public/data/writing-rel.js` (đề mới **phải** khai báo `REL.<id>` để được chấm nội dung), `public/data/speaking.js`
+- `public/data/mock.js` — Full Test chỉ tham chiếu id đề lẻ
+- Đề mới thêm vào **cuối** mảng (đề thứ 3 trở đi của mỗi kỹ năng là đề Pro). Đáp án trắc nghiệm được xáo tự động mỗi lần tải trang. Chạy `npm test` sau khi sửa.
 
 ## Quy ước khi thêm file
-- Trang mới → `public/<tên>.html`, nạp script theo thứ tự: `core/common.js` → `firebase/firebase-config.js` → `firebase/cloud.js` → `firebase/plan.js` → script riêng của trang.
+- Trang mới → `public/<tên>.html`: nạp `core/fx.js` trong `<head>`, script theo thứ tự `core/common.js` → `firebase/firebase-config.js` → `firebase/cloud.js` → `firebase/plan.js` → script riêng của trang.
 - Logic riêng của một trang → `public/assets/js/pages/`; tiện ích dùng chung → `core/`; chấm điểm → `grading/`; Firebase → `firebase/`.
-- Đề mới → `public/data/` (thêm vào **cuối** mảng: đề thứ 3 trở đi của mỗi kỹ năng là đề Pro).
+- Khóa `FA.store` mới cần đồng bộ → thêm vào `KV_KEYS` trong `cloud.js`.
 
 ---
 **Made by FPT University.** © 2026 FlashAptis. Bảo lưu mọi quyền.
 
-Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Toàn bộ câu hỏi do FlashAptis tự biên soạn; điểm số chỉ mang tính ước lượng.
+Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Điểm số chỉ mang tính ước lượng.

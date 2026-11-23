@@ -10,7 +10,7 @@
   const cfg = window.FA_FIREBASE;
   const SDK = "https://www.gstatic.com/firebasejs/10.14.1/";
   const PREFIX = "flashaptis:";
-  const KV_KEYS = ["wrongbook", "fc-known", "fc-starred", "tips-done", "calc", "roadmap", "activity", "daily", "mock"]; // ngoài ra còn "speakRate:*"
+  const KV_KEYS = ["wrongbook", "fc-known", "fc-starred", "tips-done", "calc", "roadmap", "activity", "daily", "mock", "grammar-done"]; // ngoài ra còn "speakRate:*"
   const isKV = (k) => KV_KEYS.indexOf(k) > -1 || k.indexOf("speakRate:") === 0;
 
   let auth = null, db = null, user = null, ready = false, applying = false, pushT = null;
@@ -98,7 +98,7 @@
     if (local && remote && typeof local === "object" && typeof remote === "object") {
       const out = Object.assign({}, remote, local);
       // nếu là bảng mốc thời gian (vd. fc-known) thì giữ mốc mới hơn giữa 2 thiết bị
-      if (key === "fc-known" || key === "activity") { // activity: điểm học theo ngày → lấy số lớn hơn
+      if (key === "fc-known" || key === "activity" || key === "grammar-done") { // activity: điểm học theo ngày → lấy số lớn hơn
         Object.keys(remote).forEach((k) => {
           if (typeof remote[k] === "number" && typeof local[k] === "number") out[k] = Math.max(local[k], remote[k]);
         });
@@ -174,6 +174,10 @@
       localStorage.removeItem(PREFIX + "spell-ignore");
       localStorage.removeItem(PREFIX + "devAiUsage");
       localKVKeys().forEach((k) => localStorage.removeItem(PREFIX + k));
+      // bản nháp bài làm dở (exam.js, "draft:<skill>:<id>") không đồng bộ nhưng là bài của người vừa đăng xuất → xóa để người dùng chung máy không thấy
+      const drafts = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.indexOf(PREFIX + "draft:") === 0) drafts.push(k); }
+      drafts.forEach((k) => localStorage.removeItem(k));
     } catch (e) {}
   }
 
@@ -426,7 +430,7 @@
                 <div class="acct-id"><b>${FA.esc(full)} <span class="role-badge acct-role" hidden>ADMIN</span></b><span>${FA.esc(who.email || "")}</span></div>
               </div>
               <div class="acct-plan"></div><!-- plan.js điền: gói hiện tại, lượt AI -->
-              <a role="menuitem" href="dashboard.html">🗺️ Lộ trình học</a>
+              <a role="menuitem" href="dashboard.html">🗺️ Dashboard · Lộ trình học</a>
               <a role="menuitem" href="exam.html#/progress">📊 Tiến độ & lịch sử</a>
               <a role="menuitem" href="pricing.html">⭐ Gói & thanh toán</a>
               <a role="menuitem" href="admin.html" class="acct-admin" hidden>🛠️ Trang quản trị (Admin)</a>

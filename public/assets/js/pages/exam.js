@@ -1,4 +1,4 @@
-/* FlashAptis — ứng dụng thi thử (định tuyến bằng hash)
+/* FlashAptis — ứng dụng luyện đề (định tuyến bằng hash)
    #/                     chọn kỹ năng
    #/{skill}              danh sách đề
    #/{skill}/{testId}     giới thiệu + làm bài + kết quả
@@ -14,7 +14,7 @@
   const SKILLS = {
     speaking: { name: "Speaking", icon: "🎙️", data: window.FA_SPEAKING, time: 12, meta: "4 part · ghi âm trên trình duyệt",
       desc: "Đồng hồ đếm ngược như phòng thi, máy đọc câu hỏi, bạn thu âm câu trả lời rồi nghe lại và so với bài mẫu." },
-    listening: { name: "Listening", icon: "🎧", data: window.FA_LISTENING, time: 40, meta: "17 câu hỏi · 40 phút",
+    listening: { name: "Listening", icon: "🎧", data: window.FA_LISTENING, time: 40, meta: "17 câu hỏi (25 ý) · 40 phút",
       desc: "Đủ 4 part: 13 câu ngắn, 4 người nói, hội thoại, 2 bài độc thoại. Mỗi đoạn nghe tối đa 2 lần, có transcript tô câu chốt." },
     grammar: { name: "Grammar & Vocabulary", short: "Grammar", icon: "🧩", data: window.FA_GRAMMAR, time: 25, meta: "50 câu trắc nghiệm · 25 phút",
       desc: "25 câu ngữ pháp + 25 câu từ vựng, chấm ngay. Sai câu nào hiện luôn giải thích vì sao." },
@@ -234,56 +234,135 @@
     return { bySkill, timeline, overall, doneCore };
   }
 
+  /* ---------- trang chính Luyện đề: thấy toàn cảnh kho đề + gợi ý đề nên làm tiếp ---------- */
+  const EXAM_ORDER = ["grammar", "listening", "reading", "writing", "speaking"]; // đúng thứ tự một buổi thi Aptis
+  const HUB_FACTS = [
+    ["🧩", "Grammar & Vocabulary <b>không cộng vào điểm Overall</b>, nhưng được dùng để xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc."],
+    ["🎧", "Mỗi đoạn Listening chỉ được nghe <b>tối đa 2 lần</b> — lần đầu nắm ý chính, lần hai bắt chi tiết."],
+    ["🎯", "Muốn đạt <b>B2</b> cần Overall khoảng <b>120/200</b> — trung bình 30/50 mỗi kỹ năng là bạn đã chạm ngưỡng."],
+    ["✍️", "Writing Part 4 chiếm <b>40% điểm Writing</b>: một email thân mật ~50 từ và một email trang trọng 120–150 từ."],
+    ["🎙️", "Speaking Part 4 cho <b>1 phút chuẩn bị, 2 phút nói</b> — ghi từ khóa thay vì viết câu sẽ nói trôi hơn nhiều."],
+    ["📖", "Reading có bài <b>sắp xếp câu</b>: tìm câu mở đầu trước — câu không bắt đầu bằng từ nối hay đại từ (However, Then, This, He…) thường đứng đầu."],
+    ["⏱️", "Cả bài thi Aptis đủ 5 phần mất khoảng <b>2 giờ 40 phút</b> — Full Test giúp bạn quen nhịp độ đó trước ngày thi."],
+    ["🔁", "Câu bạn làm sai được tự lưu vào <b>Sổ câu sai</b> — ôn lại đến khi đúng thì câu đó tự biến mất."],
+  ];
+  function hubSuggest(stats) {
+    // 1) bài đang làm dở  2) kỹ năng chưa thử lần nào (theo thứ tự buổi thi)  3) kỹ năng chính có điểm gần nhất thấp nhất
+    for (const k of EXAM_ORDER) {
+      const t = SKILLS[k].data.find((x) => !isLocked(k, x) && DRAFT_SKILLS.includes(k) && getDraft(k, x.id));
+      if (t) return { k, t, why: "Bạn đang làm dở đề này — làm tiếp kẻo quên nhé!", cta: "▶ Làm tiếp" };
+    }
+    const fresh = EXAM_ORDER.find((k) => !stats.bySkill[k].latest);
+    const k = fresh || CORE_SKILLS.slice().sort((a, b) => stats.bySkill[a].latest.score - stats.bySkill[b].latest.score)[0];
+    const open = SKILLS[k].data.filter((x) => !isLocked(k, x));
+    const t = open.find((x) => !FA.getAttempts(k, x.id).length) || open[0];
+    if (!t) return null;
+    const why = !stats.timeline.length ? "Bắt đầu từ phần đầu tiên của bài thi thật — 25 phút là biết mình đang ở đâu."
+      : fresh ? `Bạn chưa thử ${short(k)} lần nào — làm một đề để biết điểm xuất phát.`
+      : `${short(k)} đang là kỹ năng thấp nhất của bạn (${stats.bySkill[k].latest.score}/50) — luyện thêm để kéo Overall lên.`;
+    return { k, t, why, cta: "Làm ngay →" };
+  }
+
   function viewHub() {
     view = "hub";
     const wrongN = FA.store.get("wrongbook", []).length;
     const stats = progressStats();
     const ov = stats.overall("latest");
-    const fcN = Object.keys(FA.store.get("fc-known", {})).length;
-    const tipN = FA.store.get("tips-done", []).length;
-    const hasProgress = stats.timeline.length > 0 || fcN > 0 || tipN > 0 || wrongN > 0;
+    const totalTests = EXAM_ORDER.reduce((n, k) => n + SKILLS[k].data.length, 0);
+    const doneTests = EXAM_ORDER.reduce((n, k) => n + stats.bySkill[k].doneTests, 0);
+    const totalQ = window.FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0) + window.FA_LISTENING.length * 17;
+    const sg = hubSuggest(stats);
+    const fact = HUB_FACTS[Math.floor(Math.random() * HUB_FACTS.length)];
+    const minutes = (k) => (k === "speaking" ? "~12" : SKILLS[k].time);
+    const mockDone = MOCKS.flatMap((m) => mockHist(m.id)).filter((x) => x.status === "done" && !x.speakPending);
+    const mockBest = mockDone.length ? Math.max(...mockDone.map((x) => x.overall)) : null;
     app.innerHTML = `
       <div class="page"><div class="container">
-        <span class="eyebrow">Thi thử Aptis</span>
-        <h1 class="page-title">Chọn kỹ năng, làm luôn</h1>
-        <p class="page-sub">Đăng nhập (miễn phí) để làm bài — tiến trình và điểm số được lưu theo tài khoản, đồng bộ giữa các thiết bị.</p>
-        ${hasProgress ? `
-        <div class="card mb-2 row" style="padding:16px 20px;gap:16px">
-          <div class="ring" style="--p:${Math.round((ov / 200) * 100)}" data-label="${ov}"></div>
-          <div style="flex:1;min-width:220px">
-            <div style="font-family:var(--font-head);font-weight:700">Overall ước lượng: ${ov}/200 · <span class="pill">${FA.toCEFR("overall", ov)}</span></div>
-            <div class="muted" style="font-size:.9rem">Đã làm ${stats.doneCore}/4 kỹ năng chính (${stats.timeline.length} lượt thi) · ${fcN} từ vựng · ${tipN}/20 mẹo</div>
+        ${needLogin() ? LOGIN_NOTE : ""}
+        <section class="hub-hero">
+          <div class="hub-hero-l">
+            <span class="eyebrow">Luyện đề Aptis</span>
+            <h1 class="page-title">Kho đề Aptis <span class="nowrap">đủ 5 kỹ năng.</span><br><span class="hub-accent">Làm xong biết điểm ngay.</span></h1>
+            <p class="page-sub mb-2">Đúng format thi thật trên máy, bấm giờ từng phần, chấm điểm và giải thích từng câu. Chọn một kỹ năng bên dưới — hoặc để FlashAptis gợi ý đề hợp với bạn.</p>
+            <div class="hub-stats">
+              <div><b>${totalTests}</b><span>đề lẻ</span></div>
+              <div><b>${MOCKS.length}</b><span>Full Test</span></div>
+              <div><b>${totalQ.toLocaleString("vi-VN")}+</b><span>câu hỏi</span></div>
+              <div><b>${doneTests}</b><span>đề bạn đã làm</span></div>
+            </div>
           </div>
-          <a class="btn btn-outline btn-sm" href="#/progress">📊 Xem bảng tiến độ →</a>
-        </div>` : `
-        <div class="mb-2"><a class="btn btn-outline btn-sm" href="#/progress">📊 Bảng tiến độ & lịch sử làm bài →</a></div>`}
-        <a class="card mock-cta mb-2" href="#/mock">
-          <div class="mock-cta-ic">🏁</div>
-          <div style="flex:1;min-width:220px">
-            <span class="pill">Mới · ${MOCKS.length} đề</span>
-            <h3 class="mb-0 mt-1">Full Test — thi thử trọn bộ như thi thật</h3>
-            <p class="mb-0 muted">Grammar → Listening → Reading → Writing → Speaking liền mạch, bấm giờ từng phần, phòng thi toàn màn hình. Cuối bài ra điểm Overall /200 và bậc CEFR.</p>
+          <div class="hub-hero-r">
+            ${sg ? `<div class="hub-suggest">
+              <span class="hub-tag">✨ Gợi ý cho bạn</span>
+              <div class="hub-sg-skill">${SKILLS[sg.k].icon} ${esc(SKILLS[sg.k].name)}</div>
+              <div class="hub-sg-test">${esc(sg.t.title)}${sg.t.club ? ` · ${esc(sg.t.club)}` : ""}</div>
+              <p>${esc(sg.why)}</p>
+              <div class="row"><a class="btn btn-primary" href="#/${sg.k}/${sg.t.id}">${sg.cta}</a><span class="muted" style="font-size:.88rem">⏱ ${minutes(sg.k)} phút</span></div>
+            </div>` : ""}
+            ${stats.timeline.length ? `<a class="hub-overall" href="#/progress">
+              <div class="ring" style="--p:${Math.round((ov / 200) * 100)}" data-label="${ov}"></div>
+              <div><b>Overall ước lượng ${ov}/200 · ${FA.toCEFR("overall", ov)}</b><span>Đã làm ${stats.doneCore}/4 kỹ năng chính · xem bảng tiến độ →</span></div>
+            </a>` : ""}
           </div>
-          <span class="go">Vào Full Test →</span>
-        </a>
-        <div class="grid grid-3">
-          ${Object.entries(SKILLS).map(([k, s]) => `
-            <a class="card skill-card" href="#/${k}">
-              <div class="icon">${s.icon}</div>
-              <span class="pill green">${s.data.length} đề</span>${stats.bySkill[k].doneTests ? ` <span class="pill gray">✓ ${stats.bySkill[k].doneTests}/${s.data.length} đã làm</span>` : ""}
-              <h3>${s.name}</h3>
+        </section>
+
+        <section class="hub-journey">
+          <div class="row mb-1"><h2 class="mb-0">🗺️ Một buổi thi Aptis diễn ra thế nào?</h2><div class="spacer"></div><a class="muted" href="guide.html" style="font-size:.9rem">Xem cấu trúc chi tiết →</a></div>
+          <p class="muted mb-2" style="font-size:.92rem">5 phần liên tiếp trên máy tính — bấm vào phần bất kỳ để luyện riêng phần đó.</p>
+          <ol class="hub-steps">
+            ${EXAM_ORDER.map((k, i) => `<li><a href="#/${k}">
+              <span class="hub-step-n">${i + 1}</span><span class="hub-step-ic">${SKILLS[k].icon}</span>
+              <b>${esc(short(k))}</b><span class="muted">${minutes(k)} phút</span>
+            </a></li>`).join("")}
+          </ol>
+        </section>
+
+        <div class="row mt-4 mb-2"><h2 class="mb-0">Luyện theo kỹ năng</h2><div class="spacer"></div><a class="btn btn-ghost btn-sm" href="#/progress">📊 Bảng tiến độ & lịch sử</a></div>
+        <div class="hub-skills">
+          ${EXAM_ORDER.map((k) => {
+            const s = SKILLS[k], b = stats.bySkill[k], n = s.data.length;
+            const freeN = FA.plan ? s.data.filter((t) => !isLocked(k, t)).length : n;
+            const best = b.best ? b.best.score : null, lv = best != null && FA.CEFR[k] ? FA.toCEFR(k, best) : "";
+            const left = n - b.doneTests;
+            return `<a class="card hub-skill" href="#/${k}">
+              <div class="hub-skill-top"><span class="hub-skill-ic">${s.icon}</span>
+                ${best != null ? `<span class="hub-best" title="Điểm cao nhất của bạn">🏆 ${best}/50${lv ? ` · ${lv}` : ""}</span>` : `<span class="pill hot">Chưa thử</span>`}</div>
+              <h3>${esc(s.name)}</h3>
+              <div class="muted hub-meta">${esc(s.meta)}</div>
               <p>${s.desc}</p>
-              <span class="go">Vào thi →</span>
-            </a>`).join("")}
-          <a class="card skill-card" href="#/gym">
-            <div class="icon">📚</div>
-            <span class="pill">Không bấm giờ</span>
-            <h3>Ôn tập nhanh</h3>
-            <p>Luyện nhanh 10 câu, chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào Sổ câu sai${wrongN ? ` (đang có <b>${wrongN}</b> câu)` : ""}.</p>
-            <span class="go">Bắt đầu ôn tập →</span>
+              <div class="hub-prog"><div class="progress bar"><i style="width:${(b.doneTests / n) * 100}%"></i></div><span>${b.doneTests}/${n} đề</span></div>
+              <div class="hub-skill-foot"><span class="muted">${left ? `🔥 ${left} đề chưa làm` : "🎉 Đã làm hết"}${FA.plan && freeN < n ? ` · ${freeN} đề Free` : ""}</span><span class="go">Vào luyện →</span></div>
+            </a>`;
+          }).join("")}
+          <a class="card hub-skill hub-mock" href="#/mock">
+            <div class="hub-skill-top"><span class="hub-skill-ic">🏁</span><span class="hub-best hub-best-hot">Thử thách lớn</span></div>
+            <h3>Full Test — thi như thật</h3>
+            <div class="muted hub-meta">5 phần liền mạch · khoảng ${MOCK_MIN} phút · ${MOCKS.length} đề</div>
+            <p>Bấm giờ từng phần, phòng thi toàn màn hình, rời màn hình là bị cảnh báo. Cuối bài ra Overall /200 và bậc CEFR. <b>Bạn trụ được bao lâu?</b></p>
+            <div class="hub-skill-foot"><span class="muted">${mockBest != null ? `🏆 Cao nhất ${mockBest}/200` : "🎯 Bạn chưa thử lần nào"}</span><span class="go">Vào Full Test →</span></div>
           </a>
         </div>
+
+        <div class="hub-tiles">
+          <a class="card hub-tile" href="#/gym"><span class="hub-tile-ic">⚡</span><div><b>Ôn tập nhanh</b><span>10 câu, không bấm giờ, chọn là biết đúng sai</span></div></a>
+          <a class="card hub-tile" href="#/gym/wrong"><span class="hub-tile-ic">📒</span><div><b>Sổ câu sai${wrongN ? ` <span class="pill">${wrongN}</span>` : ""}</b><span>${wrongN ? "Ôn lại các câu từng làm sai" : "Câu làm sai sẽ tự lưu vào đây"}</span></div></a>
+          <a class="card hub-tile" href="grammar.html"><span class="hub-tile-ic">📘</span><div><b>Học ngữ pháp</b><span>101 chủ điểm A1–C2 trước khi vào đề</span></div></a>
+        </div>
+
+        <div class="card hub-fact">
+          <span class="hub-fact-ic" id="factIc">${fact[0]}</span>
+          <div style="flex:1"><span class="hub-tag">💡 Bạn có biết?</span><p class="mb-0" id="factTx">${fact[1]}</p></div>
+          <button class="btn btn-ghost btn-sm" id="factNext" type="button">Mẹo khác ↻</button>
+        </div>
       </div></div>`;
+    bindLoginLinks();
+    let fi = HUB_FACTS.indexOf(fact);
+    app.querySelector("#factNext").onclick = () => {
+      fi = (fi + 1) % HUB_FACTS.length;
+      app.querySelector("#factIc").textContent = HUB_FACTS[fi][0];
+      app.querySelector("#factTx").innerHTML = HUB_FACTS[fi][1];
+      FA.fxIn(app.querySelector(".hub-fact"));
+    };
   }
 
   function viewProgress() {
@@ -371,7 +450,7 @@
                   ${trend.length > 1 ? `<div class="row mt-1" style="gap:4px">${trend.map((x) => `<span class="pill gray" title="${FA.fmtDate(x.at)}: ${x.score}/50">${x.score}</span>`).join("")}</div>` : ""}
                 ` : `<p class="muted mt-2 mb-0" style="font-size:.9rem">Chưa làm đề nào.</p>`}
                 <div class="row mt-2">
-                  <a class="btn btn-primary btn-sm" href="#/${k}">${pick ? "Làm tiếp →" : "Thi thử ngay →"}</a>
+                  <a class="btn btn-primary btn-sm" href="#/${k}">${pick ? "Làm tiếp →" : "Luyện đề ngay →"}</a>
                   ${pick && pick.ans && !isLocked(k, pick.test) ? `<button class="btn btn-outline btn-sm" data-preplay="${k}:${esc(pick.test.id)}:${pick.at}">👁 Xem lại</button>` : ""}
                 </div>
               </div>`;
@@ -485,7 +564,7 @@
   const INTRO = {
     grammar: ["50 câu trắc nghiệm, mỗi lần một câu — giống format thi trên máy.", "Đồng hồ 25 phút. Hết giờ bài tự nộp.", "Bấm phím 1–4 hoặc A–D để chọn nhanh, ← → để chuyển câu.", "Nộp bài xong có điểm thang 0–50 và giải thích từng câu."],
     reading: ["5 part: điền từ, 2 bài sắp xếp câu, ghép ý kiến, chọn tiêu đề.", "Đồng hồ 35 phút. Chuyển part bằng thanh số ở dưới.", "Part 2–3: dùng nút ▲ ▼ để đổi vị trí câu.", "Nộp bài xong có điểm thang 0–50 và đáp án từng ý."],
-    listening: ["17 câu hỏi chia 4 part như đề thật.", "Mỗi đoạn nghe được phát tối đa 2 lần (giọng đọc máy của trình duyệt).", "Đồng hồ 40 phút. Nên dùng tai nghe và Chrome/Edge để giọng đọc rõ nhất.", "Nộp xong xem transcript với câu chốt đáp án được tô sáng."],
+    listening: ["17 câu hỏi (25 ý chấm điểm) chia 4 part như đề thật: Part 1 13 câu, Part 2–3 mỗi part 1 câu 4 ý, Part 4 2 câu × 2 ý.", "Mỗi đoạn nghe được phát tối đa 2 lần (giọng đọc máy của trình duyệt).", "Đồng hồ 40 phút. Nên dùng tai nghe và Chrome/Edge để giọng đọc rõ nhất.", "Nộp xong xem transcript với câu chốt đáp án được tô sáng."],
     writing: ["4 part: trả lời ngắn, điền form, chat 3 câu, viết 2 email.", "Đồng hồ 50 phút, đếm từ tự động cho từng câu.", "Nộp xong có điểm ước lượng tự động + bài mẫu đặt cạnh bài của bạn.", "Writing thật do giám khảo chấm; điểm ở đây là ước lượng tự động dựa trên độ dài, cấu trúc, từ nối — chỉ để tham khảo.", "Bài bị trừ điểm khi sai chính tả, sai ngữ pháp (kiểm tra bằng Harper — cần mạng, tải ~8 MB lần đầu, chạy trên máy bạn) hoặc trả lời lạc đề/thiếu ý so với câu hỏi (kiểm tra từ khóa offline, hoặc do AI chấm nếu đã cấu hình — khi đó bài viết được gửi tới máy chủ AI)."],
     speaking: ["4 part, khoảng 12 phút. Máy đọc câu hỏi, sau đó đồng hồ đếm ngược thời gian nói.", "Trình duyệt sẽ xin quyền micro để thu âm. Bản ghi chỉ nằm trên máy bạn, không gửi đi đâu.", "Part 1: 30 giây/câu · Part 2–3: 45 giây/câu · Part 4: 1 phút chuẩn bị + 2 phút nói.", "Xong bài, nghe lại từng câu, so với bài mẫu rồi tự chấm từng part theo thang Aptis: mỗi part 0–5 điểm, tối đa 20 (web quy ra thang 50)."],
   };
@@ -1086,7 +1165,7 @@
       renderResult({
         skill: "listening", test, score, cefr: FA.toCEFR("listening", (got / total) * 50), breakdown: Object.values(parts), replay: !!replay, attemptAt: replay && replay.at,
         ans: screens.map((s, i) => (s.kind === "mcq" ? optText(s.it.o, st.ans[i]) : s.kind === "mono" ? st.ans[i].map((x, k) => optText(s.tk.questions[k].o, x)) : st.ans[i].slice())),
-        note: `Bạn đúng <b>${got}/${total}</b> câu (mỗi câu 1 điểm) → quy ra thang 50. Bậc CEFR ước lượng theo ngưỡng tham khảo: B1 từ 12 câu đúng, B2 từ 17, C từ 21 (trên 25 câu) — không phải kết quả chính thức.`,
+        note: `Bạn đúng <b>${got}/${total}</b> ý (mỗi ý 1 điểm) → quy ra thang 50. Bậc CEFR ước lượng theo ngưỡng tham khảo: B1 từ 12 ý đúng, B2 từ 17, C từ 21 (trên 25 ý) — không phải kết quả chính thức.`,
         review(el) {
           el.innerHTML = screens.map((s, i) => {
             const a = st.ans[i];
@@ -1688,30 +1767,106 @@
     return pool;
   }
 
+  /* ---------- Ôn tập từ vựng: bộ CEFR A1–C2 (data/vocab/c-*.js, tải khi chọn) → câu "chọn nghĩa đúng" ---------- */
+  const VOCAB_LV = (window.FA_VOCAB_INDEX || []).filter((d) => d.section === "cefr");
+  function loadVocabDeck(id) {
+    const got = () => (window.FA_VOCAB_DECKS || {})[id];
+    if (got()) return Promise.resolve(got());
+    const m = VOCAB_LV.find((d) => d.id === id);
+    if (!m) return Promise.reject(new Error("deck"));
+    return new Promise((ok, fail) => {
+      const s = document.createElement("script");
+      s.src = m.file;
+      s.onload = () => (got() ? ok(got()) : fail(new Error("deck")));
+      s.onerror = () => { s.remove(); fail(new Error("load")); };
+      document.head.appendChild(s);
+    });
+  }
+  function vocabItems(deck, n) {
+    const cards = deck.cards.filter((c) => c.w && c.m);
+    return FA.shuffle(cards.slice()).slice(0, n).map((c) => {
+      const wrong = FA.shuffle(Array.from(new Set(cards.filter((x) => x.m !== c.m && x.w !== c.w).map((x) => x.m)))).slice(0, 3);
+      const o = FA.shuffle([c.m].concat(wrong));
+      return { id: `v-${deck.id}-${c.w}`, src: "Từ vựng · " + deck.name, q: `“${c.w}” (${c.t}) nghĩa là gì?`, o, a: o.indexOf(c.m),
+        e: [c.u, c.x ? "Ví dụ: " + c.x : ""].filter(Boolean).join(" · ") };
+    });
+  }
+  const GYM_SRC = [
+    ["mix", "🎲", "Trộn tất cả", "Grammar, Reading, Listening xen kẽ"],
+    ["grammar", "🧩", "Grammar & Vocab", "Câu trắc nghiệm ngữ pháp + từ vựng"],
+    ["reading", "📖", "Reading Part 1", "Điền từ vào đoạn văn"],
+    ["listening", "🎧", "Listening Part 1", "Nghe đoạn ngắn, nghe không giới hạn"],
+  ];
+  let gymKind = ""; // bộ lọc nguồn đang chọn ở Sổ câu sai
+  const wrongKind = (w) => { const s = String(w.src || "").split("·")[0].trim(); return s || "Khác"; };
+
   function viewGym(wrongMode) {
     view = "gym";
     const wrong = FA.store.get("wrongbook", []);
+    const len = [10, 20].includes(FA.store.get("gym-len", 10)) ? FA.store.get("gym-len", 10) : 10;
+    const today = FA.daily ? FA.daily.today() : 0, goal = FA.daily ? FA.daily.goal() : 0, streak = FA.daily ? FA.daily.streak() : 0;
+    const roadmap = FA.store.get("roadmap", {}) || {};
+    const suggestLv = { B1: "A2", B2: "B1", C1: "B2" }[roadmap.target || "B2"] || "B1";
     app.innerHTML = `
       <div class="page"><div class="container narrow">
-        <div class="crumbs"><a href="#/">← Kỹ năng</a> / Ôn tập</div>
-        <h1 class="page-title">📚 Ôn tập</h1>
-        <p class="page-sub">Chưa sẵn sàng làm cả đề? Luyện 10 câu không bấm giờ — chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào Sổ câu sai để ôn lại.</p>
-        <div class="tabs"><a class="tab ${!wrongMode ? "active" : ""}" href="#/gym">Luyện nhanh</a><a class="tab ${wrongMode ? "active" : ""}" href="#/gym/wrong">Sổ câu sai (${wrong.length})</a></div>
+        <div class="crumbs"><a href="#/">← Luyện đề</a> / Ôn tập</div>
+        <section class="gym-hero">
+          <div style="flex:1;min-width:230px">
+            <span class="eyebrow">Ôn tập nhanh</span>
+            <h1 class="page-title">⚡ Mỗi ngày một hiệp ngắn</h1>
+            <p class="page-sub mb-0">Không bấm giờ — chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào <b>Sổ câu sai</b>; ôn lại đúng thì tự gỡ ra.</p>
+          </div>
+          ${FA.daily ? `<div class="gym-goal">
+            <div class="ring" style="--p:${goal ? Math.min(100, Math.round((today / goal) * 100)) : 0}" data-label="${today}"></div>
+            <div><b>${today >= goal ? "Đã đạt mục tiêu hôm nay ✓" : `Còn ${goal - today} điểm nữa đạt mục tiêu`}</b><span>Hôm nay ${today}/${goal} điểm học · 🔥 chuỗi ${streak} ngày</span><span>Mỗi câu ôn = 1 điểm</span></div>
+          </div>` : ""}
+        </section>
+        <div class="tabs"><a class="tab ${!wrongMode ? "active" : ""}" href="#/gym">⚡ Luyện nhanh</a><a class="tab ${wrongMode ? "active" : ""}" href="#/gym/wrong">📒 Sổ câu sai (${wrong.length})</a></div>
         <div id="gymBody"></div>
       </div></div>`;
     const body = app.querySelector("#gymBody");
     if (!wrongMode) {
-      const opts = [["mix", "🎲", "Trộn tất cả", "Grammar, Reading, Listening"], ["grammar", "🧩", "Grammar & Vocab", "Ngữ pháp + từ vựng"], ["reading", "📖", "Reading Part 1", "Điền từ vào đoạn văn"], ["listening", "🎧", "Listening Part 1", "Nghe đoạn ngắn, nghe không giới hạn"]];
-      body.innerHTML = `<div class="grid grid-2">${opts.map(([k, ic, n, d]) => `<button class="card skill-card" data-src="${k}" style="text-align:left;cursor:pointer;font:inherit"><div class="icon">${ic}</div><h3>${n}</h3><p class="mb-0">${d} · ${gymPool(k).length} câu</p></button>`).join("")}</div>`;
-      body.querySelectorAll("[data-src]").forEach((b) => (b.onclick = () => gymSession(FA.shuffle(gymPool(b.dataset.src)).slice(0, 10), false, body)));
+      body.innerHTML = `
+        <div class="row mb-2" style="gap:8px"><span class="muted" style="font-size:.9rem">Số câu mỗi hiệp:</span>
+          ${[10, 20].map((n) => `<button type="button" class="chip ${n === len ? "active" : ""}" data-len="${n}">${n} câu</button>`).join("")}</div>
+        <h3 class="gym-h">Câu hỏi từ đề thi</h3>
+        <div class="gym-srcs">${GYM_SRC.map(([k, ic, n, d]) => `<button type="button" class="card gym-src" data-src="${k}"><span class="gym-src-ic">${ic}</span><div><b>${n}</b><span>${d}</span><span class="gym-n">${gymPool(k).length.toLocaleString("vi-VN")} câu</span></div></button>`).join("")}</div>
+        ${VOCAB_LV.length ? `<h3 class="gym-h">Từ vựng theo cấp độ CEFR <span class="muted" style="font-weight:400;font-size:.88rem">· chọn nghĩa đúng của từ</span></h3>
+        <div class="gym-lvs">${VOCAB_LV.map((d) => `<button type="button" class="gym-lv ${d.en === suggestLv ? "sug" : ""}" data-deck="${d.id}"><b>${d.emoji} ${esc(d.en)}</b><span>${d.n.toLocaleString("vi-VN")} từ</span>${d.en === suggestLv ? `<em>Gợi ý</em>` : ""}</button>`).join("")}</div>` : ""}
+        <div class="gym-links">
+          <a href="grammar.html">📘 Chưa chắc lý thuyết? Học ngữ pháp A1–C2 →</a>
+          <a href="flashcards.html">🃏 Học thẻ từ vựng & ôn từ khó →</a>
+          <a href="#/">⚡ Sẵn sàng làm cả đề? Vào Luyện đề →</a>
+        </div>`;
+      body.querySelectorAll("[data-len]").forEach((b) => (b.onclick = () => { FA.store.set("gym-len", +b.dataset.len); viewGym(false); }));
+      body.querySelectorAll("[data-src]").forEach((b) => (b.onclick = () => gymSession(FA.shuffle(gymPool(b.dataset.src)).slice(0, len), false, body)));
+      body.querySelectorAll("[data-deck]").forEach((b) => (b.onclick = async () => {
+        b.disabled = true;
+        const old = b.innerHTML;
+        b.innerHTML = "<b>⏳ Đang tải…</b>";
+        try { const deck = await loadVocabDeck(b.dataset.deck); if (view === "gym") gymSession(vocabItems(deck, len), false, body); }
+        catch (e) { FA.toast("Không tải được bộ từ — kiểm tra mạng rồi thử lại."); b.disabled = false; b.innerHTML = old; }
+      }));
     } else {
       if (!wrong.length) { body.innerHTML = `<div class="empty card"><div class="big">📒</div><p>Sổ câu sai đang trống. Làm đề hoặc vào Luyện nhanh — câu nào sai sẽ tự lưu ở đây.</p><a class="btn btn-primary" href="#/gym">Luyện nhanh</a></div>`; return; }
-      body.innerHTML = `<div class="row mb-2"><button class="btn btn-primary" id="reviewAll">Ôn lại ${Math.min(10, wrong.length)} câu</button><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="clearAll">Xóa hết</button></div>
-        ${wrong.map((w) => `<div class="card mb-2" style="padding:14px 16px"><div class="row"><span class="pill gray">${esc(w.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(w.id)}">Bỏ khỏi sổ</button></div>
-          <div class="mt-1"><b>${esc(w.q)}</b></div><div class="txt-ok" style="font-size:.92rem">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
-      body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(wrong).slice(0, 10), true, body);
-      body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
-      body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { FA.removeWrong(b.dataset.del); viewGym(true); }));
+      // lọc theo nguồn câu (Grammar / Reading / Listening / Từ vựng…)
+      const kinds = {};
+      wrong.forEach((w) => (kinds[wrongKind(w)] = (kinds[wrongKind(w)] || 0) + 1));
+      if (!kinds[gymKind]) gymKind = ""; // nguồn đang lọc đã hết câu → về "Tất cả"
+      let kind = gymKind; // nhớ bộ lọc khi "Bỏ khỏi sổ" vẽ lại màn
+      const draw = () => {
+        const list = kind ? wrong.filter((w) => wrongKind(w) === kind) : wrong;
+        body.innerHTML = `
+          <div class="row mb-2" style="gap:6px">${[["", "Tất cả", wrong.length]].concat(Object.entries(kinds).map(([k, n]) => [k, k, n])).map(([k, lb, n]) => `<button type="button" class="chip ${k === kind ? "active" : ""}" data-kind="${esc(k)}">${esc(lb)} · ${n}</button>`).join("")}</div>
+          <div class="row mb-2"><button class="btn btn-primary" id="reviewAll">Ôn lại ${Math.min(len, list.length)} câu${kind ? " " + esc(kind) : ""}</button><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="clearAll">Xóa hết</button></div>
+          ${list.map((w) => `<div class="card mb-2" style="padding:14px 16px"><div class="row"><span class="pill gray">${esc(w.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(w.id)}">Bỏ khỏi sổ</button></div>
+            <div class="mt-1"><b>${esc(w.q)}</b></div><div class="txt-ok" style="font-size:.92rem">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
+        body.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => { kind = gymKind = b.dataset.kind; draw(); }));
+        body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(list.slice()).slice(0, len), true, body);
+        body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
+        body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { FA.removeWrong(b.dataset.del); viewGym(true); }));
+      };
+      draw();
     }
   }
 

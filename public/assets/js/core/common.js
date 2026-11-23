@@ -42,10 +42,11 @@
   applyTheme(FA.store.get("theme", "light"));
 
   /* ---------- Header & footer ---------- */
+  /* thứ tự theo mức quan trọng với người học; "Luyện đề" được làm nổi bật (nav-hot). Dashboard chỉ nằm trong menu tài khoản (cloud.js) */
   const NAV = [
-    { href: "dashboard.html", label: "Dashboard", key: "dashboard" },
-    { href: "exam.html", label: "Thi thử", key: "exam" },
+    { href: "exam.html", label: "Luyện đề", key: "exam", hot: true },
     { href: "flashcards.html", label: "Flashcard", key: "flashcards" },
+    { href: "grammar.html", label: "Ngữ pháp", key: "grammar" },
     { href: "exam.html#/gym", label: "Ôn tập", key: "gym" },
     { href: "tips.html", label: "Lộ trình mẹo", key: "tips" },
     { href: "guide.html", label: "Cấu trúc đề", key: "guide" },
@@ -58,9 +59,9 @@
     header.className = "site-header";
     header.innerHTML = `
       <div class="container">
-        <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="70" height="70" alt="" decoding="async"><span class="logo-text"><span class="flash">Flash</span>Aptis</span></a>
+        <a class="logo" href="index.html" aria-label="FlashAptis trang chủ"><span class="logo-badge"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="70" height="70" alt="" decoding="async"></span><span class="logo-text"><span class="logo-name"><span class="flash">Flash</span><span class="aptis">Aptis</span></span><span class="logo-tag">Luyện thi Aptis</span></span></a>
         <nav class="nav" aria-label="Điều hướng chính">
-          ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : ""}${n.label}</a>`).join("")}
+          ${NAV.map((n) => `<a href="${n.href}" data-nav="${n.key}" class="${n.key === active ? "active" : ""}${n.key === "pricing" ? " nav-pro" : ""}${n.hot ? " nav-hot" : ""}"${n.key === active ? ' aria-current="page"' : ""}>${n.key === "pricing" ? "⭐ " : n.hot ? "⚡ " : ""}${n.label}</a>`).join("")}
           <button type="button" class="nav-theme" aria-pressed="false">🌙 Giao diện tối</button><!-- chỉ hiện trong menu điện thoại -->
           <a class="btn btn-primary nav-cta" href="exam.html">Làm đề ngay ⚡</a><!-- chỉ hiện trong menu mobile -->
         </nav>
@@ -84,7 +85,7 @@
       nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "☰";
       header.querySelectorAll(".acct.open").forEach((x) => x.classList.remove("open"));
     };
-    // nếu đang ở exam.html thì chuyển tab Thi thử / Ôn tập ngay bằng hash (không tải lại trang)
+    // nếu đang ở exam.html thì chuyển tab Luyện đề / Ôn tập ngay bằng hash (không tải lại trang)
     const onExamPage = /(?:^|\/)exam(?:\.html)?$/i.test(String(location.pathname || ""));
     if (onExamPage) {
       header.querySelectorAll('a[href="exam.html"], a[href="exam.html#/gym"]').forEach((a) => {
@@ -96,7 +97,7 @@
         });
       });
     }
-    // cập nhật active giữa "Thi thử" và "Ôn tập" khi đổi hash trong exam.html
+    // cập nhật active giữa "Luyện đề" và "Ôn tập" khi đổi hash trong exam.html
     if (active === "exam" || active === "gym") {
       const syncNav = () => {
         const cur = location.hash.indexOf("gym") > -1 ? "gym" : "exam";
@@ -136,12 +137,12 @@
     footer.innerHTML = `
       <div class="container">
         <div>
-          <a class="logo logo-foot" href="index.html"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="56" height="56" alt="" decoding="async"><span class="logo-text"><span class="flash">Flash</span>Aptis</span></a>
+          <a class="logo logo-foot" href="index.html" aria-label="FlashAptis trang chủ"><span class="logo-badge"><img class="logo-img" src="assets/img/brand/mascot-192.webp" width="56" height="56" alt="" decoding="async"></span><span class="logo-text"><span class="logo-name"><span class="flash">Flash</span><span class="aptis">Aptis</span></span><span class="logo-tag">Luyện thi Aptis</span></span></a>
           <div class="mt-1">Luyện thi Aptis ESOL miễn phí · Học nhanh như tia chớp.</div>
           <div class="mt-1" style="font-size:.8rem">Aptis là nhãn hiệu của British Council. FlashAptis là dự án học tập độc lập, không liên kết với British Council. Điểm trên web chỉ mang tính ước lượng.</div>
         </div>
         <div>
-          <a href="dashboard.html">Dashboard</a><a href="exam.html">Thi thử</a><a href="flashcards.html">Flashcard</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
+          <a href="exam.html">Luyện đề</a><a href="flashcards.html">Flashcard</a><a href="grammar.html">Ngữ pháp</a><a href="tips.html">Mẹo</a><a href="guide.html">Cấu trúc đề</a><a href="calculator.html">Tính điểm</a>
         </div>
       </div>
       <div class="container made-by">
@@ -474,7 +475,7 @@
      Cấu trúc điểm (theo bảng tham khảo của prepedu.com/vi/blog/thang-diem-aptis — không phải bảng chính thức của British Council):
        • Overall = Listening + Reading + Speaking + Writing, mỗi kỹ năng 0–50 → tối đa 200. Grammar & Vocabulary (50 câu × 1 điểm) KHÔNG cộng vào tổng,
          chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc.
-       • Listening: 25 câu, B1 12–16 · B2 17–20 · C 21–25 câu đúng.  Reading: 25 câu, B1 13–18 · B2 19–22 · C 23–25.
+       • Listening: 17 câu hỏi = 25 ý chấm điểm (13 + 4 + 4 + 4), B1 12–16 · B2 17–20 · C 21–25 ý đúng.  Reading: 25 ý, B1 13–18 · B2 19–22 · C 23–25.
          Quy ra thang 50 (×2): Listening 24/34/42, Reading 26/38/46 — bên dưới. Nguồn không nêu ngưỡng A1/A2 nên giữ ngưỡng tham khảo cũ.
        • Speaking: 4 part, mỗi part 0–5 → tối đa 20, web quy ra thang 50 (×2,5). Writing do giám khảo chấm, nguồn không có thang → giữ ngưỡng ước lượng cũ.
        • Overall: dưới 40 A1 · 40–80 A2 · 80–120 B1 · 120–160 B2 · 160–180 C1 · trên 180 C2. Các mốc 80/120/160 xuất hiện ở hai dòng liền nhau nên web tính “từ mốc trở lên”
