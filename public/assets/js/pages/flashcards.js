@@ -148,7 +148,7 @@
             ${n ? `<div class="row"><a class="btn btn-primary btn-sm" href="#${STAR_ID}">Ôn từ khó</a><a class="btn btn-outline btn-sm" href="#${STAR_ID}/quiz">Kiểm tra</a></div>` : ""}
           </div>`;
         })()}
-        <h2 class="mt-3 mb-1">Bộ cơ bản</h2>
+        <h2 class="mt-3 mb-1">Từ vựng cơ bản</h2>
         <p class="muted mb-2" style="font-size:.92rem">Từ vựng nền tảng, có phiên âm — học trước nếu bạn mới bắt đầu.</p>
         <div class="grid grid-4">${BASIC.map(deckCard).join("")}</div>
         ${SECTIONS.map(([sec, title, sub]) => {

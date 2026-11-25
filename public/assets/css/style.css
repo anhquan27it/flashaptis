@@ -1435,6 +1435,13 @@ button.gym-src { display: flex; flex-direction: row; gap: 12px; align-items: cen
 .gym-lv em { position: absolute; top: -9px; font-style: normal; font-size: .68rem; font-weight: 700; color: #fff; background: var(--orange-500); padding: 1px 8px; border-radius: 999px; }
 .gym-lv[disabled] { opacity: .7; cursor: wait; }
 .gym-links { display: grid; gap: 6px; margin-top: 22px; padding: 14px 16px; border: 1px dashed var(--orange-200); border-radius: 16px; font-size: .93rem; }
+.wrong-card { padding: 14px 16px; }
+.wrong-open { display: grid; gap: 4px; margin-top: 8px; padding: 8px; border-radius: 8px; color: var(--ink); }
+.wrong-open:hover { background: var(--surface-2); text-decoration: none; }
+.wrong-open span { color: var(--orange-700); font-size: .88rem; }
+.wrong-context { margin-top: 12px; }
+.wrong-context summary { cursor: pointer; }
+.review-target { scroll-margin-top: 96px; outline: 2px solid var(--orange-500); outline-offset: 3px; border-radius: 5px; }
 :root[data-theme="dark"] .gym-hero { background: radial-gradient(120% 140% at 100% 0%, #3b2414 0%, transparent 55%), linear-gradient(135deg, #251a14, var(--surface) 70%); border-color: #4a2e1c; }
 :root[data-theme="dark"] .gym-lv.sug { background: #3a2618; }
 @media (max-width: 640px) {

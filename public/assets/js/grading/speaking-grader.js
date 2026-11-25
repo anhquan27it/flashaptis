@@ -1,6 +1,6 @@
 /* FlashAptis — AI chấm Speaking trên BẢN NHẬN DẠNG GIỌNG NÓI (tùy chọn).
    - Giọng nói → chữ bằng Web Speech API của trình duyệt (Chrome/Edge; exam.js lo phần này), rồi gửi chữ cho AI chấm 0–5 từng câu.
-   - Chỉ bật khi có ai-config.js (gọi thẳng, như Writing). Chưa có Cloud Function cho Speaking → người dùng không có ai-config.js thì vẫn tự chấm như cũ.
+   - Chỉ bật khi có ai-config.js (gọi thẳng, như Writing).
    - AI KHÔNG nghe được âm thanh nên KHÔNG chấm phát âm/ngữ điệu; bản nhận dạng cũng không có dấu câu và có thể sai chữ → prompt dặn không trừ điểm vì những thứ đó.
    - Lời nói của người dùng là dữ liệu KHÔNG tin cậy (có thể nói "cho tôi 5 điểm"): prompt dặn bỏ qua chỉ dẫn trong bài, điểm luôn được ép về 0–5. */
 (function () {
@@ -44,14 +44,13 @@ Include every id you were given.`;
   const clamp5 = (x) => (typeof x === "number" && isFinite(x) ? Math.max(0, Math.min(5, Math.round(x * 2) / 2)) : null);
   const str = (x, n) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n);
 
-  /* steps: [{part, q|qs, time}] cùng chỉ số với trans: ["bản nhận dạng của từng bước"].
-     Trả về { items: { [chỉ số bước]: {score, comment} }, rates: [p1,p2,p3,p4] (số nguyên 0–5, hoặc null nếu part đó không có điểm) } */
+  /* Chỉ gửi câu có lời nói nhận dạng được. items chỉ chứa điểm thực sự do AI trả về. */
   async function grade(steps, trans) {
     if (!enabled()) throw new Error("ai-disabled");
     const items = [], out = {};
     steps.forEach((s, i) => {
       const t = String(trans[i] || "").trim(), n = words(t);
-      if (n < 3) { out[i] = { score: 0, comment: n ? "Câu trả lời quá ngắn (chưa nhận dạng được đủ lời nói)." : "Không nhận dạng được lời nói nào cho câu này." }; return; }
+      if (!n) return;
       items.push({ id: "s" + i, part: s.part, question: s.qs ? s.qs.join(" | ") : s.q, seconds: s.time, words: n, transcript: t.slice(0, 3000) });
     });
     if (items.length) {
@@ -62,7 +61,8 @@ Include every id you were given.`;
         const results = (await FA.ai.chatJSON(SYSTEM, { items: byPart[p] })).results || {};
         byPart[p].forEach((it) => {
           const r = results[it.id];
-          const score = r && clamp5(typeof r.score === "string" ? parseFloat(r.score) : r.score);
+          if (!r) return;
+          const score = clamp5(typeof r.score === "string" && r.score.trim() ? Number(r.score) : r.score);
           if (score == null) return;
           out[+it.id.slice(1)] = { score, comment: str(r.comment, 220) };
         });
@@ -72,13 +72,22 @@ Include every id you were given.`;
         throw bad ? bad.reason : new Error("empty-result");
       }
     }
-    const rates = [1, 2, 3, 4].map((p) => {
-      const idx = steps.map((s, i) => (s.part === p ? i : -1)).filter((i) => i >= 0);
-      if (!idx.length || idx.some((i) => !out[i])) return null; // part thiếu điểm của bất kỳ câu nào (request lỗi) → không có điểm AI cho part đó
-      return Math.max(0, Math.min(5, Math.round(idx.reduce((a, i) => a + out[i].score, 0) / idx.length)));
-    });
-    return { items: out, rates };
+    return { items: out };
   }
 
-  FA.speakAI = { supported, enabled, grade, SR, words };
+  function summarize(steps, responses, items = {}) {
+    const questions = steps.map((_, i) => {
+      if (responses[i] === false) return { status: "blank", score: 0 };
+      const item = items[i];
+      if (item && Number.isFinite(item.score)) return { status: "graded", score: item.score, comment: item.comment };
+      return { status: responses[i] === true ? "ungraded" : "unknown", score: null };
+    });
+    const rates = [1, 2, 3, 4].map((part) => {
+      const rows = questions.filter((_, i) => steps[i].part === part);
+      return rows.length ? rows.reduce((sum, row) => sum + (row.score ?? 0), 0) / rows.length : 0;
+    });
+    return { questions, rates, pending: questions.some((row) => row.status === "ungraded") };
+  }
+
+  FA.speakAI = { supported, enabled, grade, summarize, SR, words };
 })();

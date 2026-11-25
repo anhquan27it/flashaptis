@@ -334,6 +334,21 @@ test("FA.speakAI (speaking-grader.js): đếm từ và chỉ bật khi có AI + 
   assert.equal(FA.speakAI.supported(), false); // Node không có SpeechRecognition
 });
 
+test("Speaking phân biệt điểm AI, câu bỏ trống và câu chưa chấm được", () => {
+  const steps = [{ part: 1 }, { part: 1 }, { part: 2 }, { part: 3 }, { part: 4 }];
+  const result = FA.speakAI.summarize(steps, [true, false, true, true, false], {
+    0: { score: 4.5, comment: "Đúng trọng tâm." }, 1: { score: 5 }, 2: { score: 0 },
+  });
+  assert.deepEqual(Array.from(result.questions, (q) => [q.status, q.score]), [
+    ["graded", 4.5], ["blank", 0], ["graded", 0], ["ungraded", null], ["blank", 0],
+  ]);
+  assert.deepEqual(Array.from(result.rates), [2.25, 0, 0, 0]);
+  assert.equal(result.pending, true);
+  const blank = FA.speakAI.summarize(steps, steps.map(() => false));
+  assert.equal(blank.pending, false);
+  assert.equal(blank.rates.reduce((sum, score) => sum + score, 0), 0);
+});
+
 test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng Overall CEFR", () => {
   const s2 = createSandbox();
   const appEl = {
@@ -362,6 +377,67 @@ test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng
   assert.ok(appEl.innerHTML.includes("Bảng tiến độ học tập"));
   assert.ok(appEl.innerHTML.includes("<b>134</b><span>/200</span>"));
   assert.ok(appEl.innerHTML.includes("còn 26 điểm lên C1"));
+});
+
+test("Sổ câu sai vẫn hiện danh sách khi dữ liệu cũ có mục đã gỡ", () => {
+  const s2 = createSandbox();
+  const control = { onclick: null };
+  const body = { innerHTML: "", querySelector: () => control, querySelectorAll: () => [] };
+  const app = { innerHTML: "", querySelector: (sel) => sel === "#gymBody" ? body : null, querySelectorAll: () => [] };
+  s2.document.getElementById = (id) => id === "app" ? app : null;
+  s2.location.hash = "#/gym/wrong";
+  s2.scrollTo = () => {};
+  loadScripts(s2, [
+    "public/assets/js/core/common.js",
+    ...["grammar", "reading", "listening", "writing", "speaking"].map((name) => "public/data/" + name + ".js"),
+  ]);
+  const question = { id: "l1-p0-i10", src: "Listening · Đề 1", q: "Which room is the meeting in?", o: ["Room 401", "Room 104"], a: 0 };
+  const legacy = [null, { id: "l1-p0-i9", removed: true }, question];
+  s2.FA.store.set("wrongbook", legacy);
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  assert.match(app.innerHTML, /Sổ câu sai \(1\)/);
+  assert.match(body.innerHTML, /Which room is the meeting in\?/);
+  assert.match(body.innerHTML, /Đáp án: Room 401/);
+  assert.equal(s2.FA.store.get("wrongbook", []).length, legacy.length);
+  s2.FA.addWrong({ ...question, id: "l1-p0-i9" });
+  assert.equal(s2.FA.getWrongbook().length, 2);
+});
+
+test("Sổ câu sai mở đúng lượt đã lưu và cuộn đến câu Listening bị sai", () => {
+  const s2 = createSandbox();
+  const control = { onclick: null };
+  let focused = false, scrolled = false;
+  const target = { dataset: { reviewQuestion: "l1-p0-i10" }, classList: { add() {} }, setAttribute() {}, focus() { focused = true; }, scrollIntoView() { scrolled = true; } };
+  const body = { innerHTML: "", querySelector: () => control, querySelectorAll: () => [] };
+  const review = { innerHTML: "", querySelectorAll: (sel) => sel === "[data-review-question]" ? [target] : [] };
+  const app = { innerHTML: "", querySelector: (sel) => sel === "#gymBody" ? body : sel === "#review" ? review : control, querySelectorAll: () => [] };
+  s2.document.getElementById = (id) => id === "app" ? app : null;
+  s2.location.hash = "#/gym/wrong";
+  s2.scrollTo = () => {};
+  loadScripts(s2, [
+    "public/assets/js/core/common.js",
+    ...["grammar", "reading", "listening", "writing", "speaking"].map((name) => "public/data/" + name + ".js"),
+  ]);
+  const question = s2.FA_LISTENING[0].parts[0].items[10];
+  const item = { ...question, id: target.dataset.reviewQuestion, src: "Listening · Đề 1" };
+  const ans = Array(17).fill(null);
+  ans[10] = "Room 104";
+  const savedAt = s2.FA.saveAttempt("listening", "l1", 6, { ans: ans.slice() });
+  ans[10] = "Room 140";
+  s2.FA.saveAttempt("listening", "l1", 8, { ans: ans.slice() });
+  ans[10] = "Room 401";
+  s2.FA.saveAttempt("listening", "l1", 10, { ans: ans.slice() });
+  s2.FA.addWrong(item);
+  s2.FA.addWrong({ ...item, attemptAt: savedAt });
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  const url = "#/gym/wrong/" + item.id + "/" + savedAt;
+  assert.ok(body.innerHTML.includes('href="' + url + '"'));
+  s2.location.hash = url;
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  assert.match(app.innerHTML, /Về Sổ câu sai/);
+  assert.match(review.innerHTML, /class="opt wrong"[^>]*><span[^>]*>[^<]+<\/span>Room 104/);
+  assert.ok(focused && scrolled);
+  assert.equal(s2.FA.getAttempts("listening", "l1").length, 3);
 });
 
 test("FA.roadmap: ngưỡng mục tiêu, tick lộ trình theo bài đã làm, chuỗi ngày và giới hạn đề Free", () => {

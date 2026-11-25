@@ -13,15 +13,15 @@
 
   const SKILLS = {
     speaking: { name: "Speaking", icon: "🎙️", data: window.FA_SPEAKING, time: 12, meta: "4 part · ghi âm trên trình duyệt",
-      desc: "Đồng hồ đếm ngược như phòng thi, máy đọc câu hỏi, bạn thu âm câu trả lời rồi nghe lại và so với bài mẫu." },
+      desc: "• Thời gian đếm ngược như phòng thi, máy đọc câu hỏi<br>• Điểm chấm dựa trên thu âm câu trả lời của bạn<br>• Bạn có thể nghe lại và so với bài mẫu" },
     listening: { name: "Listening", icon: "🎧", data: window.FA_LISTENING, time: 40, meta: "17 câu hỏi (25 ý) · 40 phút",
-      desc: "Đủ 4 part: 13 câu ngắn, 4 người nói, hội thoại, 2 bài độc thoại. Mỗi đoạn nghe tối đa 2 lần, có transcript tô câu chốt." },
+      desc: "• Đủ 4 part: 13 câu ngắn, 4 người nói, hội thoại, 2 bài độc thoại<br> • Mỗi đoạn nghe tối đa 2 lần, có transcript tô đậm câu chủ chốt" },
     grammar: { name: "Grammar & Vocabulary", short: "Grammar", icon: "🧩", data: window.FA_GRAMMAR, time: 25, meta: "50 câu trắc nghiệm · 25 phút",
-      desc: "25 câu ngữ pháp + 25 câu từ vựng, chấm ngay. Sai câu nào hiện luôn giải thích vì sao." },
+      desc: "• Format: 25 câu ngữ pháp + 25 câu từ vựng<br>• Có lời giải cho các câu sai và chưa làm" },
     reading: { name: "Reading", icon: "📖", data: window.FA_READING, time: 35, meta: "4–5 part · 35 phút",
-      desc: "Điền từ, sắp xếp câu, ghép ý kiến, chọn tiêu đề đoạn văn. Chấm ngay kèm giải thích." },
+      desc: "• Điền từ, sắp xếp câu, ghép ý kiến, chọn tiêu đề đoạn văn <br> • Có lời giải cho các câu sai và chưa làm" },
     writing: { name: "Writing", icon: "✍️", data: window.FA_WRITING, time: 50, meta: "4 part · 50 phút",
-      desc: "Đủ 4 part như thi thật, đếm từ tự động. Nộp xong xem bài mẫu đặt cạnh bài mình và điểm ước lượng." },
+      desc: "• Đủ 4 part như thi thật, đếm từ tự động <br>• Có thể xem bài mẫu và điểm ước lượng sau khi nộp bài" },
   };
   const short = (k) => SKILLS[k].short || SKILLS[k].name;
 
@@ -97,7 +97,11 @@
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
     if (!parts.length) return viewHub();
     if (parts[0] === "progress") return viewProgress();
-    if (parts[0] === "gym") return needLogin() ? viewLogin(null, null) : parts[1] === "wrong" ? viewGym(true) : viewGym(false);
+    if (parts[0] === "gym") {
+      if (needLogin()) return viewLogin(null, null);
+      if (parts[1] !== "wrong") return viewGym(false);
+      return parts[2] ? viewWrongAttempt(parts[2], parts[3]) : viewGym(true);
+    }
     if (parts[0] === "mock") {
       const m = parts[1] && MOCKS.find((x) => x.id === parts[1]);
       if (!m) return viewMockList();
@@ -265,7 +269,7 @@
 
   function viewHub() {
     view = "hub";
-    const wrongN = FA.store.get("wrongbook", []).length;
+    const wrongN = FA.getWrongbook().length;
     const stats = progressStats();
     const ov = stats.overall("latest");
     const totalTests = EXAM_ORDER.reduce((n, k) => n + SKILLS[k].data.length, 0);
@@ -369,7 +373,7 @@
     view = "progress";
     const stats = progressStats();
     let mode = "latest";
-    const wrongN = FA.store.get("wrongbook", []).length;
+    const wrongN = FA.getWrongbook().length;
     const fcN = Object.keys(FA.store.get("fc-known", {})).length;
     const tipN = FA.store.get("tips-done", []).length;
     const ovNext = (ov) => {
@@ -533,7 +537,7 @@
       app.innerHTML = `
       <div class="page"><div class="container">
         <div class="crumbs"><a href="#/">← Kỹ năng</a> / ${esc(S.name)}</div>
-        <h1 class="page-title">${S.icon} Chọn đề ${esc(short(skill))}</h1>
+        <h1 class="page-title">${S.icon}  ${esc(short(skill))}</h1>
         <p class="page-sub">${S.desc}</p>
         ${needLogin() ? LOGIN_NOTE : ""}
         <div class="card list-summary">
@@ -566,7 +570,7 @@
     reading: ["5 part: điền từ, 2 bài sắp xếp câu, ghép ý kiến, chọn tiêu đề.", "Đồng hồ 35 phút. Chuyển part bằng thanh số ở dưới.", "Part 2–3: dùng nút ▲ ▼ để đổi vị trí câu.", "Nộp bài xong có điểm thang 0–50 và đáp án từng ý."],
     listening: ["17 câu hỏi (25 ý chấm điểm) chia 4 part như đề thật: Part 1 13 câu, Part 2–3 mỗi part 1 câu 4 ý, Part 4 2 câu × 2 ý.", "Mỗi đoạn nghe được phát tối đa 2 lần (giọng đọc máy của trình duyệt).", "Đồng hồ 40 phút. Nên dùng tai nghe và Chrome/Edge để giọng đọc rõ nhất.", "Nộp xong xem transcript với câu chốt đáp án được tô sáng."],
     writing: ["4 part: trả lời ngắn, điền form, chat 3 câu, viết 2 email.", "Đồng hồ 50 phút, đếm từ tự động cho từng câu.", "Nộp xong có điểm ước lượng tự động + bài mẫu đặt cạnh bài của bạn.", "Writing thật do giám khảo chấm; điểm ở đây là ước lượng tự động dựa trên độ dài, cấu trúc, từ nối — chỉ để tham khảo.", "Bài bị trừ điểm khi sai chính tả, sai ngữ pháp (kiểm tra bằng Harper — cần mạng, tải ~8 MB lần đầu, chạy trên máy bạn) hoặc trả lời lạc đề/thiếu ý so với câu hỏi (kiểm tra từ khóa offline, hoặc do AI chấm nếu đã cấu hình — khi đó bài viết được gửi tới máy chủ AI)."],
-    speaking: ["4 part, khoảng 12 phút. Máy đọc câu hỏi, sau đó đồng hồ đếm ngược thời gian nói.", "Trình duyệt sẽ xin quyền micro để thu âm. Bản ghi chỉ nằm trên máy bạn, không gửi đi đâu.", "Part 1: 30 giây/câu · Part 2–3: 45 giây/câu · Part 4: 1 phút chuẩn bị + 2 phút nói.", "Xong bài, nghe lại từng câu, so với bài mẫu rồi tự chấm từng part theo thang Aptis: mỗi part 0–5 điểm, tối đa 20 (web quy ra thang 50)."],
+    speaking: ["4 part, khoảng 12 phút. Máy đọc câu hỏi, sau đó đồng hồ đếm ngược thời gian nói.", "Trình duyệt sẽ xin quyền micro để thu âm. Khi bật AI, bản nhận dạng giọng nói được gửi đi để chấm.", "Part 1: 30 giây/câu · Part 2–3: 45 giây/câu · Part 4: 1 phút chuẩn bị + 2 phút nói.", "Xong bài, xem điểm AI và nghe lại câu trả lời. Câu bỏ trống nhận 0 điểm và được đánh dấu Chưa hoàn thành."],
   };
   /* ---------- lưu nháp bài làm dở (chỉ cục bộ trên máy, tối đa 24 giờ) ---------- */
   const DRAFT_TTL = 24 * 3600 * 1000;
@@ -655,6 +659,11 @@
     if (FA.roadmap) FA.roadmap.celebrateStages();
   }
 
+  function saveExamAttempt(o, extra) {
+    o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans, ...extra });
+    (o.wrongItems || []).forEach((item) => FA.addWrong({ ...item, attemptAt: o.attemptAt }));
+  }
+
   function renderResult(o) {
     // o: {skill, test, score, cefr, note, breakdown:[{label,got,total}], review(el)}
     running = false;
@@ -667,9 +676,9 @@
       prevStats = skillPrev(o.skill); // chụp lại trước khi lưu để biết có kỷ lục / lên bậc không
       if (FA.roadmap) FA.roadmap.primeSeen();
       clearDraft(o.skill, o.test.id);
-      o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans });
+      saveExamAttempt(o);
     }
-    /* ăn mừng khi điểm đã "chốt": trắc nghiệm chốt ngay; Writing còn chờ Harper/AI trừ điểm, Speaking tự chấm chờ người dùng kéo thanh
+    /* ăn mừng khi điểm đã "chốt": trắc nghiệm chốt ngay; Writing còn chờ Harper/AI trừ điểm
        → đợi 2,5 giây sau lần cập nhật điểm cuối cùng, và chỉ báo một lần cho mỗi lượt nộp */
     let celebT = null, celebrated = false;
     const armCeleb = (ms) => {
@@ -677,7 +686,7 @@
       clearTimeout(celebT);
       celebT = setTimeout(() => { celebrated = true; celebrateResult(o.skill, o.score, prevStats); }, ms);
     };
-    if (!o.selfScore) armCeleb(o.skill === "writing" ? 2500 : 900);
+    if (!o.speakPending) armCeleb(o.skill === "writing" ? 2500 : 900);
     const titleOf = (s) => (s >= 40 ? "Xuất sắc! 🎉" : s >= 26 ? "Làm tốt lắm! 💪" : "Cố lên, luyện thêm nhé! 🔥");
     const cefrHTML = (c) => (c ? `<span class="cefr-badge">${c}</span><span class="muted">bậc CEFR ước lượng</span>` : `<span class="muted">Grammar & Vocabulary không quy đổi CEFR riêng</span>`);
     const breakHTML = (bd) => (bd || []).map((b) => `
@@ -697,7 +706,8 @@
             </div>
           </div>
           <div class="row mt-3">
-            ${o.replay ? `<button class="btn btn-outline" id="backHist">← Về lịch sử</button>` : ""}
+            ${o.reviewQuestion ? '<a class="btn btn-outline" href="#/gym/wrong">← Về Sổ câu sai</a>'
+              : o.replay ? '<button class="btn btn-outline" id="backHist">← Về lịch sử</button>' : ""}
             <button class="btn btn-primary" id="retryBtn">Làm lại đề này</button>
             <a class="btn btn-outline" href="#/${o.skill}">Chọn đề khác</a>
             ${["grammar", "reading", "listening"].includes(o.skill) ? `<a class="btn btn-ghost" href="#/gym/wrong">Ôn Sổ câu sai</a>` : ""}
@@ -727,6 +737,15 @@
     const rv = app.querySelector("#review");
     watchReports(rv, o.skill, o.test);
     o.review(rv, update);
+    if (o.reviewQuestion) {
+      const target = Array.from(rv.querySelectorAll("[data-review-question]")).find((el) => el.dataset.reviewQuestion === o.reviewQuestion);
+      if (target) {
+        target.classList.add("review-target");
+        target.setAttribute("tabindex", "-1");
+        target.focus({ preventScroll: true });
+        target.scrollIntoView({ block: "start" });
+      }
+    }
   }
 
   /* gắn nút "⚠️ Báo lỗi" vào từng thẻ câu hỏi ở phần xem lại (kể cả khi phần xem lại vẽ lại, vd. đổi tab lọc) */
@@ -823,15 +842,17 @@
     function finish() {
       clearRun();
       let g = 0, v = 0;
+      const wrongItems = [];
       Q.forEach((q, k) => {
-        const ok = st.ans[k] === q.a;
+        const answer = st.ans[k];
+        const ok = answer === q.a;
         if (ok) q.sec === "grammar" ? g++ : v++;
-        else if (!replay) FA.addWrong({ id: `${test.id}-q${k}`, src: "Grammar · " + test.title, q: q.q, o: q.o, a: q.a, e: q.e, instr: q.instr });
+        else if (!replay && answer != null) wrongItems.push({ id: `${test.id}-q${k}`, src: "Grammar · " + test.title, q: q.q, o: q.o, a: q.a, e: q.e, instr: q.instr });
       });
       const nG = Q.filter((q) => q.sec === "grammar").length;
       const score = Math.round(((g + v) / Q.length) * 50);
       renderResult({
-        skill: "grammar", test, score, cefr: "", replay: !!replay, attemptAt: replay && replay.at,
+        skill: "grammar", test, score, cefr: "", replay: !!replay, attemptAt: replay && replay.at, reviewQuestion: replay && replay.reviewQuestion, wrongItems,
         note: `Bạn đúng <b>${g + v}/${Q.length}</b> câu (mỗi câu 1 điểm). Điểm Grammar & Vocabulary <b>không cộng vào tổng Overall</b> (chỉ tính 4 kỹ năng), nhưng được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc CEFR.`,
         ans: st.ans.map((a, k) => optText(Q[k].o, a)),
         breakdown: [{ label: "Ngữ pháp", got: g, total: nG }, { label: "Từ vựng", got: v, total: Q.length - nG }],
@@ -842,7 +863,7 @@
               Q.map((q, k) => {
                 const ok = st.ans[k] === q.a;
                 if (filter === "wrong" && ok) return "";
-                return `<div class="q-card mb-2">
+                return `<div class="q-card mb-2" data-review-question="${test.id}-q${k}">
                   <div class="q-part">Câu ${k + 1} · ${q.sec === "grammar" ? "Grammar" : "Vocabulary"} ${ok ? "✅" : "❌"}</div>
                   ${q.instr ? `<div class="q-instr">${esc(q.instr)}</div>` : ""}
                   <div class="q-text">${esc(q.q)}</div>
@@ -871,13 +892,13 @@
     return esc(text).replace(/\{(\d+)\}/g, (_, k) => renderGap(+k, gaps[+k])).replace(/\n/g, "<br>");
   }
 
-  function readingPartHTML(p, ans, review) {
+  function readingPartHTML(p, ans, review, questionPrefix) {
     const L = "ABCDEFGH";
     if (p.type === "gap") {
       return `<div class="passage">${fillGaps(p.text, p.gaps, (k, g) => {
         if (review) {
           const ok = ans[k] === g.a;
-          return `<b style="color:${ok ? "var(--green)" : "var(--red)"}">[${k + 1}] ${esc(ans[k] != null ? g.o[ans[k]] : "—")}</b>${ok ? "" : ` <span class="fix">→ ${esc(g.o[g.a])}</span>`}`;
+          return `<b data-review-question="${questionPrefix}-g${k}" style="color:${ok ? "var(--green)" : "var(--red)"}">[${k + 1}] ${esc(ans[k] != null ? g.o[ans[k]] : "—")}</b>${ok ? "" : ` <span class="fix">→ ${esc(g.o[g.a])}</span>`}`;
         }
         return `<select class="sel inline" data-gap="${k}"><option value="">(${k + 1}) chọn…</option>${g.o.map((o, j) => `<option value="${j}" ${ans[k] === j ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
       })}</div>${review ? p.gaps.map((g, k) => `<div class="explain"><b>(${k + 1})</b> ${esc(g.e)}</div>`).join("") : ""}`;
@@ -995,19 +1016,23 @@
     function finish() {
       clearRun();
       let got = 0, total = 0;
+      const wrongItems = [];
       const breakdown = P.map((p, i) => {
         const c = readingCorrect(p, st.ans[i]), t = readingItems(p);
         got += c; total += t;
-        if (p.type === "gap" && !replay) p.gaps.forEach((g, k) => { if (st.ans[i][k] !== g.a) FA.addWrong(gapItem(test, i, p, k)); });
+        if (p.type === "gap" && !replay) p.gaps.forEach((g, k) => {
+          const answer = st.ans[i][k];
+          if (answer != null && answer !== g.a) wrongItems.push(gapItem(test, i, p, k));
+        });
         return { label: p.title.split("·")[0].trim(), got: c, total: t };
       });
       const score = Math.round((got / total) * 50);
       renderResult({
-        skill: "reading", test, score, cefr: FA.toCEFR("reading", (got / total) * 50), breakdown, replay: !!replay, attemptAt: replay && replay.at,
+        skill: "reading", test, score, cefr: FA.toCEFR("reading", (got / total) * 50), breakdown, replay: !!replay, attemptAt: replay && replay.at, reviewQuestion: replay && replay.reviewQuestion, wrongItems,
         ans: st.ans.map((a, i) => (P[i].type === "gap" ? a.map((x, k) => optText(P[i].gaps[k].o, x)) : a.slice())),
         note: `Bạn đúng <b>${got}/${total}</b> ý → quy ra thang 50 (đúng ÷ ${total} × 50). Bậc CEFR ước lượng theo ngưỡng quy đổi từ bảng tham khảo 25 câu (≈ B1 từ 52%, B2 từ 76%, C từ 92%), không phải kết quả chính thức.`,
         review(el) {
-          el.innerHTML = P.map((p, i) => `<div class="q-card mb-2"><div class="q-part">${esc(p.title)} · ${readingCorrect(p, st.ans[i])}/${readingItems(p)}</div>${readingPartHTML(p, st.ans[i], true)}</div>`).join("");
+          el.innerHTML = P.map((p, i) => `<div class="q-card mb-2"><div class="q-part">${esc(p.title)} · ${readingCorrect(p, st.ans[i])}/${readingItems(p)}</div>${readingPartHTML(p, st.ans[i], true, `${test.id}-p${i}`)}</div>`).join("");
         },
       });
     }
@@ -1043,9 +1068,7 @@
       <div class="wave ${active ? "on" : ""}" data-wave="${id}">${"<i></i>".repeat(12)}</div></div>`;
   }
 
-  function runListening(test, replay, draft) {
-    clearRun();
-    // tạo danh sách màn hình
+  function listeningScreens(test) {
     const screens = [];
     test.parts.forEach((p, pi) => {
       if (p.type === "mcq") p.items.forEach((it, k) => screens.push({ kind: "mcq", p, pi, it, k, label: `Câu ${k + 1}` }));
@@ -1053,6 +1076,12 @@
       if (p.type === "conv") screens.push({ kind: "conv", p, pi, label: "Câu 15" });
       if (p.type === "mono") p.talks.forEach((tk, k) => screens.push({ kind: "mono", p, pi, tk, k, label: `Câu ${16 + k}` }));
     });
+    return screens;
+  }
+
+  function runListening(test, replay, draft) {
+    clearRun();
+    const screens = listeningScreens(test);
     const st = { i: 0, plays: {}, ans: screens.map((s) => (s.kind === "mcq" ? null : s.kind === "speakers" ? Array(4).fill(null) : s.kind === "conv" ? Array(s.p.statements.length).fill(null) : Array(s.tk.questions.length).fill(null))), playing: false };
     const restoreAns = (sv) => screens.map((s, i) => {
       const v = sv[i];
@@ -1148,12 +1177,13 @@
       clearRun();
       const parts = {};
       let got = 0, total = 0;
+      const wrongItems = [];
       screens.forEach((s, i) => {
         const a = st.ans[i];
         let c = 0, t = 0;
         if (s.kind === "mcq") {
           t = 1; c = a === s.it.a ? 1 : 0;
-          if (!c && !replay) FA.addWrong({ id: `${test.id}-p${s.pi}-i${s.k}`, src: "Listening · " + test.title, q: s.it.q, o: s.it.o, a: s.it.a, e: s.it.e, script: s.it.script });
+          if (!replay && a != null && !c) wrongItems.push({ id: `${test.id}-p${s.pi}-i${s.k}`, src: "Listening · " + test.title, q: s.it.q, o: s.it.o, a: s.it.a, e: s.it.e, script: s.it.script });
         } else if (s.kind === "speakers") { t = 4; c = s.p.speakers.filter((sp, k) => a[k] === sp.a).length; }
         else if (s.kind === "conv") { t = s.p.statements.length; c = s.p.statements.filter((x, k) => a[k] === x.a).length; }
         else { t = s.tk.questions.length; c = s.tk.questions.filter((q, k) => a[k] === q.a).length; }
@@ -1163,7 +1193,7 @@
       });
       const score = Math.round((got / total) * 50);
       renderResult({
-        skill: "listening", test, score, cefr: FA.toCEFR("listening", (got / total) * 50), breakdown: Object.values(parts), replay: !!replay, attemptAt: replay && replay.at,
+        skill: "listening", test, score, cefr: FA.toCEFR("listening", (got / total) * 50), breakdown: Object.values(parts), replay: !!replay, attemptAt: replay && replay.at, reviewQuestion: replay && replay.reviewQuestion, wrongItems,
         ans: screens.map((s, i) => (s.kind === "mcq" ? optText(s.it.o, st.ans[i]) : s.kind === "mono" ? st.ans[i].map((x, k) => optText(s.tk.questions[k].o, x)) : st.ans[i].slice())),
         note: `Bạn đúng <b>${got}/${total}</b> ý (mỗi ý 1 điểm) → quy ra thang 50. Bậc CEFR ước lượng theo ngưỡng tham khảo: B1 từ 12 ý đúng, B2 từ 17, C từ 21 (trên 25 ý) — không phải kết quả chính thức.`,
         review(el) {
@@ -1186,7 +1216,7 @@
                 <div class="explain"><b>Giải thích:</b> ${esc(q.e)}</div></div>`).join("") +
                 `<div class="transcript">${transcriptHTML(s.tk.script, s.tk.questions.map((q) => q.e))}</div>`;
             }
-            return `<div class="q-card mb-2"><div class="q-part">${s.label} · ${esc(s.p.title)}</div>${inner}</div>`;
+            return `<div class="q-card mb-2"${s.kind === "mcq" ? ` data-review-question="${test.id}-p${s.pi}-i${s.k}"` : ""}><div class="q-part">${s.label} · ${esc(s.p.title)}</div>${inner}</div>`;
           }).join("");
         },
       });
@@ -1540,12 +1570,12 @@
     function stopRec() { stopMeter(); if (recorder && recorder.state !== "inactive") recorder.stop(); recorder = null; }
     cleanup.push(stopRec);
 
-    /* Nhận dạng giọng nói (Web Speech API, Chrome/Edge) chạy song song với ghi âm → st.trans[bước]; cuối bài gửi chữ cho AI chấm (grading/speaking-grader.js).
-       Không có AI / trình duyệt không hỗ trợ thì bỏ qua, bài vẫn tự chấm như cũ. */
+    /* Nhận dạng giọng nói chạy song song với ghi âm; cuối bài gửi bản chữ cho AI chấm. */
     const SRc = FA.speakAI && FA.speakAI.SR && FA.speakAI.SR();
     const sttOn = () => !!(SRc && FA.speakAI.enabled());
     st.trans = [];
-    let recog = null, recogOn = false;
+    const speech = [], silence = [], recognitionFailed = [];
+    let recog = null, recogOn = false, finishing = false;
     function startSTT(idx) {
       if (!sttOn()) return;
       let finals = "";
@@ -1554,6 +1584,7 @@
       const mk = () => {
         const r = new SRc();
         r.lang = "en-US"; r.continuous = true; r.interimResults = true;
+        r.onspeechstart = () => { speech[idx] = true; };
         r.onresult = (e) => {
           let interim = "";
           for (let k = e.resultIndex; k < e.results.length; k++) {
@@ -1564,7 +1595,11 @@
         };
         r.onerror = (e) => {
           if (e.error && e.error !== "aborted") st.sttErr = e.error; // ghi lại mã lỗi để báo người dùng (no-speech = im lặng quá lâu)
-          if (["not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(e.error)) recogOn = false;
+          if (e.error === "no-speech") silence[idx] = true;
+          if (["not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(e.error)) {
+            recognitionFailed[idx] = true;
+            recogOn = false;
+          }
         };
         r.onend = () => { if (recogOn && recog === r) { try { mk(); } catch (e) { recogOn = false; } } }; // Chrome tự ngắt khi im lặng → bật lại cho tới khi hết câu
         recog = r;
@@ -1578,7 +1613,7 @@
             // Trình duyệt không nhận track trực tiếp: dùng mic mặc định như trước.
           }
         }
-        try { r.start(); } catch (e) { recogOn = false; }
+        try { r.start(); } catch (e) { recognitionFailed[idx] = true; recogOn = false; }
       };
       mk();
     }
@@ -1661,6 +1696,8 @@
     render();
 
     async function finish() {
+      if (finishing) return;
+      finishing = true;
       const hash0 = location.hash;
       const sttUsed = !replay && sttOn();
       stopRec();
@@ -1686,7 +1723,7 @@
             ? "AI chưa chấm vì Brave không hỗ trợ nhận dạng giọng nói — hãy làm bài bằng Chrome hoặc Edge để AI chấm Speaking."
             : "AI chưa chấm vì trình duyệt này không hỗ trợ nhận dạng giọng nói — hãy làm bài bằng Chrome hoặc Edge để AI chấm Speaking.";
         if (sttUsed) {
-          if (!trans.some((t) => FA.speakAI.words(t) >= 3)) {
+          if (!trans.some((t) => FA.speakAI.words(t) > 0)) {
             aiNote = st.sttErr === "not-allowed" || st.sttErr === "service-not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói bị lỗi kết nối nên AI chưa chấm được (kiểm tra mạng; trình duyệt như Brave, Opera, Cốc Cốc thường không hỗ trợ dịch vụ này — hãy dùng Chrome hoặc Edge)." : st.sttErr === "service-not-allowed" || st.sttErr === "language-not-supported" ? `Trình duyệt chặn dịch vụ nhận dạng giọng nói (mã lỗi: ${st.sttErr}) nên AI chưa chấm được — với Edge, bật Windows Settings → Privacy & security → Speech → Online speech recognition, hoặc dùng Chrome.`
               : "Không nhận dạng được lời nói nào nên AI chưa chấm được" + (st.sttErr ? ` (mã lỗi: ${st.sttErr})` : " — hãy nói rõ, to và gần micro hơn") + ".";
           } else {
@@ -1701,62 +1738,75 @@
               try {
                 ai = await FA.speakAI.grade(steps, trans);
                 ai.model = FA.ai.model("speaking");
-                if (ai.rates.some((x) => x == null)) aiNote += " Một số part AI chưa chấm được (lỗi/quá tải) nên giữ điểm mặc định — bạn tự chấm bù.";
               } catch (e) {
-                aiNote = `AI chấm lỗi (${(e && e.message) || "không rõ"}) nên dùng điểm tự chấm.`;
+                aiNote = `AI chưa chấm được bài (${(e && e.message) || "không rõ"}).`;
                 if (FA.plan) FA.plan.refundAI();
               }
             }
             if (location.hash !== hash0) return;
           }
         }
-        /* Thang chấm Speaking: 4 part, mỗi part 0–5 → tối đa 20, quy ra thang 50 (FA.speakingTo50) */
-        const PARTS = [["Part 1", "3 câu về bản thân"], ["Part 2", "mô tả 1 tranh + 2 câu hỏi"], ["Part 3", "so sánh 2 tranh + 2 câu hỏi"], ["Part 4", "3 câu về chủ đề trừu tượng (nói 2 phút)"]];
-        // lượt chấm cũ dùng 5 tiêu chí (1–5) → quy về trung bình cho cả 4 part; thiếu dữ liệu → 3/part
-        const normRates = (a) => {
-          const nums = (Array.isArray(a) ? a : []).filter((x) => typeof x === "number" && isFinite(x));
-          const cl = (x) => Math.max(0, Math.min(5, Math.round(x)));
-          if (nums.length === PARTS.length) return nums.map(cl);
-          if (nums.length) { const m = cl(nums.reduce((p, c) => p + c, 0) / nums.length); return PARTS.map(() => m); }
-          return PARTS.map(() => 3);
+        const legacy = replay && !Array.isArray(sv.responses);
+        const responses = replay
+          ? (legacy ? trans.map((t) => t.trim() ? true : null) : sv.responses)
+          : steps.map((_, i) => !!(trans[i].trim() || speech[i] || (recs[i] && (!silence[i] || recognitionFailed[i]))));
+        const gradedItems = ai?.items || {};
+        // Bản cũ tạo sẵn điểm 0 cho bản chép lời dưới ba từ, kể cả khi AI không chấm câu đó.
+        const items = legacy ? Object.fromEntries(Object.entries(gradedItems).filter(([i]) => FA.speakAI.words(trans[i]) >= 3)) : gradedItems;
+        const result = FA.speakAI.summarize(steps, responses, items);
+        const canRate = result.rates.map((_, k) => steps.some((step, i) => step.part === k + 1 && result.questions[i].status !== "blank"));
+        const manualRating = (rate, k) => canRate[k] ? Math.max(1, Math.min(5, Math.round(rate))) : 0;
+        const manual = Array.isArray(sv.manualRates) && sv.manualRates.length === 4
+          && sv.manualRates.every((n) => Number.isFinite(n) && n >= 0 && n <= 5);
+        const rates = manual ? sv.manualRates.map(manualRating) : legacy && sv.rates?.length === 4 ? sv.rates : result.rates;
+        const score = legacy && !manual ? replay.score : FA.speakingTo50(rates.reduce((sum, rate) => sum + rate, 0));
+        const ans = legacy ? { ...sv, rates } : { rates, responses };
+        if (trans.some(Boolean)) ans.trans = trans;
+        if (ai) ans.ai = ai;
+        const breakdown = (values) => values.map((rate, k) => ({ label: `Part ${k + 1}`, got: Math.round(rate * 100) / 100, total: 5 }));
+        const manualNote = "Điểm tổng Speaking dùng điểm bạn tự chấm. Điểm AI và trạng thái từng câu hiển thị bên dưới.";
+        const questionResult = (q) => {
+          if (q.status === "blank") return '<b>0/5</b> · <span class="pill gray">Chưa hoàn thành</span>';
+          if (q.status === "graded") return `<b>AI chấm: ${q.score}/5</b>${q.comment ? ` — ${esc(q.comment)}` : ""}`;
+          if (q.status === "ungraded") return '<span class="pill gray">AI chưa chấm được</span>';
+          return '<span class="muted">Lượt cũ chưa lưu kết quả AI cho câu này.</span>';
         };
-        const rates = normRates((replay && replay.ans && replay.ans.rates) || FA.store.get("speakRate:" + test.id, null));
-        if (!replay && ai) ai.rates.forEach((x, k) => { if (x != null) rates[k] = x; }); // điểm AI điền sẵn vào thanh chấm, part nào AI không chấm được giữ mặc định
-        const mkAns = () => { const a = { rates: rates.slice() }; if (trans.some(Boolean)) a.trans = trans; if (ai) a.ai = ai; return a; }; // lưu kèm bản nhận dạng + kết quả AI để xem lại không cần gọi AI
-        const raw = () => rates.reduce((a, b) => a + b, 0);
-        const calc = () => FA.speakingTo50(raw());
-        const breakdown = () => PARTS.map((p, k) => ({ label: p[0], got: rates[k], total: 5 }));
         renderResult({
-          skill: "speaking", test, score: calc(), cefr: FA.toCEFR("speaking", calc()), replay: !!replay, attemptAt: replay && replay.at, ans: mkAns(), selfScore: !ai,
-          note: (ai
-            ? `Điểm Speaking do AI (${esc(ai.model || "")}) chấm sẵn từ bản nhận dạng giọng nói của bạn: 4 part, mỗi part 0–5 điểm (tối đa 20), quy ra thang 50 (×2,5). AI không nghe được âm thanh nên <b>không chấm phát âm</b>, và nhận dạng giọng nói có thể nghe sai chữ — hãy nghe lại bản ghi và kéo thanh bên dưới để chỉnh nếu thấy chưa đúng.`
-            : "Điểm Speaking là điểm TỰ CHẤM theo thang Aptis: 4 part, mỗi part 0–5 điểm (tối đa 20), web quy ra thang 50 (×2,5). Nghe lại bản ghi, so với bài mẫu rồi kéo thanh đánh giá bên dưới — điểm sẽ cập nhật.") + (aiNote ? `<br>${esc(aiNote)}` : ""),
-          breakdown: breakdown(),
+          skill: "speaking", test, score, cefr: FA.toCEFR("speaking", score), replay: !!replay, attemptAt: replay && replay.at, ans, speakPending: !manual && !legacy && result.pending,
+          note: (manual ? manualNote : legacy ? "Điểm của lượt làm trước được giữ theo lịch sử."
+            : "AI chấm từng câu từ bản nhận dạng giọng nói. Câu bỏ trống tính 0 điểm."
+              + (result.pending ? " Điểm tổng đang tạm tính từ các câu đã chấm được." : "")) + (aiNote ? `<br>${esc(aiNote)}` : ""),
+          breakdown: breakdown(rates),
           review(el, update) {
-            el.innerHTML = `<div class="q-card mb-2"><div class="q-part">${ai ? "Điểm từng part (AI chấm sẵn — bạn có thể chỉnh, 0–5 điểm)" : "Tự chấm từng part (0–5 điểm)"}</div>
-              <div class="muted mb-2" style="font-size:.88rem">Tiêu chí: khả năng diễn đạt (trôi chảy, từ vựng, ngữ pháp, phát âm) và độ chính xác, đúng trọng tâm của câu trả lời.<br><b>0</b> không trả lời/không hiểu được · <b>1–2</b> rất hạn chế · <b>3</b> trả lời được nhưng còn nhiều lỗi · <b>4</b> khá tốt · <b>5</b> tốt, tự nhiên.</div>
-              ${PARTS.map((p, k) => `<div class="calc-row"><span><b>${p[0]}</b> · ${p[1]}</span><input type="range" min="0" max="5" value="${rates[k]}" data-r="${k}"><b class="lv" data-rv="${k}">${rates[k]}</b><span></span></div>`).join("")}
-              <div class="row mt-2"><b>${ai ? "Điểm" : "Điểm tự chấm"}: <span id="selfRaw">${raw()}</span>/${FA.SPEAKING_MAX_RAW} → <span id="selfScore">${calc()}</span>/50</b> · <span id="selfCefr" class="pill">${FA.toCEFR("speaking", calc())}</span><div class="spacer"></div><button class="btn btn-primary btn-sm" id="saveRate">Lưu điểm</button></div></div>` +
-              steps.map((s, i) => `<div class="q-card mb-2"><div class="q-part">${s.label}</div>
+            const draft = rates.map(manualRating);
+            const manualScore = () => FA.speakingTo50(draft.reduce((sum, rate) => sum + rate, 0));
+            el.innerHTML = `<details class="q-card mb-2" ${!manual && result.pending ? "open" : ""}>
+              <summary><b>Tự chấm Speaking</b></summary>
+              <p class="muted mt-1">Nghe lại bản ghi, rồi chọn điểm nguyên từ 1 đến 5 cho từng part. 1 là câu trả lời rất hạn chế, 3 là truyền đạt được ý chính, 5 là trả lời đầy đủ và rõ ràng. Part bỏ trống hoàn toàn giữ 0 điểm.</p>
+              ${draft.map((rate, k) => `<label class="calc-row"><b>Part ${k + 1}</b><input type="range" min="${canRate[k] ? 1 : 0}" max="5" step="1" value="${rate}" data-self-rate="${k}" ${canRate[k] ? "" : "disabled"}><output data-self-value="${k}">${rate}/5</output><span></span></label>`).join("")}
+              <div class="row mt-2"><b>Điểm tự chấm: <span data-self-total>${manualScore()}</span>/50</b><span class="spacer"></span><button class="btn btn-primary btn-sm" type="button" data-save-self ${canRate.some(Boolean) ? "" : "disabled"}>Lưu điểm tự chấm</button></div>
+            </details>` + steps.map((s, i) => `<div class="q-card mb-2"><div class="q-part">${s.label}</div>
                 ${[].concat(s.photo || [], s.photos || []).some((ph) => ph.img) ? `<div class="photo-thumbs">${[].concat(s.photo || [], s.photos || []).filter((ph) => ph.img).map((ph) => `<img src="${esc(ph.img)}" alt="${esc(ph.cap)}" loading="lazy">`).join("")}</div>` : ""}
                 ${s.qs ? `<ol style="padding-left:20px">${s.qs.map((q) => `<li><b>${esc(q)}</b></li>`).join("")}</ol>` : `<div class="q-text">${esc(s.q)}</div>`}
                 ${recs[i] ? `<div class="sample-label" style="color:var(--orange-700)">Bản ghi của bạn</div><audio controls src="${recs[i]}" style="width:100%;margin:6px 0"></audio>` : `<div class="muted" style="font-size:.9rem">${replay ? "Bản ghi âm không được lưu lại sau khi rời trang." : "Không có bản ghi cho câu này."}</div>`}
                 ${trans[i] ? `<div class="sample-label" style="margin-top:6px">Máy nghe được bạn nói (nhận dạng giọng nói)</div><div class="muted" style="font-size:.92rem;margin-bottom:6px">${esc(trans[i])}</div>` : ""}
-                ${ai && ai.items && ai.items[i] ? `<div style="font-size:.92rem;margin-bottom:6px"><b>AI chấm: ${ai.items[i].score}/5</b>${ai.items[i].comment ? ` — ${esc(ai.items[i].comment)}` : ""}</div>` : ""}
+                <div class="mb-1">${questionResult(result.questions[i])}</div>
                 <div class="sample"><div class="row"><span class="sample-label">Bài mẫu tham khảo</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-say="${i}">🔊 Nghe mẫu</button></div>${esc(s.s)}</div></div>`).join("");
-            el.querySelectorAll("[data-r]").forEach((r) => (r.oninput = () => {
-              rates[+r.dataset.r] = +r.value;
-              el.querySelector(`[data-rv="${r.dataset.r}"]`).textContent = r.value;
-              el.querySelector("#selfRaw").textContent = raw();
-              el.querySelector("#selfScore").textContent = calc();
-              el.querySelector("#selfCefr").textContent = FA.toCEFR("speaking", calc());
-            }));
-            el.querySelector("#saveRate").onclick = () => {
-              FA.store.set("speakRate:" + test.id, rates);
-              update({ score: calc(), cefr: FA.toCEFR("speaking", calc()), breakdown: breakdown(), ans: mkAns() }); // cập nhật đúng lượt làm bài này + vòng điểm phía trên (giữ nguyên bản nhận dạng + kết quả AI)
-              FA.toast(`Đã lưu điểm ${ai ? "" : "tự chấm"}: ${raw()}/${FA.SPEAKING_MAX_RAW} → ${calc()}/50`);
-            };
             el.querySelectorAll("[data-say]").forEach((b) => (b.onclick = () => FA.speak(steps[+b.dataset.say].s, { gender: "m" })));
+            const total = el.querySelector("[data-self-total]");
+            el.querySelectorAll("[data-self-rate]").forEach((input) => {
+              const k = Number(input.dataset.selfRate);
+              input.oninput = () => {
+                draft[k] = manualRating(Number(input.value), k);
+                el.querySelector(`[data-self-value="${k}"]`).textContent = `${draft[k]}/5`;
+                total.textContent = manualScore();
+              };
+            });
+            el.querySelector("[data-save-self]").onclick = () => {
+              const score = manualScore(), manualRates = draft.slice();
+              update({ score, cefr: FA.toCEFR("speaking", score), ans: { ...ans, manualRates }, breakdown: breakdown(manualRates), note: manualNote, speakPending: false });
+              FA.toast("Đã lưu điểm tự chấm Speaking.");
+            };
           },
         });
       }
@@ -1813,9 +1863,66 @@
   let gymKind = ""; // bộ lọc nguồn đang chọn ở Sổ câu sai
   const wrongKind = (w) => { const s = String(w.src || "").split("·")[0].trim(); return s || "Khác"; };
 
-  function viewGym(wrongMode) {
+  function wrongAttempt(item, requestedAt) {
+    const match = /^(g\d+)-q(\d+)$|^([rl]\d+)-p(\d+)-([gi])(\d+)$/.exec(item.id);
+    if (!match) return null;
+    const [, grammarId, grammarIndex, testId, partIndex, type, itemIndex] = match;
+    const skill = grammarId ? "grammar" : testId.startsWith("r") && type === "g" ? "reading"
+      : testId.startsWith("l") && type === "i" ? "listening" : "";
+    const test = SKILLS[skill]?.data.find((t) => t.id === (grammarId || testId));
+    if (!test) return null;
+
+    const pi = Number(partIndex), k = Number(grammarId ? grammarIndex : itemIndex);
+    const part = test.parts?.[pi];
+    const question = skill === "grammar" ? test.questions[k] : skill === "reading" ? part?.gaps?.[k] : part?.items?.[k];
+    if (!question || (skill !== "reading" && question.q !== item.q) || question.o[question.a] !== item.o[item.a]) return null;
+
+    const index = skill === "listening" ? listeningScreens(test).findIndex((s) => s.kind === "mcq" && s.pi === pi && s.k === k) : k;
+    const at = requestedAt ?? item.attemptAt;
+    const attempt = FA.getAttempts(skill, test.id).find((entry) => {
+      if (!entry || !Number.isSafeInteger(entry.at) || !Array.isArray(entry.ans) || (at != null && String(entry.at) !== String(at))) return false;
+      const answer = skill === "reading" ? entry.ans[pi]?.[k] : entry.ans[index];
+      const selected = optIdx(question.o, answer);
+      return selected != null && selected !== question.a;
+    });
+    return attempt ? { skill, test, attempt } : null;
+  }
+
+  function viewWrongAttempt(encodedId, at) {
+    if (!/^\d+$/.test(at || "")) return viewGym(true);
+    let id;
+    try { id = decodeURIComponent(encodedId); } catch (e) { return viewGym(true); }
+    const item = FA.getWrongbook().find((w) => w.id === id);
+    const source = item && wrongAttempt(item, at);
+    if (!source) return viewGym(true, "Lượt làm bài này không còn trong lịch sử.");
+    const { skill, test, attempt } = source;
+    if (isLocked(skill, test)) {
+      if (FA.plan && !FA.plan.loaded()) return viewLocked(skill, test);
+      return viewGym(true, "Đề của lượt làm này hiện yêu cầu gói Pro.");
+    }
+    RUNNERS[skill](test, { ...attempt, reviewQuestion: item.id });
+  }
+
+  function wrongCard(item) {
+    const source = wrongAttempt(item);
+    const title = esc(item.q);
+    const passage = typeof item.passage === "string" ? item.passage.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, "") : "";
+    const content = source
+      ? `<a class="wrong-open" href="#/gym/wrong/${encodeURIComponent(item.id)}/${source.attempt.at}">
+          <b>${title}</b><span>${item.attemptAt ? "Xem lượt làm bài" : "Xem lượt sai tìm thấy"} · ${esc(FA.fmtDate(source.attempt.at))} →</span>
+        </a>`
+      : `<details class="wrong-context"><summary><b>${title}</b> <span class="muted">· Xem ngữ cảnh</span></summary>
+          ${passage ? `<div class="passage mt-1">${esc(passage).replace(/\n/g, "<br>")}</div>` : ""}
+          ${Array.isArray(item.script) ? `<div class="transcript">${transcriptHTML(item.script.filter((line) => typeof line?.t === "string"))}</div>` : ""}
+          <div class="txt-ok mt-1">Đáp án: ${esc(item.o[item.a])}</div>
+          <div class="muted">${esc(item.e)}</div>
+        </details>`;
+    return `<div class="card wrong-card mb-2"><div class="row"><span class="pill gray">${esc(item.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(item.id)}">Bỏ khỏi sổ</button></div>${content}</div>`;
+  }
+
+  function viewGym(wrongMode, notice) {
     view = "gym";
-    const wrong = FA.store.get("wrongbook", []);
+    const wrong = FA.getWrongbook();
     const len = [10, 20].includes(FA.store.get("gym-len", 10)) ? FA.store.get("gym-len", 10) : 10;
     const today = FA.daily ? FA.daily.today() : 0, goal = FA.daily ? FA.daily.goal() : 0, streak = FA.daily ? FA.daily.streak() : 0;
     const roadmap = FA.store.get("roadmap", {}) || {};
@@ -1835,6 +1942,7 @@
           </div>` : ""}
         </section>
         <div class="tabs"><a class="tab ${!wrongMode ? "active" : ""}" href="#/gym">⚡ Luyện nhanh</a><a class="tab ${wrongMode ? "active" : ""}" href="#/gym/wrong">📒 Sổ câu sai (${wrong.length})</a></div>
+        ${notice ? `<p class="explain" role="status">${esc(notice)} <a href="#/gym/wrong">Về Sổ câu sai</a></p>` : ""}
         <div id="gymBody"></div>
       </div></div>`;
     const body = app.querySelector("#gymBody");
@@ -1872,8 +1980,7 @@
         body.innerHTML = `
           <div class="row mb-2" style="gap:6px">${[["", "Tất cả", wrong.length]].concat(Object.entries(kinds).map(([k, n]) => [k, k, n])).map(([k, lb, n]) => `<button type="button" class="chip ${k === kind ? "active" : ""}" data-kind="${esc(k)}">${esc(lb)} · ${n}</button>`).join("")}</div>
           <div class="row mb-2"><button class="btn btn-primary" id="reviewAll">Ôn lại ${Math.min(len, list.length)} câu${kind ? " " + esc(kind) : ""}</button><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="clearAll">Xóa hết</button></div>
-          ${list.map((w) => `<div class="card mb-2" style="padding:14px 16px"><div class="row"><span class="pill gray">${esc(w.src)}</span><div class="spacer"></div><button class="btn btn-ghost btn-sm" data-del="${esc(w.id)}">Bỏ khỏi sổ</button></div>
-            <div class="mt-1"><b>${esc(w.q)}</b></div><div class="txt-ok" style="font-size:.92rem">Đáp án: ${esc(w.o[w.a])}</div><div class="muted" style="font-size:.88rem">${esc(w.e)}</div></div>`).join("")}`;
+          ${list.map(wrongCard).join("")}`;
         body.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => { kind = gymKind = b.dataset.kind; draw(); }));
         body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(list.slice()).slice(0, len), true, body);
         body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
@@ -1957,16 +2064,13 @@
     all[id] = list.sort((a, b) => b.at - a.at).slice(0, 10);
     FA.store.set("mock", all);
   }
-  /* Speaking tự chấm (không có AI) mà người dùng chưa bấm "Lưu điểm" → điểm chỉ là mặc định 3/5 mỗi part:
-     KHÔNG cộng vào Overall (ghi rõ "chờ chấm Speaking") để điểm tổng không bị thổi phồng. */
-  const speakPending = (run) => !!(run.os.speaking && run.os.speaking.selfScore && !run.speakSaved);
   function mockRecord(run, status) {
     const scores = {}, cefrs = {};
-    const pend = speakPending(run);
+    const pend = !!run.os.speaking?.speakPending;
     MOCK_ORDER.forEach((k) => {
       const o = run.os[k];
-      scores[k] = o && !(k === "speaking" && pend) ? o.score : null;
-      cefrs[k] = o && !(k === "speaking" && pend) ? o.cefr || "" : ""; // CEFR của runner (Listening/Reading xét trên điểm chưa làm tròn)
+      scores[k] = o ? o.score : null;
+      cefrs[k] = o ? o.cefr || "" : ""; // CEFR của runner (Listening/Reading xét trên điểm chưa làm tròn)
     });
     const overall = CORE_SKILLS.reduce((n, k) => n + (scores[k] || 0), 0);
     return { at: run.at, finishedAt: Date.now(), status, strikes: run.strikes || 0, scores, cefrs, overall, cefr: FA.toCEFR("overall", overall), speakPending: pend || undefined };
@@ -2063,7 +2167,7 @@
         </div>
         <div id="roomNote"></div>
         ${hist.length ? `<div class="mt-4"><h3>Lịch sử Full Test</h3><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Overall</th><th>L · R · S · W</th><th>Grammar</th><th>Trạng thái</th></tr>
-          ${hist.map((r) => `<tr><td>${FA.fmtDate(r.at)}</td><td><b>${r.overall}</b>/200 · ${esc(r.cefr)}${r.speakPending ? `<br><span class="muted" style="font-size:.82rem">tạm tính, chưa gồm Speaking</span>` : ""}</td><td>${CORE_SKILLS.map((k) => (r.scores[k] == null ? "–" : r.scores[k])).join(" · ")}</td><td>${r.scores.grammar == null ? "–" : r.scores.grammar + "/50"}</td><td>${MOCK_STATUS[r.status] || esc(r.status)}${r.strikes ? `<br><span class="muted" style="font-size:.85rem">⚠️ ${r.strikes} lần rời màn hình</span>` : ""}</td></tr>`).join("")}
+          ${hist.map((r) => `<tr><td>${FA.fmtDate(r.at)}</td><td><b>${r.overall}</b>/200 · ${esc(r.cefr)}${r.speakPending ? `<br><span class="muted" style="font-size:.82rem">tạm tính, Speaking chưa chấm đủ</span>` : ""}</td><td>${CORE_SKILLS.map((k) => (r.scores[k] == null ? "–" : r.scores[k])).join(" · ")}</td><td>${r.scores.grammar == null ? "–" : r.scores.grammar + "/50"}</td><td>${MOCK_STATUS[r.status] || esc(r.status)}${r.strikes ? `<br><span class="muted" style="font-size:.85rem">⚠️ ${r.strikes} lần rời màn hình</span>` : ""}</td></tr>`).join("")}
         </table></div><p class="muted" style="font-size:.85rem">Muốn xem lại bài làm từng phần: vào đề lẻ tương ứng → Lịch sử làm bài → Xem lại.</p></div>` : ""}
       </div></div>`;
     app.querySelector("#openRoom").onclick = () => {
@@ -2140,7 +2244,7 @@
   function mockCollect(o) {
     const run = mockRun;
     clearDraft(o.skill, o.test.id);
-    o.attemptAt = FA.saveAttempt(o.skill, o.test.id, o.score, { cefr: o.cefr, ans: o.ans, mock: run.m.id });
+    saveExamAttempt(o, { mock: run.m.id });
     run.os[o.skill] = o;
     const next = run.idx + 1;
     if (run.terminated) return mockEnd("terminated");
@@ -2199,7 +2303,7 @@
     if (render === false) return;
     viewMockResult(run, rec);
     if (status === "done" && FA.celebrate) FA.celebrate(rec.speakPending
-      ? { icon: "🏁", title: `Hoàn thành ${run.m.title}!`, sub: "Tự chấm Speaking ở tab bên dưới để có điểm Overall đầy đủ." }
+      ? { icon: "🏁", title: `Hoàn thành ${run.m.title}!`, sub: "Mở tab Speaking để xem câu nào AI chưa chấm được." }
       : rec.overall >= 180
         ? { icon: "🎆", title: `Xuất sắc! ${run.m.title}: ${rec.overall}/200 (${Math.round(rec.overall / 2)}%)`, sub: `Bậc CEFR ước lượng ${rec.cefr} — quá đỉnh!`, confetti: true }
         : { icon: "🏁", title: `Hoàn thành ${run.m.title}: ${rec.overall}/200`, sub: `Bậc CEFR ước lượng ${rec.cefr} — xem chi tiết từng phần bên dưới.`, confetti: false });
@@ -2208,7 +2312,7 @@
   function viewMockResult(run, rec) {
     view = "mockResult";
     const m = run.m;
-    const tileNote = (k) => (k === "speaking" && rec.speakPending ? "chờ tự chấm" : rec.scores[k] == null ? "chưa làm" : k === "grammar" ? "không cộng Overall" : esc((rec.cefrs && rec.cefrs[k]) || ""));
+    const tileNote = (k) => (k === "speaking" && rec.speakPending ? "điểm tạm tính" : rec.scores[k] == null ? "chưa làm" : k === "grammar" ? "không cộng Overall" : esc((rec.cefrs && rec.cefrs[k]) || ""));
     const summary = () => `
       <div class="result-hero">
         <div class="ring-lg" style="--p:${Math.round((rec.overall / 200) * 100)}"><div><b>${rec.overall}</b><span>/200</span></div></div>
@@ -2219,8 +2323,7 @@
           <div class="mock-scores">${MOCK_ORDER.map((k) => `<div class="${k === "grammar" ? "g" : ""}"><span>${SKILLS[k].icon} ${esc(short(k))}</span><b>${rec.scores[k] == null ? "–" : rec.scores[k]}<small>/50</small></b><em>${tileNote(k)}</em></div>`).join("")}</div>
           ${rec.status === "terminated" ? `<div class="explain mt-1">⛔ ${rec.strikes > 1 ? `Bạn đã rời màn hình thi ${rec.strikes} lần` : "Bạn đã rời màn hình thi"}${run.endReason ? ` (${esc(run.endReason.replace(/\.$/, ""))})` : ""} nên bài thi tự nộp phần đang làm và dừng. Các phần chưa làm tính 0 điểm.</div>` : rec.status === "aborted" ? `<div class="explain mt-1">⏹ Bạn đã kết thúc sớm — các phần chưa làm tính 0 điểm.</div>` : ""}
           ${rec.strikes && rec.status !== "terminated" ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">⚠️ Ghi nhận ${rec.strikes} lần rời màn hình trong lúc thi.</p>` : ""}
-          ${rec.speakPending ? `<div class="explain mt-1">🎙️ <b>Overall đang tạm tính, chưa gồm Speaking.</b> Không có AI chấm nên bạn cần tự chấm: mở tab Speaking bên dưới, nghe lại bản ghi, kéo thanh điểm từng part rồi bấm <b>Lưu điểm</b> — Overall và bậc CEFR sẽ tự cập nhật.</div>`
-            : run.os.speaking ? `<p class="muted mb-0 mt-1" style="font-size:.88rem">🎙️ Speaking ${run.os.speaking.selfScore ? "theo điểm bạn tự chấm" : "do AI chấm sẵn"} — có thể chỉnh lại ở tab Speaking (bấm <b>Lưu điểm</b>), Overall tự cập nhật.</p>` : ""}
+          ${rec.speakPending ? `<div class="explain mt-1">🎙️ <b>Overall đang tạm tính.</b> AI chưa chấm được một số câu Speaking. Mở tab Speaking để xem điểm và trạng thái từng câu.</div>` : ""}
         </div>
       </div>`;
     const done = MOCK_ORDER.filter((k) => run.os[k]);
@@ -2253,7 +2356,6 @@
       noteEl.innerHTML = noteHTML(o);
       const update = (n) => {
         Object.assign(o, n);
-        if (k === "speaking") run.speakSaved = true; // người dùng đã tự chấm → tính Speaking vào Overall
         if (o.attemptAt) FA.updateAttempt(o.skill, o.test.id, o.attemptAt, Object.assign({ score: o.score, cefr: o.cefr }, n.ans ? { ans: n.ans } : {}));
         const r2 = mockRecord(run, rec.status);
         Object.assign(rec, { scores: r2.scores, cefrs: r2.cefrs, overall: r2.overall, cefr: r2.cefr, speakPending: r2.speakPending });
@@ -2263,7 +2365,6 @@
         noteEl.innerHTML = noteHTML(o);
         const tb = app.querySelector(`[data-mt="${k}"]`);
         if (tb) tb.textContent = `${SKILLS[k].icon} ${short(k)} · ${o.score}/50`;
-        if (rec.status === "done" && k === "speaking" && FA.celebrate) FA.celebrate({ icon: rec.overall >= 180 ? "🎆" : "🏁", title: `Overall ${run.m.title}: ${rec.overall}/200`, sub: `Đã gồm Speaking — bậc CEFR ước lượng ${rec.cefr}.${rec.overall >= 180 ? " Xuất sắc!" : ""}`, confetti: rec.overall >= 180 });
       };
       watchReports(rv, k, o.test);
       o.review(rv, update);

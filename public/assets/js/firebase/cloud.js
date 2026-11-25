@@ -81,7 +81,8 @@
       const seen = {}, out = [];
       local.concat(remote).forEach((x) => {
         const id = x && typeof x === "object" && x.id != null ? "id:" + x.id : JSON.stringify(x);
-        if (!seen[id]) { seen[id] = 1; out.push(x); }
+        if (!seen[id]) seen[id] = out.push(x);
+        else if (key === "wrongbook" && x?.attemptAt > (out[seen[id] - 1]?.attemptAt || 0)) out[seen[id] - 1] = x;
       });
       return key === "wrongbook" ? out.slice(0, 300) : out;
     }

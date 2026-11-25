@@ -175,13 +175,25 @@
   };
 
   /* Sổ câu sai */
-  FA.addWrong = function (item) {
+  function storedWrongbook() {
     const list = FA.store.get("wrongbook", []);
-    if (!list.some((x) => x.id === item.id)) list.unshift(item);
-    FA.store.set("wrongbook", list.slice(0, 300));
+    return Array.isArray(list) ? list : [];
+  }
+  // Dữ liệu từ bản cũ có thể còn dấu gỡ câu chỉ gồm ID, không có đề và đáp án.
+  const isWrongbookItem = (item) => item && !item.removed &&
+    typeof item.id === "string" && typeof item.src === "string" && typeof item.q === "string" &&
+    Array.isArray(item.o) && Number.isInteger(item.a) && typeof item.o[item.a] === "string";
+  FA.getWrongbook = () => storedWrongbook().filter(isWrongbookItem);
+  FA.addWrong = function (item) {
+    const list = storedWrongbook();
+    const previous = list.find((x) => x?.id === item.id && isWrongbookItem(x));
+    if (previous && !(item.attemptAt > (previous.attemptAt || 0))) return;
+    const next = list.filter((x) => x?.id !== item.id);
+    next.unshift(item);
+    FA.store.set("wrongbook", next.slice(0, 300));
   };
   FA.removeWrong = function (id) {
-    FA.store.set("wrongbook", FA.store.get("wrongbook", []).filter((x) => x.id !== id));
+    FA.store.set("wrongbook", storedWrongbook().filter((x) => x?.id !== id));
   };
 
   /* ---------- Toast & Hộp thoại xác nhận ---------- */

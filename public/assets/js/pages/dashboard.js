@@ -46,7 +46,7 @@
     const mDone = (window.FA_MOCK || []).flatMap((m) => mh[m.id] || []).filter((x) => x.status === "done" && !x.speakPending);
     const vocabAll = VOCAB_TOTAL + (window.FA_VOCAB_INDEX || []).reduce((n, d) => n + d.n, 0);
     const starN = Object.keys(FA.store.get("fc-starred", {}) || {}).length;
-    const wrongN = FA.store.get("wrongbook", []).length;
+    const wrongN = FA.getWrongbook().length;
     const tile = (href, ic, name, val, sub, pct) => `<a class="card rm-lib" href="${href}">
         <span class="rm-lib-ic">${ic}</span>
         <div style="min-width:0;flex:1"><b>${name}</b><div class="rm-lib-val">${val}</div><div class="muted rm-lib-sub">${sub}</div>
@@ -97,7 +97,7 @@
     const r = snapshot();
     const g = goalNow();
     const saved = FA.store.get("roadmap", null);
-    const wrongN = FA.store.get("wrongbook", []).length;
+    const wrongN = FA.getWrongbook().length;
     const dr = drafts();
     const maxDay = Math.max(1, ...r.days.map((d) => d.n));
     const wk = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
