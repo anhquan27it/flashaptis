@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tính điểm Aptis → CEFR — FlashAptis</title>
+  <meta name="author" content="FPT University">
+  <meta name="copyright" content="FlashAptis - Made by FPT University">
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" type="image/png" href="assets/img/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/core/fx.js"></script>
+</head>
+<body>
+  <main class="page"><div class="container narrow">
+    <span class="eyebrow">Công cụ miễn phí</span>
+    <h1 class="page-title">🧮 Tính điểm Aptis → CEFR</h1>
+    <p class="page-sub">Nhập điểm 4 kỹ năng (0–50). Công cụ cho biết bậc từng kỹ năng, tổng điểm Overall và cần thêm bao nhiêu điểm để lên bậc tiếp theo.</p>
+
+    <div class="card" id="calc"></div>
+    <div class="row mt-2">
+      <button class="btn btn-outline btn-sm" id="fromHist" type="button">📥 Lấy điểm gần nhất từ lịch sử thi</button>
+      <a class="btn btn-ghost btn-sm" href="exam.html#/progress">📊 Xem bảng tiến độ →</a>
+    </div>
+
+    <div class="card mt-2">
+      <div class="result-hero">
+        <div class="ring-lg" id="ovRing" style="--p:0"><div><b id="ovScore">0</b><span>/200</span></div></div>
+        <div>
+          <span class="eyebrow">Overall (ước lượng)</span>
+          <div class="row"><span class="cefr-badge" id="ovLv">A0</span><span class="muted" id="ovNext"></span></div>
+          <p class="muted mt-1 mb-0" style="font-size:.88rem">Overall = Listening + Reading + Speaking + Writing (tối đa 200). Điểm Grammar & Vocabulary <b>không cộng vào tổng</b>, chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc. Kết quả ở đây chỉ mang tính tham khảo.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="mt-4">Ngưỡng điểm tham khảo</h2>
+    <div class="tbl-wrap"><table class="tbl" id="thTable"></table></div>
+    <p class="muted mt-1" style="font-size:.86rem">Listening (17 câu hỏi = 25 ý chấm điểm) và Reading (25 ý): ngưỡng B1/B2/C tương ứng 12/17/21 và 13/19/23 ý đúng trên 25 (nhân đôi để ra thang 50). Speaking: 4 part × 0–5 điểm = 20, quy ra thang 50. Ngưỡng A1/A2 và Writing là ước lượng tham khảo.</p>
+
+    <h2 class="mt-4">Bậc Overall theo tổng điểm (/200)</h2>
+    <div class="tbl-wrap"><table class="tbl" id="ovTable"></table></div>
+    <p class="muted mt-1" style="font-size:.86rem">Các mốc 80, 120, 160 thuộc về bậc cao hơn (80 → B1, 120 → B2, 160 → C1); C2 từ 181 điểm. Ngưỡng tổng hợp từ nguồn tham khảo (prepedu.com), có thể khác bảng quy đổi chính thức của British Council ở từng kỳ thi.</p>
+  </div></main>
+
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>
+    FA.renderShell("calculator");
+    const SK = [["listening", "🎧 Listening"], ["reading", "📖 Reading"], ["speaking", "🎙️ Speaking"], ["writing", "✍️ Writing"]];
+    let saved = FA.store.get("calc", { listening: 30, reading: 34, speaking: 28, writing: 30 });
+    const calc = document.getElementById("calc");
+    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" value="${saved[k]}" data-k="${k}"><input class="inp" type="number" min="0" max="50" value="${saved[k]}" data-n="${k}"><span class="lv" data-lv="${k}"></span></div>`).join("");
+    function nextGap(skill, score) {
+      const t = FA.CEFR[skill].slice().reverse(); // tăng dần
+      const nx = t.find(([min]) => score < min);
+      return nx ? `còn ${nx[0] - score} điểm lên ${nx[1]}` : "đã đạt bậc cao nhất";
+    }
+    function update() {
+      let total = 0;
+      SK.forEach(([k]) => {
+        const v = Math.max(0, Math.min(50, +calc.querySelector(`[data-k="${k}"]`).value || 0));
+        saved[k] = v; total += v;
+        const lv = FA.toCEFR(k, v);
+        const el = calc.querySelector(`[data-lv="${k}"]`);
+        el.textContent = lv;
+        el.title = nextGap(k, v);
+      });
+      FA.store.set("calc", saved);
+      document.getElementById("ovScore").textContent = total;
+      document.getElementById("ovRing").style.setProperty("--p", Math.round((total / 200) * 100));
+      document.getElementById("ovLv").textContent = FA.toCEFR("overall", total);
+      document.getElementById("ovNext").textContent = "· " + nextGap("overall", total) + " · " + SK.map(([k, n]) => `${n.split(" ")[1]}: ${nextGap(k, saved[k])}`).join(" · ");
+    }
+    calc.querySelectorAll("[data-k]").forEach((r) => (r.oninput = () => { calc.querySelector(`[data-n="${r.dataset.k}"]`).value = r.value; update(); }));
+    calc.querySelectorAll("[data-n]").forEach((n) => (n.oninput = () => { calc.querySelector(`[data-k="${n.dataset.n}"]`).value = n.value; update(); }));
+    document.getElementById("fromHist").onclick = () => {
+      const all = FA.store.get("attempts", {});
+      let filled = 0;
+      SK.forEach(([k]) => {
+        let best = null;
+        Object.keys(all).forEach((key) => {
+          if (key.indexOf(k + ":") !== 0) return;
+          const rec = (all[key] || [])[0];
+          if (rec && (!best || rec.at > best.at)) best = rec;
+        });
+        if (best) {
+          saved[k] = best.score;
+          calc.querySelector(`[data-k="${k}"]`).value = best.score;
+          calc.querySelector(`[data-n="${k}"]`).value = best.score;
+          filled++;
+        }
+      });
+      if (!filled) return FA.toast("Chưa có lượt làm bài nào cho 4 kỹ năng chính.");
+      update();
+      FA.toast(`Đã nạp điểm gần nhất của ${filled}/4 kỹ năng.`);
+    };
+    window.addEventListener("fa:synced", () => {
+      saved = FA.store.get("calc", saved);
+      SK.forEach(([k]) => { calc.querySelector(`[data-k="${k}"]`).value = saved[k]; calc.querySelector(`[data-n="${k}"]`).value = saved[k]; });
+      update();
+    });
+    update();
+    // bảng ngưỡng
+    const levels = ["A1", "A2", "B1", "B2", "C"];
+    const row = (k, n) => `<tr><td><b>${n}</b></td>${levels.map((lv) => { const f = FA.CEFR[k].find((x) => x[1] === lv); return `<td>${f ? "≥ " + f[0] : "—"}</td>`; }).join("")}</tr>`;
+    document.getElementById("thTable").innerHTML = `<tr><th>Kỹ năng (/50)</th>${levels.map((l) => `<th>${l}</th>`).join("")}</tr>` + SK.map(([k, n]) => row(k, n)).join("");
+    // Overall: A1 → C2, hiện khoảng điểm của từng bậc
+    const ov = FA.CEFR.overall.slice().reverse(); // tăng dần
+    document.getElementById("ovTable").innerHTML = `<tr>${ov.map(([, lv]) => `<th>${lv}</th>`).join("")}</tr><tr>${ov.map(([min], i) => `<td>${i === 0 ? "dưới " + ov[1][0] : i === ov.length - 1 ? "từ " + min : min + " – " + (ov[i + 1][0] - 1)}</td>`).join("")}</tr>`;
+  </script>
+</body>
+</html>

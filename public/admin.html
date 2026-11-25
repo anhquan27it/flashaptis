@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Quản trị — FlashAptis</title>
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" type="image/png" href="assets/img/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/core/fx.js"></script>
+</head>
+<body>
+  <main class="page"><div class="container">
+    <span class="eyebrow">Quản trị</span>
+    <h1 class="page-title">🛠️ Quản trị</h1>
+    <div class="tabs"><a class="tab active" href="#pay" data-at="pay">💳 Thanh toán Pro</a><a class="tab" href="#reports" data-at="reports">🐞 Báo lỗi đề <span class="tab-n" id="repN">…</span></a></div>
+    <p class="page-sub" id="paySub">Đối chiếu app ngân hàng: số tiền và nội dung chuyển khoản (<code>FLASHAPTIS FA…</code>) phải khớp với mã của yêu cầu. Duyệt → tài khoản được cộng thêm số ngày Pro.</p>
+    <div id="adm"></div>
+    <div id="reps" hidden></div>
+  </div></main>
+
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>
+    /* Trang quản trị: chỉ tài khoản có document admins/{uid} trong Firestore mới đọc/ghi được (firestore.rules chặn ở server). */
+    FA.renderShell("");
+    const P = FA.PLAN, esc = FA.esc, plan = FA.plan, el = document.getElementById("adm");
+    const DAY = 864e5;
+
+    async function grant(uid, days, email, payId) {
+      const db = FA.cloud.db(), me = plan.user().uid;
+      const planRef = db.collection("plans").doc(uid);
+      let until = 0;
+      await db.runTransaction(async (tx) => {
+        const s = await tx.get(planRef);
+        const cur = (s.exists && +s.data().proUntil) || 0;
+        until = Math.max(cur, Date.now()) + days * DAY; // còn Pro → cộng nối tiếp
+        tx.set(planRef, { proUntil: until, updatedAt: Date.now(), email: email || (s.exists && s.data().email) || "" });
+        if (payId) tx.update(db.collection("payments").doc(payId), { status: "approved", approvedAt: Date.now(), by: me, proUntil: until });
+      });
+      return until;
+    }
+    async function reject(payId, note) {
+      await FA.cloud.db().collection("payments").doc(payId).update({ status: "rejected", approvedAt: Date.now(), by: plan.user().uid, note: note || "" });
+    }
+
+    async function draw() {
+      if (!plan.loaded()) { el.innerHTML = `<div class="card"><p class="muted mb-0">Đang kiểm tra tài khoản…</p></div>`; return; }
+      const u = plan.user();
+      if (!u) {
+        el.innerHTML = `<div class="card"><p>Đăng nhập bằng tài khoản admin.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập / Tạo tài khoản</button></div>`;
+        document.getElementById("loginBtn").onclick = () => FA.cloud.signIn();
+        return;
+      }
+      if (!plan.isAdmin()) {
+        el.innerHTML = `<div class="card"><h3>Tài khoản này chưa phải admin</h3>
+          <p>UID của bạn: <code>${esc(u.uid)}</code></p>
+          <p class="muted mb-0">Để cấp quyền: Firebase Console → Firestore Database → <b>Start collection</b> <code>admins</code> → Document ID = UID ở trên → thêm một field bất kỳ (vd. <code>email</code> = email của bạn) → Save. Rồi tải lại trang này.</p></div>`;
+        return;
+      }
+      el.innerHTML = `<div class="card"><p class="muted mb-0">Đang tải yêu cầu…</p></div>`;
+      const snap = await FA.cloud.db().collection("payments").orderBy("createdAt", "desc").limit(100).get();
+      const pays = [];
+      snap.forEach((d) => pays.push(Object.assign({ id: d.id }, d.data())));
+      const pending = pays.filter((p) => p.status === "pending"), done = pays.filter((p) => p.status !== "pending");
+      const row = (p, actions) => `<tr>
+        <td>${FA.fmtDate(p.createdAt)}</td>
+        <td><b>${esc(p.name || "—")}</b><br><span class="muted" style="font-size:.85rem">${esc(p.email || "")}</span></td>
+        <td><code>FLASHAPTIS ${esc(p.code)}</code></td>
+        <td>${plan.fmtVND(+p.amount || 0)}</td>
+        <td>${actions}</td></tr>`;
+      const ST = { approved: "✅ Đã duyệt", rejected: "❌ Từ chối" };
+
+      el.innerHTML = `
+        <div class="card">
+          <h3>Chờ duyệt (${pending.length})</h3>
+          ${pending.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Người dùng</th><th>Nội dung CK</th><th>Số tiền</th><th></th></tr>
+            ${pending.map((p) => row(p, `<div class="row"><button class="btn btn-green btn-sm" data-ok="${esc(p.id)}">Duyệt +${P.days} ngày</button><button class="btn btn-red btn-sm" data-no="${esc(p.id)}">Từ chối</button></div>`)).join("")}</table></div>` : `<p class="muted mb-0">Không có yêu cầu nào đang chờ.</p>`}
+        </div>
+        <div class="card mt-2">
+          <h3>Cấp Pro thủ công</h3>
+          <div class="row"><input id="gUid" placeholder="UID người dùng" style="flex:1;min-width:220px" class="inp"><input id="gDays" type="number" min="1" value="${P.days}" style="width:90px" class="inp"><button class="btn btn-outline btn-sm" id="gBtn" type="button">Cấp</button></div>
+          <p class="muted mb-0 mt-1" style="font-size:.85rem">UID xem ở Firebase Console → Authentication → Users. Nhập số ngày âm không được; muốn thu hồi thì sửa <code>plans/{uid}.proUntil</code> trong Console.</p>
+        </div>
+        <div class="card mt-2">
+          <h3>Đã xử lý gần đây</h3>
+          ${done.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Người dùng</th><th>Nội dung CK</th><th>Số tiền</th><th>Kết quả</th></tr>
+            ${done.map((p) => row(p, `${ST[p.status] || esc(p.status)}${p.proUntil ? `<br><span class="muted" style="font-size:.85rem">Pro đến ${plan.fmtDay(p.proUntil)}</span>` : ""}${p.note ? `<br><span class="muted" style="font-size:.85rem">${esc(p.note)}</span>` : ""}`)).join("")}</table></div>` : `<p class="muted mb-0">Chưa có.</p>`}
+        </div>`;
+
+      el.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = async () => {
+        const p = pending.find((x) => x.id === b.dataset.ok);
+        if (!(await FA.confirm(`Đã thấy ${plan.fmtVND(+p.amount)} với nội dung "FLASHAPTIS ${p.code}" trong app ngân hàng?\nDuyệt sẽ cộng ${P.days} ngày Pro cho ${p.email || p.uid}.`, { title: "Duyệt thanh toán", okText: `Duyệt +${P.days} ngày` }))) return;
+        b.disabled = true;
+        try { const until = await grant(p.uid, P.days, p.email, p.id); FA.toast("Đã duyệt — Pro đến " + plan.fmtDay(until)); draw(); }
+        catch (e) { console.warn(e); FA.toast("Lỗi: " + ((e && e.message) || "")); b.disabled = false; }
+      }));
+      el.querySelectorAll("[data-no]").forEach((b) => (b.onclick = async () => {
+        const note = await FA.prompt("Lý do từ chối (người dùng sẽ thấy):", "Chưa nhận được tiền", { title: "Từ chối yêu cầu", okText: "Từ chối" });
+        if (note === null) return;
+        try { await reject(b.dataset.no, note.slice(0, 200)); FA.toast("Đã từ chối"); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      }));
+      document.getElementById("gBtn").onclick = async () => {
+        const uid = document.getElementById("gUid").value.trim(), days = Math.round(+document.getElementById("gDays").value);
+        if (!uid || !(days > 0)) return FA.toast("Nhập UID và số ngày > 0");
+        if (!(await FA.confirm(`Cấp ${days} ngày Pro cho UID ${uid}?`, { title: "Cấp Pro thủ công", okText: "Cấp ngay" }))) return;
+        try { const until = await grant(uid, days, ""); FA.toast("Đã cấp — Pro đến " + plan.fmtDay(until)); draw(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      };
+    }
+    plan.onChange(draw);
+    draw();
+
+    /* ---------- Báo lỗi đề (collection reports — người học gửi từ nút ⚠️ Báo lỗi ở trang thi) ---------- */
+    const CAT = Object.fromEntries(FA.REPORT_CATS);
+    const SK = { grammar: "Grammar", reading: "Reading", listening: "Listening", writing: "Writing", speaking: "Speaking" };
+    const RST = { open: "🟠 Chưa xử lý", fixed: "✅ Đã sửa", ignored: "⚪ Bỏ qua" };
+    const repBox = document.getElementById("reps");
+    let repFilter = "open";
+    async function drawReports() {
+      const repN = document.getElementById("repN");
+      if (!plan.loaded() || !plan.user() || !plan.isAdmin()) { repBox.innerHTML = `<div class="card"><p class="muted mb-0">${!plan.loaded() ? "Đang kiểm tra tài khoản…" : "Chỉ tài khoản admin mới xem được báo lỗi — mở tab 💳 Thanh toán Pro để đăng nhập / xem hướng dẫn cấp quyền."}</p></div>`; repN.textContent = "–"; return; }
+      repBox.innerHTML = `<div class="card"><p class="muted mb-0">Đang tải báo lỗi…</p></div>`;
+      const reps = [];
+      try {
+        const snap = await FA.cloud.db().collection("reports").orderBy("createdAt", "desc").limit(200).get();
+        snap.forEach((d) => reps.push(Object.assign({ id: d.id }, d.data())));
+      } catch (e) {
+        repBox.innerHTML = `<div class="card"><h3>Chưa đọc được báo lỗi</h3><p class="muted mb-0">${esc((e && e.message) || "")} — nếu là lỗi quyền (permission-denied), hãy deploy luật Firestore mới: <code>firebase deploy --only firestore</code>.</p></div>`;
+        repN.textContent = "!";
+        return;
+      }
+      const open = reps.filter((r) => r.status === "open");
+      repN.textContent = open.length;
+      const list = repFilter === "open" ? open : reps;
+      const keyOf = (r) => [r.skill, r.testId, r.ref].join("|");
+      const cnt = {}; // câu nào bị nhiều người báo
+      open.forEach((r) => (cnt[keyOf(r)] = (cnt[keyOf(r)] || 0) + 1));
+      const row = (r) => {
+        const n = cnt[keyOf(r)] || 0;
+        return `<tr>
+          <td>${FA.fmtDate(r.createdAt)}<br><span class="muted" style="font-size:.82rem">${RST[r.status] || esc(r.status)}</span></td>
+          <td><b>${esc(r.testTitle || (SK[r.skill] || r.skill) + " " + r.testId)}</b> <code>${esc(r.testId)}</code><br>${esc(r.ref || "")}${n > 1 && r.status === "open" ? ` <span class="pill">${n} báo cáo</span>` : ""}</td>
+          <td><b>${esc(CAT[r.cat] || r.cat)}</b>${r.msg ? `<br><span style="white-space:pre-line">${esc(r.msg)}</span>` : ""}</td>
+          <td>${esc(r.name || "—")}<br><span class="muted" style="font-size:.82rem">${esc(r.email || "")}</span></td>
+          <td><div class="row" style="gap:6px">
+            ${SK[r.skill] && r.testId ? `<a class="btn btn-outline btn-sm" href="exam.html#/${encodeURIComponent(r.skill)}/${encodeURIComponent(r.testId)}" target="_blank" rel="noopener">Mở đề</a>` : ""}
+            ${r.status === "open"
+              ? `<button class="btn btn-green btn-sm" data-rs="fixed" data-id="${esc(r.id)}">Đã sửa</button><button class="btn btn-ghost btn-sm" data-rs="ignored" data-id="${esc(r.id)}">Bỏ qua</button>`
+              : `<button class="btn btn-ghost btn-sm" data-rs="open" data-id="${esc(r.id)}">Mở lại</button>`}
+            <button class="btn btn-red btn-sm" data-rdel="${esc(r.id)}">Xóa</button></div></td></tr>`;
+      };
+      repBox.innerHTML = `
+        <div class="card">
+          <div class="row mb-2"><h3 class="mb-0">Báo lỗi từ người học</h3><div class="spacer"></div>
+            <div class="tabs mb-0"><button class="tab ${repFilter === "open" ? "active" : ""}" data-rf="open">Chưa xử lý (${open.length})</button><button class="tab ${repFilter === "all" ? "active" : ""}" data-rf="all">Tất cả (${reps.length})</button></div></div>
+          <p class="muted" style="font-size:.88rem">Sửa nội dung trong <code>public/data/*.js</code> theo mã đề (vd. <code>g3</code>, <code>l2</code>), deploy, rồi bấm “Đã sửa”. “Mở đề” mở đề đó trên web để kiểm tra.</p>
+          ${list.length ? `<div class="tbl-wrap"><table class="tbl"><tr><th>Gửi lúc</th><th>Đề · vị trí</th><th>Lỗi</th><th>Người gửi</th><th></th></tr>${list.map(row).join("")}</table></div>`
+            : `<p class="muted mb-0">${repFilter === "open" ? "Không có báo lỗi nào đang chờ. 🎉" : "Chưa có báo lỗi nào."}</p>`}
+        </div>`;
+      repBox.querySelectorAll("[data-rf]").forEach((b) => (b.onclick = () => { repFilter = b.dataset.rf; drawReports(); }));
+      repBox.querySelectorAll("[data-rs]").forEach((b) => (b.onclick = async () => {
+        b.disabled = true;
+        try { await FA.cloud.db().collection("reports").doc(b.dataset.id).update({ status: b.dataset.rs, doneAt: Date.now(), by: plan.user().uid }); drawReports(); }
+        catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); b.disabled = false; }
+      }));
+      repBox.querySelectorAll("[data-rdel]").forEach((b) => (b.onclick = async () => {
+        if (!(await FA.confirm("Xóa hẳn báo lỗi này?", { title: "Xóa báo lỗi", okText: "Xóa", danger: true }))) return;
+        try { await FA.cloud.db().collection("reports").doc(b.dataset.rdel).delete(); drawReports(); } catch (e) { FA.toast("Lỗi: " + ((e && e.message) || "")); }
+      }));
+    }
+    plan.onChange(drawReports);
+    drawReports();
+
+    /* tab Thanh toán / Báo lỗi (theo #hash để tải lại vẫn đúng tab) */
+    function showTab() {
+      const rep = location.hash === "#reports";
+      document.querySelectorAll("[data-at]").forEach((a) => a.classList.toggle("active", (a.dataset.at === "reports") === rep));
+      el.hidden = rep; repBox.hidden = !rep; document.getElementById("paySub").hidden = rep;
+    }
+    window.addEventListener("hashchange", showTab);
+    showTab();
+  </script>
+</body>
+</html>

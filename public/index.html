@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlashAptis — Luyện thi Aptis online, chấm điểm liền tay</title>
+  <meta name="description" content="FlashAptis: luyện đề Aptis đủ 5 kỹ năng, flashcard từ vựng, ôn tập nhanh, lộ trình mẹo và công cụ tính điểm CEFR. Miễn phí, không cần đăng ký.">
+  <meta name="author" content="FPT University">
+  <meta name="copyright" content="FlashAptis - Made by FPT University">
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" type="image/png" href="assets/img/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/core/fx.js"></script>
+</head>
+<body>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="pill hot">⚡ Miễn phí · Đăng nhập để lưu tiến trình</span>
+          <h1 class="mt-2">Luyện thi Aptis<br>nhanh như chớp.<span class="accent">Chấm điểm liền tay.</span></h1>
+          <p class="lead">Đủ 5 kỹ năng theo đúng format Aptis ESOL, flashcard từ vựng theo chủ đề, ôn tập nhanh 10 câu mỗi ngày. Làm xong biết điểm và xem giải thích từng câu ngay.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="exam.html">Làm đề miễn phí ngay</a>
+            <a class="btn btn-outline btn-lg" href="flashcards.html">⚡ Học flashcard</a>
+          </div>
+          <div class="quick-skills">
+            <span class="label">Vào thẳng kỹ năng:</span>
+            <a class="chip" href="exam.html#/speaking">🎙️ Speaking</a>
+            <a class="chip" href="exam.html#/listening">🎧 Listening</a>
+            <a class="chip" href="exam.html#/grammar">🧩 Grammar</a>
+            <a class="chip" href="exam.html#/reading">📖 Reading</a>
+            <a class="chip" href="exam.html#/writing">✍️ Writing</a>
+          </div>
+        </div>
+        <div style="position:relative">
+          <div class="demo-card" id="demo">
+            <div class="demo-top"><span>GRAMMAR · CÂU 7/50</span><span class="timer-badge">24:51</span></div>
+            <div class="q">She _______ to work by bus every day.</div>
+            <div class="demo-opt" data-k="0"><b>A</b> go</div>
+            <div class="demo-opt" data-k="1"><b>B</b> goes</div>
+            <div class="demo-opt" data-k="2"><b>C</b> going</div>
+            <div class="muted" style="font-size:.85rem" id="demoMsg">Thử bấm chọn một đáp án 👆</div>
+          </div>
+          <div class="demo-result">
+            <div class="ring" style="--p:84" data-label="42"></div>
+            <div><b style="font-family:var(--font-head)">42/50</b><div class="muted" style="font-size:.82rem">Sai câu nào có giải thích câu đó</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="stats">
+          <div class="stat"><b id="statQ">150</b><span>câu Grammar & Vocab có giải thích</span></div>
+          <div class="stat"><b id="statR">3</b><span>đề Reading đủ 5 part</span></div>
+          <div class="stat"><b id="statL">3</b><span>đề Listening đủ 4 part, có giọng đọc</span></div>
+          <div class="stat"><b id="statV">120</b><span>flashcard từ vựng theo chủ đề</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="block" style="padding-top:20px">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Luyện đề</span>
+          <h2>Chọn kỹ năng, làm luôn</h2>
+          <p>Đúng format và thời gian đề Aptis ESOL. Nộp bài là có điểm 0–50 kèm lời giải.</p>
+        </div>
+        <div class="skill-tiles">
+          <a class="card skill-tile" href="exam.html#/grammar"><span class="icon">🧩</span><b>Grammar & Vocab</b><small>50 câu · 25 phút</small></a>
+          <a class="card skill-tile" href="exam.html#/listening"><span class="icon">🎧</span><b>Listening</b><small>17 câu (25 ý) · 40 phút</small></a>
+          <a class="card skill-tile" href="exam.html#/reading"><span class="icon">📖</span><b>Reading</b><small>5 part · 35 phút</small></a>
+          <a class="card skill-tile" href="exam.html#/writing"><span class="icon">✍️</span><b>Writing</b><small>4 part · 50 phút</small></a>
+          <a class="card skill-tile" href="exam.html#/speaking"><span class="icon">🎙️</span><b>Speaking</b><small>4 part · 12 phút</small></a>
+        </div>
+        <div class="quick-skills mt-2">
+          <span class="label">Luyện thêm:</span>
+          <a class="chip" href="exam.html#/gym">📚 Ôn tập nhanh 10 câu</a>
+          <a class="chip" href="flashcards.html">⚡ Flashcard từ vựng</a>
+          <a class="chip" href="tips.html">💡 Lộ trình 20 mẹo</a>
+          <a class="chip" href="calculator.html">🧮 Tính điểm → CEFR</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEPS -->
+    <section class="block" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Cách dùng</span><h2>Ba bước, không vòng vèo</h2></div>
+        <div class="grid grid-3 steps">
+          <div class="card step"><h3>Chọn kỹ năng</h3><p class="muted mb-0">Đăng nhập bằng Google hoặc email (miễn phí, không cần số điện thoại) để lưu tiến trình và dùng được trên mọi thiết bị.</p></div>
+          <div class="card step"><h3>Làm như thi thật</h3><p class="muted mb-0">Đồng hồ đếm ngược, mỗi lần một câu, đúng nhịp và format đề Aptis ESOL.</p></div>
+          <div class="card step"><h3>Nhận điểm + lời giải</h3><p class="muted mb-0">Grammar, Reading, Listening ra điểm ngay thang 0–50, kèm giải thích và transcript. Writing, Speaking có bài mẫu để so.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="block">
+      <div class="container narrow">
+        <div class="section-head"><span class="eyebrow">Hỏi đáp</span><h2>Câu hỏi thường gặp</h2></div>
+        <details class="faq"><summary>Cần bao nhiêu điểm để đạt B1, B2?</summary><p>Điểm Overall là tổng 4 kỹ năng Listening, Reading, Speaking, Writing (mỗi kỹ năng 0–50, tối đa 200). Theo bảng tham khảo FlashAptis đang dùng: <b>B1 từ 80</b>, <b>B2 từ 120</b>, <b>C1 từ 160</b>. Nhiều nơi còn yêu cầu từng kỹ năng đạt bậc tối thiểu, nên đừng để kỹ năng nào quá thấp. Thử nhập điểm ở trang <a href="calculator.html">Tính điểm</a> để biết còn thiếu bao nhiêu.</p></details>
+        <details class="faq"><summary>Grammar & Vocabulary có tính vào điểm tổng không?</summary><p>Không. Phần này vẫn bắt buộc thi, nhưng không cộng vào Overall — nó chỉ được xét khi điểm một kỹ năng nằm sát ranh giới giữa hai bậc. Vì vậy hãy dồn sức cho 4 kỹ năng chính, đặc biệt Speaking và Writing là nơi dễ kéo điểm nhất.</p></details>
+        <details class="faq"><summary>Điểm ở FlashAptis có giống điểm thi thật không?</summary><p>Chỉ là <b>ước lượng</b>. Listening, Reading, Grammar chấm đúng/sai nên khá sát. Writing được chấm tự động theo độ dài, chính tả, ngữ pháp và mức bám sát câu hỏi (có AI hỗ trợ nếu bạn đăng nhập); Speaking do bạn tự chấm theo tiêu chí. Điểm thật do giám khảo British Council chấm và có thể lệch.</p></details>
+        <details class="faq"><summary>Nên ôn kỹ năng nào trước khi chỉ còn ít thời gian?</summary><p>Làm một đề mỗi kỹ năng để biết điểm yếu, rồi ưu tiên kỹ năng thấp nhất. Writing và Speaking tăng điểm nhanh nhất nếu bạn học thuộc khung trả lời (mở bài – lý do – ví dụ) và viết/nói đủ độ dài. Xem <a href="tips.html">Lộ trình mẹo</a> để ôn theo thứ tự phần thi.</p></details>
+        <details class="faq"><summary>Free và Pro khác nhau thế nào?</summary><p>Free (0đ) làm được 2 đề đầu mỗi kỹ năng, AI chấm Writing 3 lượt/ngày. Pro (50.000đ/30 ngày) mở toàn bộ đề và 6 lượt AI/ngày, thanh toán bằng QR chuyển khoản. Xem chi tiết ở trang <a href="pricing.html">Gói Pro</a>.</p></details>
+        <details class="faq"><summary>Có cần đăng nhập không? Kết quả lưu ở đâu?</summary><p>Flashcard, Mẹo và trang Ngữ pháp dùng được ngay không cần đăng nhập — khi đó tiến độ chỉ lưu trên trình duyệt đang dùng. Luyện đề, Ôn tập, Full Test và Dashboard lộ trình cần đăng nhập (Google hoặc email). Đã đăng nhập thì <b>đồng bộ theo tài khoản</b>: lịch sử làm bài, sổ câu sai, mục tiêu lộ trình, chuỗi ngày, từ đã thuộc/từ khó, chủ điểm ngữ pháp đã học, mẹo đã làm. <b>Chỉ lưu trên máy</b>: bản nháp bài làm dở (tối đa 24 giờ), chế độ sáng/tối và các lựa chọn hiển thị. Bản ghi âm Speaking không được lưu lại.</p></details>
+        <details class="faq"><summary>Listening, Speaking nên dùng máy gì?</summary><p>Máy tính dùng Chrome hoặc Edge cho giọng đọc Anh-Anh rõ nhất; nên đeo tai nghe có micro. Bản ghi âm Speaking chỉ nằm trên máy bạn để nghe lại, không gửi đi đâu.</p></details>
+      </div>
+    </section>
+
+    <section class="block" style="padding-top:0">
+      <div class="container">
+        <div class="cta-band">
+          <div><h2>Sẵn sàng thử sức chưa?</h2><p>Làm một đề Grammar 25 phút để biết mình đang ở đâu.</p></div>
+          <a class="btn btn-outline btn-lg" href="exam.html#/grammar">Bắt đầu ngay ⚡</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>FA.renderShell("home");</script>
+  <script src="data/grammar.js"></script>
+  <script src="data/reading.js"></script>
+  <script src="data/listening.js"></script>
+  <script src="data/vocab.js"></script>
+  <script src="data/vocab-index.js"></script>
+  <script>
+    // số liệu thật từ ngân hàng đề
+    document.getElementById("statQ").textContent = FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0);
+    document.getElementById("statR").textContent = FA_READING.length;
+    document.getElementById("statL").textContent = FA_LISTENING.length;
+    document.getElementById("statV").textContent = (FA_VOCAB.reduce((n, d) => n + d.cards.length, 0) + (window.FA_VOCAB_INDEX || []).reduce((n, d) => n + d.n, 0)).toLocaleString("vi-VN");
+    // demo tương tác
+    document.querySelectorAll("#demo .demo-opt").forEach((el) => el.addEventListener("click", () => {
+      document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok", "bad"));
+      const ok = el.dataset.k === "1";
+      document.querySelector('#demo .demo-opt[data-k="1"]').classList.add("ok");
+      if (!ok) el.classList.add("bad");
+      document.getElementById("demoMsg").innerHTML = ok ? "✓ Chính xác! Chủ ngữ số ít <b>she</b> → <b>goes</b>." : "✗ Chưa đúng. Chủ ngữ số ít <b>she</b> → động từ thêm -es: <b>goes</b>.";
+    }));
+  </script>
+</body>
+</html>

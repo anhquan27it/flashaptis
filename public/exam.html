@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Luyện đề Aptis — FlashAptis</title>
+  <meta name="description" content="Luyện đề Aptis online: Grammar, Reading, Listening, Writing, Speaking. Chấm điểm và giải thích ngay.">
+  <meta name="author" content="FPT University">
+  <meta name="copyright" content="FlashAptis - Made by FPT University">
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" type="image/png" href="assets/img/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/core/fx.js"></script>
+</head>
+<body>
+  <main id="app"></main>
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>FA.renderShell(location.hash.indexOf("gym") > -1 ? "gym" : "exam");</script>
+  <script src="data/grammar.js"></script>
+  <script src="data/reading.js"></script>
+  <script src="data/listening.js"></script>
+  <script src="data/writing.js"></script>
+  <script src="data/writing-rel.js"></script>
+  <script src="data/speaking.js"></script>
+  <script src="data/mock.js"></script><!-- Full Test: ghép đề lẻ theo id -->
+  <script src="assets/js/grading/relevance.js"></script>
+  <script src="assets/js/grading/ai-config.js"></script><!-- tùy chọn: có file này (đã .gitignore) thì AI chấm nội dung Writing -->
+  <script src="assets/js/grading/ai-grader.js"></script>
+  <script src="assets/js/grading/speaking-grader.js"></script><!-- AI chấm Speaking trên bản nhận dạng giọng nói (cần ai-config.js) -->
+  <script src="assets/js/grading/spellcheck.js"></script>
+  <script src="data/grammar-index.js"></script><!-- mục lục Học ngữ pháp: lộ trình tính giống dashboard + liên kết ở Ôn tập -->
+  <script src="data/vocab-index.js"></script><!-- Ôn tập từ vựng: tải bộ CEFR khi cần -->
+  <script src="assets/js/core/roadmap.js"></script><!-- ăn mừng khi xong giai đoạn lộ trình -->
+  <script src="assets/js/pages/exam.js"></script>
+</body>
+</html>

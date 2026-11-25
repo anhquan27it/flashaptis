@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gói Free & Pro — FlashAptis</title>
+  <meta name="author" content="FPT University">
+  <meta name="copyright" content="FlashAptis - Made by FPT University">
+  <meta name="theme-color" content="#f97316">
+  <link rel="icon" type="image/png" href="assets/img/brand/favicon-48.png">
+  <link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem("flashaptis:theme")==='"dark"')document.documentElement.dataset.theme="dark"}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/core/fx.js"></script>
+</head>
+<body>
+  <main class="page"><div class="container narrow">
+    <span class="eyebrow">Gói tài khoản</span>
+    <h1 class="page-title">⚡ Free hay Pro?</h1>
+    <p class="page-sub">Free dùng mãi mãi không mất tiền. Pro mở toàn bộ đề và nhiều lượt AI chấm Writing hơn — thanh toán bằng QR chuyển khoản ngân hàng.</p>
+
+    <div class="plans" id="plans"></div>
+
+    <div class="card mt-3" id="payArea"></div>
+
+    <p class="muted mt-2" style="font-size:.86rem">Lượt AI tính theo ngày (giờ Việt Nam), hết ngày tự làm mới; lượt không dùng không cộng dồn. Không đăng nhập vẫn làm được các đề Free, nhưng AI chấm cần đăng nhập để đếm lượt. Pro được kích hoạt sau khi admin xác nhận đã nhận tiền; gia hạn khi đang còn Pro thì cộng tiếp <span id="daysTxt">30</span> ngày vào ngày hết hạn hiện tại.</p>
+  </div></main>
+
+  <script src="assets/js/core/common.js"></script>
+  <script src="assets/js/firebase/firebase-config.js"></script>
+  <script src="assets/js/firebase/cloud.js"></script>
+  <script src="assets/js/firebase/plan.js"></script>
+  <script>
+    FA.renderShell("pricing");
+    const P = FA.PLAN, esc = FA.esc, plan = FA.plan;
+    document.getElementById("daysTxt").textContent = P.days;
+
+    function drawPlans() {
+      const pro = plan.isPro(), u = plan.user();
+      document.getElementById("plans").innerHTML = `
+        <div class="card plan-card">
+          <span class="pill gray" style="align-self:flex-start">Free</span>
+          <div class="price">0đ <small>/ mãi mãi</small></div>
+          <ul>
+            <li><b>${P.freeTests} đề đầu</b> của mỗi kỹ năng (Grammar, Reading, Listening, Writing, Speaking)</li>
+            <li>AI chấm nội dung Writing <b>${P.aiPerDay.free} lượt/ngày</b> (cần đăng nhập)</li>
+            <li>Ôn tập nhanh, flashcard, sổ câu sai, lộ trình mẹo</li>
+            <li>Đồng bộ lịch sử làm bài khi đăng nhập</li>
+          </ul>
+          ${u && !pro ? `<span class="pill green" style="align-self:flex-start">Gói hiện tại</span>` : ""}
+        </div>
+        <div class="card plan-card best">
+          <span class="pill pro" style="align-self:flex-start">⭐ Pro</span>
+          <div class="price">${plan.fmtVND(P.price)} <small>/ ${P.days} ngày</small></div>
+          <ul>
+            <li><b>Toàn bộ đề</b> của mọi kỹ năng, kể cả đề mới thêm sau này</li>
+            <li>AI chấm nội dung Writing <b>${P.aiPerDay.pro} lượt/ngày</b></li>
+            <li>Mọi tính năng của gói Free</li>
+          </ul>
+          ${pro ? `<span class="pill green" style="align-self:flex-start">Đang dùng · hết hạn ${plan.fmtDay(plan.proUntil())}</span>` : ""}
+          <button class="btn btn-primary" id="buyBtn" type="button">${pro ? "Gia hạn Pro" : "Nâng cấp Pro"}</button>
+        </div>`;
+      document.getElementById("buyBtn").onclick = () => { showQR = true; drawPay(); document.getElementById("payArea").scrollIntoView({ behavior: "smooth" }); };
+    }
+
+    let showQR = false;
+    async function drawPay() {
+      const area = document.getElementById("payArea");
+      if (!plan.loaded()) { area.innerHTML = `<p class="muted mb-0">Đang kiểm tra tài khoản…</p>`; return; }
+      const u = plan.user();
+      if (!u) {
+        area.innerHTML = `<h3>Thanh toán</h3><p class="muted">Đăng nhập (Google hoặc email) để nâng cấp — gói Pro được gắn với tài khoản, dùng được trên mọi thiết bị.</p><button class="btn btn-primary" id="loginBtn" type="button">Đăng nhập / Tạo tài khoản</button>`;
+        document.getElementById("loginBtn").onclick = () => FA.cloud && FA.cloud.signIn();
+        return;
+      }
+      area.innerHTML = `<p class="muted mb-0">Đang tải lịch sử thanh toán…</p>`;
+      let pays = [];
+      try { pays = await plan.myPayments(); } catch (e) { console.warn(e); }
+      const pending = pays.find((p) => p.status === "pending");
+      const ST = { pending: "⏳ Chờ duyệt", approved: "✅ Đã kích hoạt", rejected: "❌ Từ chối" };
+      const hist = pays.length ? `<h4 class="mt-3">Lịch sử thanh toán</h4><div class="tbl-wrap"><table class="tbl"><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr>${pays.map((p) => `<tr><td>${FA.fmtDate(p.createdAt)}</td><td>${plan.fmtVND(p.amount)}</td><td>${ST[p.status] || esc(p.status)}${p.note ? ` · <span class="muted">${esc(p.note)}</span>` : ""}</td></tr>`).join("")}</table></div>` : "";
+
+      const bankReady = P.bank && P.bank.accountNo && !/^0+$/.test(String(P.bank.accountNo).trim());
+      const qr = !bankReady
+        ? `<div class="explain mt-2">⚠️ Chủ trang chưa cấu hình số tài khoản ngân hàng nhận thanh toán (<code>FA.PLAN.bank</code> trong <code>plan.js</code>). Vui lòng quay lại sau.</div>`
+        : `
+        <div class="pay-box mt-2">
+          <img src="${esc(plan.qrUrl())}" alt="Mã QR chuyển khoản ${esc(plan.fmtVND(P.price))}" width="240" height="240">
+          <div>
+            <dl>
+              <dt>Ngân hàng</dt><dd>${esc(P.bank.name || P.bank.id)}</dd>
+              <dt>Số tài khoản</dt><dd>${esc(P.bank.accountNo)} <button type="button" class="copy-btn" data-copy="${esc(P.bank.accountNo)}">📋 Sao chép</button></dd>
+              <dt>Chủ tài khoản</dt><dd>${esc(P.bank.accountName)}</dd>
+              <dt>Số tiền</dt><dd>${plan.fmtVND(P.price)}</dd>
+              <dt>Nội dung</dt><dd><code>${esc(plan.memo())}</code> <button type="button" class="copy-btn" data-copy="${esc(plan.memo())}">📋 Sao chép</button></dd>
+            </dl>
+            <div class="explain">Mở app ngân hàng → quét QR (số tiền và nội dung đã điền sẵn). Nếu chuyển tay, <b>ghi đúng nội dung <code>${esc(plan.memo())}</code></b> để admin nhận ra tài khoản của bạn.</div>
+            ${pending ? "" : `<button class="btn btn-primary mt-2" id="paidBtn" type="button">Tôi đã chuyển khoản</button>`}
+          </div>
+        </div>`;
+
+      area.innerHTML = `
+        <h3>Thanh toán</h3>
+        <p class="mb-0">Tài khoản: <b>${esc(u.email || u.displayName || "")}</b> · Gói hiện tại: <b>${plan.name()}</b>${plan.isPro() ? ` (đến ${plan.fmtDay(plan.proUntil())})` : ""} · AI hôm nay: ${plan.aiUsed()}/${plan.aiLimit()} lượt${plan.isAdmin() ? ` · <a href="admin.html">Trang admin →</a>` : ""}</p>
+        ${pending ? `<div class="explain">⏳ Yêu cầu gửi lúc ${FA.fmtDate(pending.createdAt)} đang chờ admin xác nhận. Pro sẽ tự bật khi được duyệt — tải lại trang để cập nhật.</div>` : ""}
+        ${showQR || pending ? qr : `<p class="muted mt-1 mb-0">Bấm “${plan.isPro() ? "Gia hạn Pro" : "Nâng cấp Pro"}” ở trên để lấy mã QR.</p>`}
+        ${hist}`;
+      area.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => FA.copy(b.dataset.copy, b)));
+      const btn = document.getElementById("paidBtn");
+      if (btn) btn.onclick = async () => {
+        if (!(await FA.confirm(`Xác nhận bạn đã chuyển ${plan.fmtVND(P.price)} với nội dung "${plan.memo()}"?`, { title: "Xác nhận chuyển khoản", okText: "Đã chuyển khoản" }))) return;
+        btn.disabled = true;
+        try { await plan.submitPayment(); FA.toast("Đã gửi yêu cầu — chờ admin xác nhận"); drawPay(); }
+        catch (e) { console.warn(e); FA.toast("Không gửi được yêu cầu: " + ((e && e.message) || "lỗi")); btn.disabled = false; }
+      };
+    }
+
+    function draw() { drawPlans(); drawPay(); }
+    plan.onChange(draw);
+    draw();
+  </script>
+</body>
+</html>

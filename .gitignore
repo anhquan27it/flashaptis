@@ -2,3 +2,16 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# API key của AI chấm Writing — không commit
+public/assets/js/grading/ai-config.js
+node_modules/
+functions/node_modules/
+functions/.env*
+.firebase/
+*-debug.log
+
+# File Excel nguồn từ vựng CEFR (có thông tin nguồn bên thứ ba) — chỉ dùng cục bộ cho npm run build:vocab, không commit
+EXCEL/
+# PDF ngữ pháp nguồn (có dòng ghi nguồn bên thứ ba) — chỉ dùng cục bộ cho npm run build:grammar, không commit
+Ngữ pháp/
