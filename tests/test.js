@@ -349,6 +349,74 @@ test("Speaking phân biệt điểm AI, câu bỏ trống và câu chưa chấm 
   assert.equal(blank.rates.reduce((sum, score) => sum + score, 0), 0);
 });
 
+test("Speaking chế độ tự chấm (không AI) hiển thị đúng giao diện, cho phép chấm 0–5 và lưu speakRate", () => {
+  const s2 = createSandbox();
+  const noop = { onclick: null, style: { setProperty() {} }, textContent: "", innerHTML: "", classList: { toggle() {}, add() {}, remove() {} } };
+  const replayBtn = { dataset: { replay: "0" }, onclick: null };
+  const rateInputs = [0, 1, 2, 3].map((k) => ({ dataset: { selfRate: String(k) }, value: "0", oninput: null }));
+  const valEls = [0, 1, 2, 3].map(() => ({ textContent: "" }));
+  const totalEl = { textContent: "" }, cefrEl = { textContent: "" }, saveBtn = { onclick: null };
+  const reviewEl = {
+    innerHTML: "",
+    querySelectorAll: (sel) => (sel === "[data-self-rate]" ? rateInputs : []),
+    querySelector: (sel) => {
+      if (sel === "[data-self-total]") return totalEl;
+      if (sel === "[data-self-cefr]") return cefrEl;
+      if (sel === "[data-save-self]") return saveBtn;
+      const m = /^\[data-self-value="(\d)"\]$/.exec(sel);
+      return m ? valEls[+m[1]] : null;
+    },
+  };
+  const appEl = {
+    id: "app", innerHTML: "",
+    querySelectorAll: (sel) => (sel === "[data-replay]" ? [replayBtn] : []),
+    querySelector: (sel) => (sel === "#review" ? reviewEl : noop),
+  };
+  s2.document.getElementById = (id) => (id === "app" ? appEl : null);
+  s2.location.hash = "#/speaking/s1";
+  s2.scrollTo = () => {};
+  loadScripts(s2, [
+    "public/assets/js/core/common.js",
+    ...["grammar", "reading", "listening", "writing", "speaking"].map((name) => "public/data/" + name + ".js"),
+    "public/assets/js/grading/speaking-grader.js",
+  ]);
+  s2.FA.saveAttempt("speaking", "s1", 0, {
+    cefr: "A0",
+    ans: { rates: [0, 0, 0, 0], responses: Array(10).fill(true), selfMode: true },
+  });
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  assert.ok(typeof replayBtn.onclick === "function");
+  replayBtn.onclick();
+  assert.match(reviewEl.innerHTML, /Tự chấm Speaking/);
+  assert.match(reviewEl.innerHTML, /min="0" max="5" step="1"/);
+  assert.match(reviewEl.innerHTML, /id="selfCefr"/);
+  assert.doesNotMatch(reviewEl.innerHTML, /AI chưa chấm được/);
+  assert.match(reviewEl.innerHTML, /3 câu về bản thân/);
+  [4, 3, 4, 3].forEach((v, k) => { rateInputs[k].value = String(v); rateInputs[k].oninput(); });
+  assert.equal(totalEl.textContent, 35);
+  assert.equal(cefrEl.textContent, "B1");
+  saveBtn.onclick();
+  assert.equal(s2.FA.getAttempts("speaking", "s1")[0].score, 35);
+  assert.deepEqual(Array.from(s2.FA.getAttempts("speaking", "s1")[0].ans.manualRates), [4, 3, 4, 3]);
+  assert.deepEqual(Array.from(s2.FA.store.get("speakRate:s1", [])), [4, 3, 4, 3]);
+
+  // Lượt AI chấm dở (câu 0 có AI, câu 1 bỏ trống, câu 2 lỗi AI) vẫn giữ nguyên thông báo AI khi xem lại
+  s2.FA.saveAttempt("speaking", "s1", 10, {
+    cefr: "A1",
+    ans: {
+      rates: [2.25, 0, 0, 0],
+      responses: [true, false, true, false, false, false, false, false, false, false],
+      trans: ["Hello everyone", "", "I see a park"],
+      ai: { items: { 0: { score: 4.5, comment: "Trả lời tốt." } }, model: "test-model" },
+    },
+  });
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  replayBtn.onclick();
+  assert.match(reviewEl.innerHTML, /<b>AI chấm: 4\.5\/5<\/b> — Trả lời tốt\./);
+  assert.match(reviewEl.innerHTML, /0\/5.*Chưa hoàn thành/);
+  assert.match(reviewEl.innerHTML, /AI chưa chấm được/);
+});
+
 test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng Overall CEFR", () => {
   const s2 = createSandbox();
   const appEl = {
