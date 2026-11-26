@@ -95,6 +95,10 @@
     lastHash = location.hash;
     window.scrollTo(0, 0);
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+    if (app && app.dataset) {
+      if (SKILLS[parts[0]]) app.dataset.skill = parts[0];
+      else delete app.dataset.skill;
+    }
     if (!parts.length) return viewHub();
     if (parts[0] === "progress") return viewProgress();
     if (parts[0] === "gym") {

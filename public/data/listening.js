@@ -12173,4 +12173,2104 @@ window.FA_LISTENING = [
       }
     ]
   },
+  {
+    "id": "l28",
+    "title": "Đề 25 — Public transport and urban commuting",
+    "parts": [
+      {
+        "type": "mcq",
+        "title": "Part 1 · Câu 1–13",
+        "instr": "Nghe từng đoạn ngắn (tối đa 2 lần) và chọn đáp án đúng.",
+        "items": [
+          {
+            "q": "Which platform does the 08:15 train to Bristol leave from?",
+            "o": [
+              "Platform 3",
+              "Platform 7",
+              "Platform 9"
+            ],
+            "a": 1,
+            "e": "'The 08:15 service to Bristol has moved from Platform 3 to Platform 7' → chuyến tàu chuyển sang sân ga số 7.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Attention passengers. The 08:15 service to Bristol has moved from Platform 3 to Platform 7.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Passengers for Cardiff should continue to wait at Platform 9."
+              }
+            ]
+          },
+          {
+            "q": "How much does a weekly student bus pass cost?",
+            "o": [
+              "£12",
+              "£15",
+              "£18"
+            ],
+            "a": 0,
+            "e": "'With a student card, the weekly pass is £12 instead of the usual £18' → thẻ tuần sinh viên giá £12.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Can I buy a weekly bus pass? I have my university ID."
+              },
+              {
+                "s": "f",
+                "t": "Sure. With a student card, the weekly pass is £12 instead of the usual £18.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why is the riverside ferry delayed this morning?",
+            "o": [
+              "Heavy fog on the river",
+              "A broken ticket machine",
+              "A bridge repair"
+            ],
+            "a": 0,
+            "e": "'Because of thick fog along the river, the ferry will depart twenty minutes late' → trễ do sương mù dày trên sông.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Good morning commuters. Because of thick fog along the river, the ferry will depart twenty minutes late.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "You can use your ferry ticket on the number 14 bus in the meantime."
+              }
+            ]
+          },
+          {
+            "q": "Where did Liam leave his umbrella?",
+            "o": [
+              "On the train",
+              "At the ticket office",
+              "In the station cafe"
+            ],
+            "a": 2,
+            "e": "'I had it when I bought my coffee, so it must still be under the table in the station cafe' → để quên ở quán cà phê nhà ga.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Did you drop your umbrella on the train, Liam?"
+              },
+              {
+                "s": "m",
+                "t": "No, I had it when I bought my coffee, so it must still be under the table in the station cafe.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What time does the last airport shuttle leave the city centre?",
+            "o": [
+              "22:30",
+              "23:15",
+              "23:45"
+            ],
+            "a": 1,
+            "e": "'The final coach departs the main square at 23:15' → chuyến cuối rời trung tâm lúc 23:15.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Airport Express coaches run every half hour until 22:30."
+              },
+              {
+                "s": "f",
+                "t": "After that, the final coach departs the main square at 23:15 and reaches Terminal 2 by 23:45.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What should cyclists do at the west entrance of the station?",
+            "o": [
+              "Walk their bikes",
+              "Park on the pavement",
+              "Show a helmet"
+            ],
+            "a": 0,
+            "e": "'Please get off and push your bicycle through the west entrance' → xuống xe và dắt bộ.",
+            "script": [
+              {
+                "s": "m",
+                "t": "For everyone's safety, please get off and push your bicycle through the west entrance.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "Covered racks are located fifty metres ahead on the left."
+              }
+            ]
+          },
+          {
+            "q": "Which bus stop is closed until Friday?",
+            "o": [
+              "Market Street",
+              "Green Park",
+              "Hospital Gate"
+            ],
+            "a": 1,
+            "e": "'Roadworks mean the Green Park stop is closed until Friday evening' → trạm Green Park đóng cửa đến thứ Sáu.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Route 22 is running normally between Market Street and Hospital Gate."
+              },
+              {
+                "s": "f",
+                "t": "However, roadworks mean the Green Park stop is closed until Friday evening.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What did Nora decide to buy for her commute?",
+            "o": [
+              "A folding bicycle",
+              "A new raincoat",
+              "Noise-cancelling headphones"
+            ],
+            "a": 2,
+            "e": "'I went for noise-cancelling headphones so I can listen to podcasts on the train' → chọn mua tai nghe chống ồn.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Did you end up getting that folding bike?"
+              },
+              {
+                "s": "f",
+                "t": "It was too heavy to carry up the stairs, so I went for noise-cancelling headphones so I can listen to podcasts on the train.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What phone number should passengers call about lost property?",
+            "o": [
+              "01632 960 412",
+              "01632 960 421",
+              "01632 960 142"
+            ],
+            "a": 0,
+            "e": "'call our lost property desk on 01632 960 412' → số điện thoại là 01632 960 412.",
+            "script": [
+              {
+                "s": "m",
+                "t": "If you have left an item on any tram or bus, please call our lost property desk on 01632 960 412.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "The line is open Monday to Saturday from nine to five."
+              }
+            ]
+          },
+          {
+            "q": "Why does Ben prefer taking the early tram?",
+            "o": [
+              "Tickets are cheaper",
+              "He always gets a seat",
+              "It stops closer to his office"
+            ],
+            "a": 1,
+            "e": "'if I catch the 7:20 tram, I can always sit down and read' → luôn có chỗ ngồi.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Why do you leave home so early, Ben? Is the fare cheaper?"
+              },
+              {
+                "s": "m",
+                "t": "The price is the same, but if I catch the 7:20 tram, I can always sit down and read.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Where can travellers top up their smart travel cards?",
+            "o": [
+              "Only at the main station",
+              "At any corner newsagent",
+              "Inside the bus driver's cabin"
+            ],
+            "a": 1,
+            "e": "'You can add credit at any local newsagent showing the blue travel sign' → nạp tiền tại bất kỳ quầy báo nào có biển hiệu.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Drivers no longer accept cash top-ups on board."
+              },
+              {
+                "s": "f",
+                "t": "You can add credit at any local newsagent showing the blue travel sign, or use the mobile app.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What change is happening to the night metro this weekend?",
+            "o": [
+              "It will close at midnight",
+              "Trains will run every twenty minutes",
+              "It will skip Central Station"
+            ],
+            "a": 1,
+            "e": "'trains will operate every twenty minutes instead of every ten' → tàu chạy cách nhau 20 phút.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Due to signal testing this Saturday night, trains will operate every twenty minutes instead of every ten.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "All stations including Central Station will remain open."
+              }
+            ]
+          },
+          {
+            "q": "What does the woman ask her colleague to bring to the carpool?",
+            "o": [
+              "A spare phone charger",
+              "Coins for the toll road",
+              "Directions to the hotel"
+            ],
+            "a": 0,
+            "e": "'Could you bring a spare phone charger? Mine stopped working yesterday' → nhờ mang sạc điện thoại dự phòng.",
+            "script": [
+              {
+                "s": "f",
+                "t": "I've already paid the motorway toll online and saved the hotel map."
+              },
+              {
+                "s": "f",
+                "t": "Could you bring a spare phone charger? Mine stopped working yesterday.",
+                "hl": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "speakers",
+        "title": "Part 2 · Câu 14",
+        "instr": "Nghe 4 người (A, B, C, D) nói về cách họ đi làm hằng ngày. Ghép mỗi người với mô tả đúng (có 2 lựa chọn thừa).",
+        "topic": "How people commute to work",
+        "options": [
+          "Walks part of the journey for exercise",
+          "Shares a car with neighbours",
+          "Works on a laptop during the train ride",
+          "Cycles along a quiet canal path",
+          "Changed working hours to avoid rush hour",
+          "Takes the ferry to enjoy the view"
+        ],
+        "speakers": [
+          {
+            "a": 0,
+            "e": "Người A: 'I get off two stops early and walk the last twenty minutes' → đi bộ một đoạn để tập thể dục.",
+            "script": [
+              {
+                "s": "m",
+                "who": "A",
+                "t": "I take the bus most of the way, but I get off two stops early and walk the last twenty minutes."
+              },
+              {
+                "s": "m",
+                "who": "A",
+                "t": "It wakes me up before my first meeting and saves me a gym trip."
+              }
+            ]
+          },
+          {
+            "a": 3,
+            "e": "Người B: 'I follow the flat towpath beside the canal on my bike' → đạp xe dọc lối đi ven kênh.",
+            "script": [
+              {
+                "s": "f",
+                "who": "B",
+                "t": "I stopped driving last spring and now I follow the flat towpath beside the canal on my bike."
+              },
+              {
+                "s": "f",
+                "who": "B",
+                "t": "There are no traffic lights there, so my journey always takes exactly twenty-five minutes."
+              }
+            ]
+          },
+          {
+            "a": 4,
+            "e": "Người C: 'My manager agreed I could start at ten and finish at six' → đổi giờ làm để tránh giờ cao điểm.",
+            "script": [
+              {
+                "s": "m",
+                "who": "C",
+                "t": "The eight o'clock train used to leave me exhausted before work even began."
+              },
+              {
+                "s": "m",
+                "who": "C",
+                "t": "My manager agreed I could start at ten and finish at six, and now the carriages are almost empty."
+              }
+            ]
+          },
+          {
+            "a": 1,
+            "e": "Người D: 'Three of us on the same street take turns driving into the business park' → đi chung xe với hàng xóm.",
+            "script": [
+              {
+                "s": "f",
+                "who": "D",
+                "t": "Public transport doesn't reach our industrial estate, so three of us on the same street take turns driving into the business park."
+              },
+              {
+                "s": "f",
+                "who": "D",
+                "t": "We split the fuel bill and the drive passes much faster when you have company."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "conv",
+        "title": "Part 3 · Câu 15",
+        "instr": "Nghe hai người thảo luận về việc xây thêm làn xe đạp trong thành phố. Ai bày tỏ ý kiến sau: người đàn ông (Man), người phụ nữ (Woman) hay cả hai (Both)?",
+        "topic": "Should cities build more cycle lanes?",
+        "script": [
+          {
+            "s": "f",
+            "t": "If the council builds separated cycle lanes on main roads, far more parents will let their children bike to school."
+          },
+          {
+            "s": "m",
+            "t": "I agree that painted lines alone don't feel safe, especially near junctions."
+          },
+          {
+            "s": "f",
+            "t": "Exactly. Physical kerbs make the biggest difference."
+          },
+          {
+            "s": "m",
+            "t": "My main worry is delivery vans. On narrow shopping streets, removing a lane can block shops from unloading goods."
+          },
+          {
+            "s": "f",
+            "t": "That's fair, though many towns solve it by setting early-morning delivery windows."
+          },
+          {
+            "s": "m",
+            "t": "True. Whatever they build, the routes need to connect smoothly instead of ending suddenly at roundabouts."
+          },
+          {
+            "s": "f",
+            "t": "Yes, a disconnected network is the quickest way to waste public money."
+          }
+        ],
+        "statements": [
+          {
+            "q": "Separated lanes would encourage more families to cycle.",
+            "a": "Woman",
+            "e": "Người phụ nữ: 'far more parents will let their children bike to school'."
+          },
+          {
+            "q": "Painted lines by themselves are not safe enough.",
+            "a": "Both",
+            "e": "Người đàn ông: 'painted lines alone don't feel safe'; người phụ nữ: 'Exactly. Physical kerbs make the biggest difference'."
+          },
+          {
+            "q": "Narrow shopping streets may face delivery difficulties.",
+            "a": "Man",
+            "e": "Người đàn ông: 'On narrow shopping streets, removing a lane can block shops from unloading goods'."
+          },
+          {
+            "q": "Cycle routes must form a continuous network.",
+            "a": "Both",
+            "e": "Người đàn ông: 'the routes need to connect smoothly'; người phụ nữ: 'Yes, a disconnected network is the quickest way to waste public money'."
+          }
+        ]
+      },
+      {
+        "type": "mono",
+        "title": "Part 4 · Câu 16–17",
+        "instr": "Nghe bài nói và trả lời 2 câu hỏi cho mỗi bài.",
+        "talks": [
+          {
+            "topic": "Night buses for shift workers",
+            "script": [
+              {
+                "s": "m",
+                "t": "When people think of city transport, they usually picture the weekday rush hour."
+              },
+              {
+                "s": "m",
+                "t": "Yet thousands of hospital staff, bakers, and warehouse workers travel between midnight and five in the morning."
+              },
+              {
+                "s": "m",
+                "t": "Last year, our transport authority launched three circular night routes linking residential estates directly to the hospital and distribution hub."
+              },
+              {
+                "s": "m",
+                "t": "Rather than using full-sized double-deckers, we chose smaller electric minibuses that are quieter on residential streets."
+              },
+              {
+                "s": "m",
+                "t": "Passenger numbers doubled within six months, and several employers now subsidise their staff passes."
+              }
+            ],
+            "questions": [
+              {
+                "q": "Who were the new night routes mainly designed for?",
+                "o": [
+                  "Tourists arriving at the airport",
+                  "People working overnight shifts",
+                  "University students going home late"
+                ],
+                "a": 1,
+                "e": "'hospital staff, bakers, and warehouse workers travel between midnight and five' → người làm ca đêm."
+              },
+              {
+                "q": "Why did the authority choose smaller electric minibuses?",
+                "o": [
+                  "They carry more luggage",
+                  "They make less noise in housing areas",
+                  "They travel faster on motorways"
+                ],
+                "a": 1,
+                "e": "'smaller electric minibuses that are quieter on residential streets' → ít ồn hơn ở khu dân cư."
+              }
+            ]
+          },
+          {
+            "topic": "Contactless ticketing in regional towns",
+            "script": [
+              {
+                "s": "f",
+                "t": "Small towns often struggle to modernise bus tickets because each private operator uses a different fare system."
+              },
+              {
+                "s": "f",
+                "t": "A passenger switching from a rural bus to a town shuttle used to buy two separate paper tickets."
+              },
+              {
+                "s": "f",
+                "t": "Our regional partnership introduced a single tap-on, tap-off system with an automatic daily price cap."
+              },
+              {
+                "s": "f",
+                "t": "Crucially, we kept cash payments available so older residents without bank cards are not excluded."
+              },
+              {
+                "s": "f",
+                "t": "Boarding times have dropped by nearly a third, which helps buses stay on schedule."
+              }
+            ],
+            "questions": [
+              {
+                "q": "What problem did passengers face before the new system?",
+                "o": [
+                  "They had to buy separate tickets for different operators",
+                  "Buses only accepted foreign currency",
+                  "Online booking charged a high fee"
+                ],
+                "a": 0,
+                "e": "'used to buy two separate paper tickets' → phải mua vé rời cho từng hãng xe."
+              },
+              {
+                "q": "Why did the partnership keep cash as an option?",
+                "o": [
+                  "Card readers often fail in winter",
+                  "To ensure residents without bank cards can still travel",
+                  "Because drivers preferred handling coins"
+                ],
+                "a": 1,
+                "e": "'so older residents without bank cards are not excluded' → để người không có thẻ ngân hàng vẫn đi được."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l29",
+    "title": "Đề 26 — Healthy eating and food culture",
+    "parts": [
+      {
+        "type": "mcq",
+        "title": "Part 1 · Câu 1–13",
+        "instr": "Nghe từng đoạn ngắn (tối đa 2 lần) và chọn đáp án đúng.",
+        "items": [
+          {
+            "q": "What ingredient is missing from the kitchen?",
+            "o": [
+              "Garlic",
+              "Olive oil",
+              "Fresh basil"
+            ],
+            "a": 2,
+            "e": "'we're completely out of fresh basil' → hết lá húng quế tươi.",
+            "script": [
+              {
+                "s": "f",
+                "t": "I've chopped the garlic and there's plenty of olive oil left."
+              },
+              {
+                "s": "f",
+                "t": "Could you grab a bunch of fresh basil on your way back? We're completely out.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "When does the Saturday farmers' market close?",
+            "o": [
+              "13:00",
+              "14:30",
+              "16:00"
+            ],
+            "a": 1,
+            "e": "'stalls pack up at 2:30 p.m.' → đóng cửa lúc 14:30.",
+            "script": [
+              {
+                "s": "m",
+                "t": "The farmers' market opens at eight in the morning, and most bakers sell out by one."
+              },
+              {
+                "s": "m",
+                "t": "All stalls pack up at 2:30 p.m., so don't leave it too late.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why did Sam return his soup at the restaurant?",
+            "o": [
+              "It was too salty",
+              "It was lukewarm",
+              "It contained nuts"
+            ],
+            "a": 1,
+            "e": "'it arrived barely warm' → súp mang ra chỉ hơi âm ấm (nguội).",
+            "script": [
+              {
+                "s": "f",
+                "t": "Was there something wrong with the seasoning?"
+              },
+              {
+                "s": "m",
+                "t": "No, the flavour was fine, it just arrived barely warm, so I asked them to heat it up.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "How much is the cooking workshop including ingredients?",
+            "o": [
+              "£25",
+              "£30",
+              "£35"
+            ],
+            "a": 2,
+            "e": "'£30 for the lesson plus £5 for ingredients, so £35 in total' → tổng cộng £35.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Our Saturday pastry workshop costs £30 for the lesson plus £5 for ingredients, so £35 in total.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Aprons and recipe cards are provided free of charge."
+              }
+            ]
+          },
+          {
+            "q": "Which drink does Maya order?",
+            "o": [
+              "Iced green tea",
+              "Oat milk latte",
+              "Fresh orange juice"
+            ],
+            "a": 0,
+            "e": "'I'll just have an iced green tea with lemon' → gọi trà xanh đá.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Would you like your usual oat milk latte?"
+              },
+              {
+                "s": "f",
+                "t": "I've already had two coffees today. I'll just have an iced green tea with lemon.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Where is the new vegetarian bakery located?",
+            "o": [
+              "Next to the cinema",
+              "Opposite the post office",
+              "Inside the shopping mall"
+            ],
+            "a": 1,
+            "e": "'It's right across the street from the old post office' → đối diện bưu điện.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Have you tried the new bakery near the cinema?"
+              },
+              {
+                "s": "f",
+                "t": "That one closed last month. The new vegetarian place is right across the street from the old post office.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What should guests mention when booking the dinner?",
+            "o": [
+              "Their seating preference",
+              "Any food allergies",
+              "Their arrival time"
+            ],
+            "a": 1,
+            "e": "'please let us know about any food allergies at least two days in advance' → báo trước nếu bị dị ứng thực phẩm.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Everyone sits together at one long table starting at seven."
+              },
+              {
+                "s": "f",
+                "t": "When you reserve your place, please let us know about any food allergies at least two days in advance.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why did the man stop buying pre-cut vegetables?",
+            "o": [
+              "They spoil too quickly",
+              "They have too much plastic",
+              "They taste bitter"
+            ],
+            "a": 0,
+            "e": "'they always seemed to go soft after just one day in the fridge' → nhanh hỏng.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Don't pre-cut vegetables save you a lot of time?"
+              },
+              {
+                "s": "m",
+                "t": "They do, but they always seemed to go soft after just one day in the fridge, so I ended up throwing half away.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What day is the supermarket offering double loyalty points?",
+            "o": [
+              "Tuesday",
+              "Wednesday",
+              "Thursday"
+            ],
+            "a": 2,
+            "e": "'double points are now awarded every Thursday' → áp dụng vào thứ Năm.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Shoppers, please note that our midweek promotion has moved from Tuesday."
+              },
+              {
+                "s": "m",
+                "t": "Double points are now awarded every Thursday on all fresh produce.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What is the woman's main tip for cooking rice?",
+            "o": [
+              "Use boiling water",
+              "Rinse it several times first",
+              "Stir it while it cooks"
+            ],
+            "a": 1,
+            "e": "'the real secret is rinsing the grains three times before cooking' → vo gạo vài lần trước khi nấu.",
+            "script": [
+              {
+                "s": "f",
+                "t": "People often worry about the exact pot they use, but the real secret is rinsing the grains three times before cooking.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "And once the lid is on, never lift it to stir."
+              }
+            ]
+          },
+          {
+            "q": "How will the grocery box be delivered?",
+            "o": [
+              "By electric cargo bike",
+              "By refrigerated van",
+              "Left at a pickup locker"
+            ],
+            "a": 0,
+            "e": "'our riders deliver within the city by electric cargo bike' → giao bằng xe đạp chở hàng chạy điện.",
+            "script": [
+              {
+                "s": "m",
+                "t": "To cut emissions, our riders deliver within the city by electric cargo bike every Friday morning.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "Just leave last week's empty wooden crate on your doorstep."
+              }
+            ]
+          },
+          {
+            "q": "What did David forget to pack for the picnic?",
+            "o": [
+              "Paper napkins",
+              "A bottle opener",
+              "Plastic cups"
+            ],
+            "a": 2,
+            "e": "'I packed napkins and the bottle opener, but I left the cups on the kitchen counter' → quên mang cốc.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Great, you remembered the lemonade! Where are the cups?"
+              },
+              {
+                "s": "m",
+                "t": "Oh no—I packed napkins and the bottle opener, but I left the cups on the kitchen counter.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why does the nutritionist recommend eating breakfast within an hour of waking?",
+            "o": [
+              "It improves sleep quality",
+              "It helps keep energy levels steady",
+              "It speeds up lunch digestion"
+            ],
+            "a": 1,
+            "e": "'helps keep your blood sugar and energy steady throughout the morning' → giữ mức năng lượng ổn định.",
+            "script": [
+              {
+                "s": "f",
+                "t": "You don't need a huge breakfast, just something with protein and fibre."
+              },
+              {
+                "s": "f",
+                "t": "Eating within an hour of waking helps keep your blood sugar and energy steady throughout the morning.",
+                "hl": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "speakers",
+        "title": "Part 2 · Câu 14",
+        "instr": "Nghe 4 người (A, B, C, D) nói về cách họ chuẩn bị bữa ăn trong tuần. Ghép mỗi người với mô tả đúng (có 2 lựa chọn thừa).",
+        "topic": "How people plan their weekly meals",
+        "options": [
+          "Cooks large batches on Sunday afternoon",
+          "Orders meal kits with measured ingredients",
+          "Writes a strict shopping list before visiting the store",
+          "Grows herbs and salad leaves on a balcony",
+          "Swaps home-cooked dishes with a friend",
+          "Eats the main hot meal at lunchtime"
+        ],
+        "speakers": [
+          {
+            "a": 0,
+            "e": "Người A: 'Every Sunday afternoon I roast two trays of vegetables and make a big pot of soup' → nấu sẵn lượng lớn vào chiều Chủ nhật.",
+            "script": [
+              {
+                "s": "f",
+                "who": "A",
+                "t": "Every Sunday afternoon I roast two trays of vegetables and make a big pot of soup."
+              },
+              {
+                "s": "f",
+                "who": "A",
+                "t": "Then on busy weeknights I only need ten minutes to heat dinner."
+              }
+            ]
+          },
+          {
+            "a": 2,
+            "e": "Người B: 'I check the cupboards first and write down every single item I need' → lập danh sách mua sắm chặt chẽ trước khi đi chợ.",
+            "script": [
+              {
+                "s": "m",
+                "who": "B",
+                "t": "I used to buy random snacks whenever I shopped hungry."
+              },
+              {
+                "s": "m",
+                "who": "B",
+                "t": "Now I check the cupboards first and write down every single item I need, and I never buy anything off the list."
+              }
+            ]
+          },
+          {
+            "a": 4,
+            "e": "Người C: 'my neighbour and I each cook double portions twice a week and trade containers' → trao đổi món ăn tự nấu với bạn/hàng xóm.",
+            "script": [
+              {
+                "s": "f",
+                "who": "C",
+                "t": "Cooking for one person gets boring, so my neighbour and I each cook double portions twice a week and trade containers."
+              },
+              {
+                "s": "f",
+                "who": "C",
+                "t": "We both get more variety without spending extra time in the kitchen."
+              }
+            ]
+          },
+          {
+            "a": 5,
+            "e": "Người D: 'I have my proper cooked meal at midday and just eat fruit or toast in the evening' → ăn bữa chính nóng vào buổi trưa.",
+            "script": [
+              {
+                "s": "m",
+                "who": "D",
+                "t": "Eating heavily at nine o'clock always gave me a restless night."
+              },
+              {
+                "s": "m",
+                "who": "D",
+                "t": "Now I have my proper cooked meal at midday and just eat fruit or toast in the evening."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "conv",
+        "title": "Part 3 · Câu 15",
+        "instr": "Nghe hai người thảo luận về việc trường học cung cấp bữa trưa nóng miễn phí cho tất cả học sinh. Ai bày tỏ ý kiến sau: người đàn ông (Man), người phụ nữ (Woman) hay cả hai (Both)?",
+        "topic": "Should schools provide free hot lunches for all pupils?",
+        "script": [
+          {
+            "s": "m",
+            "t": "Providing free hot lunches for every pupil removes the embarrassment some families feel about applying for help."
+          },
+          {
+            "s": "f",
+            "t": "I see that benefit, and teachers always say children concentrate better after a warm meal."
+          },
+          {
+            "s": "m",
+            "t": "Exactly. Afternoon lessons are much calmer when nobody is hungry."
+          },
+          {
+            "s": "f",
+            "t": "My concern is the budget. Paying for families who can easily afford lunch might take money away from classroom equipment."
+          },
+          {
+            "s": "m",
+            "t": "Buying ingredients in bulk actually lowers the cost per meal quite a lot."
+          },
+          {
+            "s": "f",
+            "t": "Maybe, as long as kitchens are funded properly so the food is genuinely nutritious and not just cheap processed snacks."
+          },
+          {
+            "s": "m",
+            "t": "Completely agree—quality standards have to be written into the contract."
+          }
+        ],
+        "statements": [
+          {
+            "q": "Universal free meals avoid stigma for lower-income families.",
+            "a": "Man",
+            "e": "Người đàn ông: 'removes the embarrassment some families feel about applying for help'."
+          },
+          {
+            "q": "A warm lunch helps pupils focus in the afternoon.",
+            "a": "Both",
+            "e": "Người phụ nữ: 'children concentrate better after a warm meal'; người đàn ông: 'Exactly. Afternoon lessons are much calmer'."
+          },
+          {
+            "q": "Funding free meals for everyone could reduce other school resources.",
+            "a": "Woman",
+            "e": "Người phụ nữ: 'might take money away from classroom equipment'."
+          },
+          {
+            "q": "Strict nutritional quality must be guaranteed.",
+            "a": "Both",
+            "e": "Người phụ nữ: 'the food is genuinely nutritious'; người đàn ông: 'Completely agree—quality standards have to be written into the contract'."
+          }
+        ]
+      },
+      {
+        "type": "mono",
+        "title": "Part 4 · Câu 16–17",
+        "instr": "Nghe bài nói và trả lời 2 câu hỏi cho mỗi bài.",
+        "talks": [
+          {
+            "topic": "Reducing food waste in supermarkets",
+            "script": [
+              {
+                "s": "f",
+                "t": "A surprising amount of edible food never even reaches supermarket shelves simply because of its shape or size."
+              },
+              {
+                "s": "f",
+                "t": "Curved carrots or slightly scarred apples taste identical, yet strict cosmetic rules used to reject them at the farm."
+              },
+              {
+                "s": "f",
+                "t": "Over the past three years, several chains have introduced 'imperfect produce' boxes sold at twenty percent below standard prices."
+              },
+              {
+                "s": "f",
+                "t": "At the same time, stores are replacing 'best before' dates on fresh fruit with clearer storage advice so shoppers rely on sight and smell."
+              },
+              {
+                "s": "f",
+                "t": "Early audits suggest these two steps together have cut store-level vegetable waste by nearly a quarter."
+              }
+            ],
+            "questions": [
+              {
+                "q": "Why was a lot of edible produce previously rejected?",
+                "o": [
+                  "It failed appearance standards",
+                  "It was harvested too late",
+                  "It cost too much to transport"
+                ],
+                "a": 0,
+                "e": "'strict cosmetic rules used to reject them' → bị loại vì không đạt tiêu chuẩn hình thức."
+              },
+              {
+                "q": "What change have stores made to labels on fresh fruit?",
+                "o": [
+                  "Printed larger nutrition tables",
+                  "Replaced 'best before' dates with storage tips",
+                  "Added the farmer's photograph"
+                ],
+                "a": 1,
+                "e": "'replacing best before dates on fresh fruit with clearer storage advice' → thay bằng hướng dẫn bảo quản."
+              }
+            ]
+          },
+          {
+            "topic": "Reviving traditional fermented foods",
+            "script": [
+              {
+                "s": "m",
+                "t": "Long before refrigerators existed, families preserved seasonal harvests through fermentation—turning cabbage into kimchi or milk into yoghurt."
+              },
+              {
+                "s": "m",
+                "t": "Recently, young chefs and home cooks have returned to these slow techniques, partly because of growing interest in gut health."
+              },
+              {
+                "s": "m",
+                "t": "Unlike quick pickling with vinegar, natural fermentation relies on salt, time, and beneficial bacteria."
+              },
+              {
+                "s": "m",
+                "t": "Community workshops now teach beginners how to sterilise jars and judge temperature so batches turn out crisp and safe."
+              },
+              {
+                "s": "m",
+                "t": "Many participants say the best part is reconnecting with recipes their grandparents used to make."
+              }
+            ],
+            "questions": [
+              {
+                "q": "How does natural fermentation differ from quick pickling?",
+                "o": [
+                  "It requires freezing the vegetables",
+                  "It uses salt, time, and bacteria instead of vinegar",
+                  "It can only be done in winter"
+                ],
+                "a": 1,
+                "e": "'Unlike quick pickling with vinegar, natural fermentation relies on salt, time, and beneficial bacteria'."
+              },
+              {
+                "q": "What do beginners learn in the community workshops?",
+                "o": [
+                  "How to clean jars and control temperature",
+                  "How to sell products online",
+                  "How to grow cabbages indoors"
+                ],
+                "a": 0,
+                "e": "'teach beginners how to sterilise jars and judge temperature' → tiệt trùng hũ và kiểm soát nhiệt độ."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l30",
+    "title": "Đề 27 — Remote work and digital habits",
+    "parts": [
+      {
+        "type": "mcq",
+        "title": "Part 1 · Câu 1–13",
+        "instr": "Nghe từng đoạn ngắn (tối đa 2 lần) và chọn đáp án đúng.",
+        "items": [
+          {
+            "q": "When will the team video call take place now?",
+            "o": [
+              "10:00",
+              "11:30",
+              "14:00"
+            ],
+            "a": 1,
+            "e": "'we've pushed it back to 11:30' → dời sang 11:30.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Hi Tom, the ten o'clock design call clashed with a client demo, so we've pushed it back to 11:30.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "That still leaves the afternoon free for the 2 p.m. workshop."
+              }
+            ]
+          },
+          {
+            "q": "Where should visitors collect a temporary Wi-Fi password?",
+            "o": [
+              "From the security desk",
+              "In the third-floor lounge",
+              "At reception"
+            ],
+            "a": 2,
+            "e": "'ask for a guest voucher at the main reception desk' → lấy tại quầy lễ tân chính.",
+            "script": [
+              {
+                "s": "m",
+                "t": "The old guest password expired this morning."
+              },
+              {
+                "s": "m",
+                "t": "If you have clients visiting, please ask for a guest voucher at the main reception desk.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why couldn't Hannah join the webinar?",
+            "o": [
+              "Her internet cut out",
+              "Her microphone broke",
+              "She got the wrong link"
+            ],
+            "a": 0,
+            "e": "'my home router lost connection right before it started' → mất kết nối mạng.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Sorry you missed the webinar, Hannah. Did the link fail?"
+              },
+              {
+                "s": "f",
+                "t": "No, the link was fine—my home router lost connection right before it started.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "How long will the IT maintenance last on Sunday?",
+            "o": [
+              "One hour",
+              "Two hours",
+              "Four hours"
+            ],
+            "a": 1,
+            "e": "'between six and eight a.m.' → kéo dài 2 tiếng.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Email and shared drives will be offline this Sunday between six and eight a.m. for server updates.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Everything will be back to normal well before the working week begins."
+              }
+            ]
+          },
+          {
+            "q": "What item does Alex want to borrow from the office supply room?",
+            "o": [
+              "A laptop stand",
+              "A second monitor",
+              "A wireless mouse"
+            ],
+            "a": 0,
+            "e": "'I'm looking for a folding laptop stand for my home desk' → muốn mượn giá đỡ laptop.",
+            "script": [
+              {
+                "s": "m",
+                "t": "I already have a spare mouse, so I'm looking for a folding laptop stand for my home desk.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Check the top shelf next to the spare keyboards."
+              }
+            ]
+          },
+          {
+            "q": "Which room has the colour printer?",
+            "o": [
+              "Room 204",
+              "Room 210",
+              "Room 305"
+            ],
+            "a": 2,
+            "e": "'the colour printer was moved upstairs to Room 305' → chuyển lên phòng 305.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Room 204 only has the black-and-white photocopier now."
+              },
+              {
+                "s": "f",
+                "t": "The colour printer was moved upstairs to Room 305 last week.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What does the manager ask staff to do before leaving a shared desk?",
+            "o": [
+              "Turn off the monitor",
+              "Unplug the cables",
+              "Wipe the surface clean"
+            ],
+            "a": 2,
+            "e": "'please wipe the desk with the sanitising cloths provided' → lau sạch mặt bàn.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Leave the cables plugged in for the next person, as they are colour-coded."
+              },
+              {
+                "s": "m",
+                "t": "Before you head home, please wipe the desk with the sanitising cloths provided.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "How much is the monthly coworking membership for part-time users?",
+            "o": [
+              "£65",
+              "£85",
+              "£120"
+            ],
+            "a": 1,
+            "e": "'our part-time plan for ten days a month is £85' → gói bán thời gian giá £85.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Full-time access is £120 a month, while our part-time plan for ten days a month is £85.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Both plans include free coffee and meeting booth bookings."
+              }
+            ]
+          },
+          {
+            "q": "Why does Clara mute notifications after 7 p.m.?",
+            "o": [
+              "To save phone battery",
+              "To spend uninterrupted time with her family",
+              "Because her signal is weak at home"
+            ],
+            "a": 1,
+            "e": "'so I can actually focus on dinner and my kids without checking work messages' → dành thời gian trọn vẹn cho gia đình.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Do you turn off work alerts to save battery?"
+              },
+              {
+                "s": "f",
+                "t": "No, I set automatic silence at seven so I can actually focus on dinner and my kids without checking work messages.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What file format should presenters submit their slides in?",
+            "o": [
+              "PDF",
+              "PowerPoint",
+              "Plain text"
+            ],
+            "a": 0,
+            "e": "'please export your slides as a PDF so the fonts don't shift' → nộp dưới dạng PDF.",
+            "script": [
+              {
+                "s": "m",
+                "t": "We've had trouble with custom fonts changing on the conference laptop."
+              },
+              {
+                "s": "m",
+                "t": "To avoid surprises, please export your slides as a PDF before emailing them over.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Where will the Friday training session be held?",
+            "o": [
+              "Online only",
+              "In the main auditorium",
+              "In the training annex"
+            ],
+            "a": 0,
+            "e": "'we've decided to run Friday's session completely online' → tổ chức hoàn toàn trực tuyến.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Because the auditorium air conditioning is being repaired, we've decided to run Friday's session completely online.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "A recording will also be posted for anyone on leave."
+              }
+            ]
+          },
+          {
+            "q": "What happened to Kevin's laptop?",
+            "o": [
+              "He spilled tea on the keyboard",
+              "The battery stopped charging",
+              "The screen cracked in his bag"
+            ],
+            "a": 1,
+            "e": "'the battery refuses to hold a charge unless it stays plugged in' → pin không sạc được nữa.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Did you drop your laptop again, Kevin?"
+              },
+              {
+                "s": "m",
+                "t": "Thankfully no—the screen is fine, but the battery refuses to hold a charge unless it stays plugged in.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What does the speaker suggest for avoiding eye strain?",
+            "o": [
+              "Buying blue-light glasses",
+              "Looking away from the screen every twenty minutes",
+              "Working in a dark room"
+            ],
+            "a": 1,
+            "e": "'every twenty minutes, look at something across the room for twenty seconds' → nhìn ra xa màn hình mỗi 20 phút.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Before spending money on special glasses, try a simpler habit."
+              },
+              {
+                "s": "f",
+                "t": "Every twenty minutes, look at something across the room for twenty seconds to let your eye muscles relax.",
+                "hl": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "speakers",
+        "title": "Part 2 · Câu 14",
+        "instr": "Nghe 4 người (A, B, C, D) nói về cách họ kiểm soát thời gian dùng màn hình ngoài giờ làm. Ghép mỗi người với mô tả đúng (có 2 lựa chọn thừa).",
+        "topic": "Managing screen time outside work",
+        "options": [
+          "Charges the phone outside the bedroom",
+          "Deleted social media apps from the phone",
+          "Uses a paper notebook for evening reading and notes",
+          "Sets a daily app timer on the phone",
+          "Takes a full screen-free day every weekend",
+          "Switched the phone display to black and white"
+        ],
+        "speakers": [
+          {
+            "a": 0,
+            "e": "Người A: 'I plug my phone in on the hallway table before bed and use a cheap alarm clock' → sạc điện thoại ngoài phòng ngủ.",
+            "script": [
+              {
+                "s": "m",
+                "who": "A",
+                "t": "I used to scroll in bed for an hour every night."
+              },
+              {
+                "s": "m",
+                "who": "A",
+                "t": "Now I plug my phone in on the hallway table before bed and use a cheap alarm clock instead."
+              }
+            ]
+          },
+          {
+            "a": 5,
+            "e": "Người B: 'I switched my screen to greyscale' → chuyển màn hình sang trắng đen.",
+            "script": [
+              {
+                "s": "f",
+                "who": "B",
+                "t": "A friend told me to switch my screen to greyscale, and it worked immediately."
+              },
+              {
+                "s": "f",
+                "who": "B",
+                "t": "Without bright colours, shopping and video apps suddenly look much less tempting."
+              }
+            ]
+          },
+          {
+            "a": 1,
+            "e": "Người C: 'I removed all social media apps from my phone and only check them on my laptop' → xóa ứng dụng mạng xã hội khỏi điện thoại.",
+            "script": [
+              {
+                "s": "m",
+                "who": "C",
+                "t": "I didn't close my accounts, I just removed all social media apps from my phone and only check them on my laptop."
+              },
+              {
+                "s": "m",
+                "who": "C",
+                "t": "That small barrier cut my usage from two hours a day to fifteen minutes."
+              }
+            ]
+          },
+          {
+            "a": 4,
+            "e": "Người D: 'Every Sunday I turn off my laptop and phone from morning until evening' → dành trọn một ngày cuối tuần không màn hình.",
+            "script": [
+              {
+                "s": "f",
+                "who": "D",
+                "t": "Every Sunday I turn off my laptop and phone from morning until evening."
+              },
+              {
+                "s": "f",
+                "who": "D",
+                "t": "I read, garden, or visit friends, and Monday morning feels far less stressful."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "conv",
+        "title": "Part 3 · Câu 15",
+        "instr": "Nghe hai người thảo luận về việc công ty áp dụng tuần làm việc 4 ngày. Ai bày tỏ ý kiến sau: người đàn ông (Man), người phụ nữ (Woman) hay cả hai (Both)?",
+        "topic": "Should companies adopt a four-day working week?",
+        "script": [
+          {
+            "s": "f",
+            "t": "In the trials I read about, staff cut unnecessary meetings and finished the same workload in four days."
+          },
+          {
+            "s": "m",
+            "t": "That works well for office teams, but in customer support or hospitals someone still has to cover five or seven days."
+          },
+          {
+            "s": "f",
+            "t": "You can rotate which day people take off so the service stays open all week."
+          },
+          {
+            "s": "m",
+            "t": "Rotating schedules could work, though managers would need careful planning so deadlines don't slip."
+          },
+          {
+            "s": "f",
+            "t": "True, it fails if companies just cram five days of stress into four ten-hour shifts."
+          },
+          {
+            "s": "m",
+            "t": "Exactly. The point is working smarter, not exhausting people by Thursday night."
+          },
+          {
+            "s": "f",
+            "t": "If they keep pay the same and measure real output, staff retention would definitely rise."
+          }
+        ],
+        "statements": [
+          {
+            "q": "Reducing pointless meetings helps teams finish work in four days.",
+            "a": "Woman",
+            "e": "Người phụ nữ: 'staff cut unnecessary meetings and finished the same workload in four days'."
+          },
+          {
+            "q": "Customer-facing roles are harder to fit into a four-day model.",
+            "a": "Man",
+            "e": "Người đàn ông: 'in customer support or hospitals someone still has to cover five or seven days'."
+          },
+          {
+            "q": "Compressing all hours into four exhausting days defeats the purpose.",
+            "a": "Both",
+            "e": "Người phụ nữ: 'it fails if companies just cram five days of stress into four ten-hour shifts'; người đàn ông: 'Exactly. The point is working smarter, not exhausting people'."
+          },
+          {
+            "q": "Keeping salaries unchanged would help companies keep staff.",
+            "a": "Woman",
+            "e": "Người phụ nữ: 'If they keep pay the same... staff retention would definitely rise'."
+          }
+        ]
+      },
+      {
+        "type": "mono",
+        "title": "Part 4 · Câu 16–17",
+        "instr": "Nghe bài nói và trả lời 2 câu hỏi cho mỗi bài.",
+        "talks": [
+          {
+            "topic": "Designing quiet zones in open offices",
+            "script": [
+              {
+                "s": "m",
+                "t": "Open-plan offices were meant to spark spontaneous conversation, yet surveys show noise is employees' number-one complaint."
+              },
+              {
+                "s": "m",
+                "t": "When half the team is on video calls at their desks, nobody else can concentrate on writing or analysis."
+              },
+              {
+                "s": "m",
+                "t": "Instead of rebuilding walls everywhere, our workplace redesign split the floor into three clear zones."
+              },
+              {
+                "s": "m",
+                "t": "Small soundproof booths handle video calls, a central cafe area hosts informal chats, and the north wing is strictly silent."
+              },
+              {
+                "s": "m",
+                "t": "Within two months, voluntary office attendance increased because people finally had spaces matched to their tasks."
+              }
+            ],
+            "questions": [
+              {
+                "q": "What is the main complaint about open-plan offices mentioned by the speaker?",
+                "o": [
+                  "Lack of natural light",
+                  "Background noise from colleagues",
+                  "Not enough meeting chairs"
+                ],
+                "a": 1,
+                "e": "'surveys show noise is employees' number-one complaint' → tiếng ồn từ đồng nghiệp."
+              },
+              {
+                "q": "How did the redesign handle video calls?",
+                "o": [
+                  "Banned them from the office",
+                  "Built small soundproof booths",
+                  "Moved them to the north wing"
+                ],
+                "a": 1,
+                "e": "'Small soundproof booths handle video calls' → bố trí các buồng cách âm nhỏ cho cuộc gọi video."
+              }
+            ]
+          },
+          {
+            "topic": "Digital archiving for small museums",
+            "script": [
+              {
+                "s": "f",
+                "t": "Local museums often hold thousands of fragile photographs and letters that rarely fit into display cabinets."
+              },
+              {
+                "s": "f",
+                "t": "Scanning these collections used to require expensive specialist gear that small towns could not afford."
+              },
+              {
+                "s": "f",
+                "t": "A regional library grant now lends portable scanning kits and trains volunteers to record dates, names, and locations."
+              },
+              {
+                "s": "f",
+                "t": "Accurate labels matter just as much as sharp images; without context, a scanned photo is almost impossible to search."
+              },
+              {
+                "s": "f",
+                "t": "Once uploaded, schools and distant relatives can explore local history from anywhere without handling delicate originals."
+              }
+            ],
+            "questions": [
+              {
+                "q": "How can small museums now afford to scan their collections?",
+                "o": [
+                  "By charging visitors an extra fee",
+                  "By borrowing portable kits through a regional grant",
+                  "By selling duplicate photographs"
+                ],
+                "a": 1,
+                "e": "'A regional library grant now lends portable scanning kits' → mượn bộ máy quét di động từ quỹ thư viện khu vực."
+              },
+              {
+                "q": "Why does the speaker emphasise accurate labels?",
+                "o": [
+                  "They make images searchable and meaningful",
+                  "They reduce file size",
+                  "They are required for printing"
+                ],
+                "a": 0,
+                "e": "'without context, a scanned photo is almost impossible to search' → giúp tìm kiếm và hiểu ngữ cảnh ảnh."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "l31",
+    "title": "Đề 28 — Architecture, heritage and museums",
+    "parts": [
+      {
+        "type": "mcq",
+        "title": "Part 1 · Câu 1–13",
+        "instr": "Nghe từng đoạn ngắn (tối đa 2 lần) và chọn đáp án đúng.",
+        "items": [
+          {
+            "q": "Where can visitors pick up an audio guide?",
+            "o": [
+              "At the east entrance",
+              "In the gift shop",
+              "Beside the cloakroom"
+            ],
+            "a": 2,
+            "e": "'Audio guides are handed out at the desk beside the cloakroom' → nhận cạnh phòng gửi đồ.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Welcome to the City Museum. Tickets are checked at the east entrance."
+              },
+              {
+                "s": "f",
+                "t": "Audio guides are handed out free of charge at the desk beside the cloakroom.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What time does the evening gallery tour begin?",
+            "o": [
+              "17:45",
+              "18:15",
+              "19:00"
+            ],
+            "a": 1,
+            "e": "'the curator's tour starts promptly at 6:15 p.m.' → bắt đầu lúc 18:15.",
+            "script": [
+              {
+                "s": "m",
+                "t": "The gallery stays open late on Fridays until nine."
+              },
+              {
+                "s": "m",
+                "t": "Please gather by the marble staircase at 5:45; the curator's tour starts promptly at 6:15 p.m.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Why is the castle tower closed today?",
+            "o": [
+              "Strong winds",
+              "Roof painting",
+              "A private wedding"
+            ],
+            "a": 0,
+            "e": "'due to high winds at the top, access to the tower is suspended' → đóng do gió mạnh.",
+            "script": [
+              {
+                "s": "f",
+                "t": "The courtyard and great hall are open as usual."
+              },
+              {
+                "s": "f",
+                "t": "However, due to high winds at the top, access to the tower is suspended for the rest of the day.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "How much does a combined ticket for the house and gardens cost?",
+            "o": [
+              "£14",
+              "£16",
+              "£20"
+            ],
+            "a": 1,
+            "e": "'the combined ticket is £16, saving you £4' → vé kết hợp giá £16.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Entry to the house alone is £14, or £20 if you buy the house and gardens separately."
+              },
+              {
+                "s": "m",
+                "t": "The combined ticket is £16, saving you £4.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What are visitors NOT allowed to use inside the textile room?",
+            "o": [
+              "Notebooks",
+              "Camera flash",
+              "Backpacks"
+            ],
+            "a": 1,
+            "e": "'please switch off your camera flash, as bright light fades the old fabrics' → không dùng đèn flash.",
+            "script": [
+              {
+                "s": "f",
+                "t": "You are welcome to take photographs for personal use in this gallery."
+              },
+              {
+                "s": "f",
+                "t": "Just please switch off your camera flash, as bright light fades the old fabrics.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "Which floor is the museum cafe on?",
+            "o": [
+              "Ground floor",
+              "Second floor",
+              "Roof terrace"
+            ],
+            "a": 1,
+            "e": "'the main cafe is up on the second floor overlooking the square' → nằm ở tầng 2.",
+            "script": [
+              {
+                "s": "m",
+                "t": "The roof terrace is closed for winter, and there's only a vending machine on the ground floor."
+              },
+              {
+                "s": "m",
+                "t": "The main cafe is up on the second floor overlooking the square.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What did Owen enjoy most about the architecture walk?",
+            "o": [
+              "The hidden courtyards",
+              "The cathedral spire",
+              "The modern glass bridge"
+            ],
+            "a": 0,
+            "e": "'the quiet hidden courtyards behind the main street were the real highlight' → thích nhất những khoảng sân kín yên tĩnh.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Was the cathedral spire as impressive as you expected?"
+              },
+              {
+                "s": "m",
+                "t": "It was nice, though the quiet hidden courtyards behind the main street were the real highlight for me.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "How often does the heritage steam train run on Sundays?",
+            "o": [
+              "Every hour",
+              "Every ninety minutes",
+              "Twice a day"
+            ],
+            "a": 1,
+            "e": "'departures run every ninety minutes from ten in the morning' → chạy cách nhau 90 phút.",
+            "script": [
+              {
+                "s": "f",
+                "t": "On weekdays we run only twice a day, but on Sundays departures run every ninety minutes from ten in the morning.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "You can buy tickets on the platform."
+              }
+            ]
+          },
+          {
+            "q": "Why did the restoration team keep the old brick floor?",
+            "o": [
+              "Replacing it was too expensive",
+              "It shows the building's industrial past",
+              "It is easier to heat"
+            ],
+            "a": 1,
+            "e": "'we kept the worn brick floor so visitors can still feel the building's history as a printworks' → giữ dấu ấn lịch sử công nghiệp.",
+            "script": [
+              {
+                "s": "m",
+                "t": "We had the budget for new tiles, yet we kept the worn brick floor so visitors can still feel the building's history as a printworks.",
+                "hl": 1
+              },
+              {
+                "s": "m",
+                "t": "We simply cleaned and sealed it."
+              }
+            ]
+          },
+          {
+            "q": "What should school groups bring with them?",
+            "o": [
+              "Clipboards and pencils",
+              "Packed lunches only",
+              "A printed booking letter"
+            ],
+            "a": 0,
+            "e": "'we ask teachers to bring clipboards and pencils for the sketching activity' → mang bìa kẹp giấy và bút chì.",
+            "script": [
+              {
+                "s": "f",
+                "t": "You don't need to print the confirmation email—we have your school on our list."
+              },
+              {
+                "s": "f",
+                "t": "However, we ask teachers to bring clipboards and pencils for the sketching activity.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "When will the ceramics exhibition reopen?",
+            "o": [
+              "Next Monday",
+              "In two weeks",
+              "Next month"
+            ],
+            "a": 1,
+            "e": "'reopening in two weeks with thirty newly restored pieces' → mở cửa lại sau hai tuần.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Gallery Four is currently closed while new lighting is installed."
+              },
+              {
+                "s": "m",
+                "t": "The ceramics exhibition will reopen in two weeks with thirty newly restored pieces.",
+                "hl": 1
+              }
+            ]
+          },
+          {
+            "q": "What discount is available to local residents?",
+            "o": [
+              "Free entry on Wednesdays",
+              "Half-price tickets all week",
+              "Free coffee at the cafe"
+            ],
+            "a": 0,
+            "e": "'residents with a local library card enter free every Wednesday' → miễn phí vé vào thứ Tư.",
+            "script": [
+              {
+                "s": "f",
+                "t": "Standard tickets are £10, and residents with a local library card enter free every Wednesday.",
+                "hl": 1
+              },
+              {
+                "s": "f",
+                "t": "Just show your card at the ticket counter."
+              }
+            ]
+          },
+          {
+            "q": "Where is the coach drop-off point for the palace?",
+            "o": [
+              "Outside the main gate",
+              "At the south car park",
+              "Beside the river pier"
+            ],
+            "a": 1,
+            "e": "'all tour coaches must drop passengers at the south car park' → trả khách tại bãi đỗ xe phía nam.",
+            "script": [
+              {
+                "s": "m",
+                "t": "Vehicles are no longer permitted outside the main gate."
+              },
+              {
+                "s": "m",
+                "t": "All tour coaches must drop passengers at the south car park, a five-minute walk from the ticket office.",
+                "hl": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "speakers",
+        "title": "Part 2 · Câu 14",
+        "instr": "Nghe 4 người (A, B, C, D) nói về lý do họ thích tham quan các công trình lịch sử. Ghép mỗi người với mô tả đúng (có 2 lựa chọn thừa).",
+        "topic": "Why people visit historic buildings",
+        "options": [
+          "Draws architectural details in a sketchbook",
+          "Enjoys listening to personal stories from volunteer guides",
+          "Takes children to hands-on family workshops",
+          "Likes exploring peaceful historic gardens",
+          "Researches local family history in the archives",
+          "Collects guidebooks from every site"
+        ],
+        "speakers": [
+          {
+            "a": 0,
+            "e": "Người A: 'I bring a small sketchbook and spend half an hour drawing doorways or stone carvings' → vẽ phác họa chi tiết kiến trúc.",
+            "script": [
+              {
+                "s": "f",
+                "who": "A",
+                "t": "Whenever I visit an old house or abbey, I bring a small sketchbook and spend half an hour drawing doorways or stone carvings."
+              },
+              {
+                "s": "f",
+                "who": "A",
+                "t": "Slowing down to sketch makes me notice patterns I would otherwise walk right past."
+              }
+            ]
+          },
+          {
+            "a": 1,
+            "e": "Người B: 'the volunteer guides always share little anecdotes about the servants and builders' → thích nghe câu chuyện từ hướng dẫn viên tình nguyện.",
+            "script": [
+              {
+                "s": "m",
+                "who": "B",
+                "t": "I rarely read long information boards, but I love chatting with the volunteer guides."
+              },
+              {
+                "s": "m",
+                "who": "B",
+                "t": "They always share little anecdotes about the servants and builders that bring the rooms to life."
+              }
+            ]
+          },
+          {
+            "a": 3,
+            "e": "Người C: 'I go mainly for the walled gardens and old orchards' → thích dạo chơi trong khu vườn lịch sử yên tĩnh.",
+            "script": [
+              {
+                "s": "f",
+                "who": "C",
+                "t": "Honestly, I go mainly for the walled gardens and old orchards rather than the furniture inside."
+              },
+              {
+                "s": "f",
+                "who": "C",
+                "t": "Sitting under a two-hundred-year-old oak tree is the calmest way to spend a Saturday."
+              }
+            ]
+          },
+          {
+            "a": 2,
+            "e": "Người D: 'my twins love the weekend craft sessions where they try pottery or weaving' → đưa con đi trải nghiệm hoạt động thực hành.",
+            "script": [
+              {
+                "s": "m",
+                "who": "D",
+                "t": "Traditional museums used to bore my twins, but they love the weekend craft sessions where they try pottery or weaving."
+              },
+              {
+                "s": "m",
+                "who": "D",
+                "t": "They learn far more by making something than by staring behind a rope."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "conv",
+        "title": "Part 3 · Câu 15",
+        "instr": "Nghe hai người thảo luận về việc cải tạo nhà máy cũ thành căn hộ chung cư. Ai bày tỏ ý kiến sau: người đàn ông (Man), người phụ nữ (Woman) hay cả hai (Both)?",
+        "topic": "Should historic factories be converted into apartments?",
+        "script": [
+          {
+            "s": "m",
+            "t": "Turning empty brick mills into apartments saves landmarks from crumbling and adds housing right near the centre."
+          },
+          {
+            "s": "f",
+            "t": "I'd much rather see them reused than knocked down, especially since tearing down sturdy buildings wastes enormous amounts of carbon."
+          },
+          {
+            "s": "m",
+            "t": "Yes, keeping the original structure is far greener than starting from scratch."
+          },
+          {
+            "s": "f",
+            "t": "My frustration is that developers almost always turn them into luxury flats that local residents can't afford."
+          },
+          {
+            "s": "m",
+            "t": "That happens because insulating old walls and tall windows costs a fortune."
+          },
+          {
+            "s": "f",
+            "t": "Then councils should require a mix of affordable flats and maybe a ground-floor workshop or cafe open to everyone."
+          },
+          {
+            "s": "m",
+            "t": "Keeping the ground floor open to the public is a great idea—it lets the whole neighbourhood enjoy the building."
+          }
+        ],
+        "statements": [
+          {
+            "q": "Reusing existing structures is better for the environment than demolition.",
+            "a": "Both",
+            "e": "Người phụ nữ: 'tearing down sturdy buildings wastes enormous amounts of carbon'; người đàn ông: 'Yes, keeping the original structure is far greener'."
+          },
+          {
+            "q": "Converted factories are often priced out of reach for local people.",
+            "a": "Woman",
+            "e": "Người phụ nữ: 'developers almost always turn them into luxury flats that local residents can't afford'."
+          },
+          {
+            "q": "Upgrading insulation in old buildings is very expensive.",
+            "a": "Man",
+            "e": "Người đàn ông: 'insulating old walls and tall windows costs a fortune'."
+          },
+          {
+            "q": "Ground-floor spaces should remain accessible to the community.",
+            "a": "Both",
+            "e": "Người phụ nữ: 'a ground-floor workshop or cafe open to everyone'; người đàn ông: 'Keeping the ground floor open to the public is a great idea'."
+          }
+        ]
+      },
+      {
+        "type": "mono",
+        "title": "Part 4 · Câu 16–17",
+        "instr": "Nghe bài nói và trả lời 2 câu hỏi cho mỗi bài.",
+        "talks": [
+          {
+            "topic": "Natural lighting in modern libraries",
+            "script": [
+              {
+                "s": "f",
+                "t": "When architects design a public library today, daylight is one of their hardest balancing acts."
+              },
+              {
+                "s": "f",
+                "t": "Readers feel more alert and comfortable near sunlit windows, yet direct sunlight can overheat rooms and damage paper books."
+              },
+              {
+                "s": "f",
+                "t": "In our new central library, angled roof skylights bounce soft northern light onto the reading tables without letting harsh beams hit the shelves."
+              },
+              {
+                "s": "f",
+                "t": "Automated blinds also adjust throughout the afternoon to cut glare on computer screens."
+              },
+              {
+                "s": "f",
+                "t": "As a result, electricity use for lighting has fallen by forty percent compared with the old building."
+              }
+            ],
+            "questions": [
+              {
+                "q": "Why is direct sunlight a problem in libraries?",
+                "o": [
+                  "It makes rooms too hot and harms books",
+                  "It fades painted walls quickly",
+                  "It prevents automated blinds from working"
+                ],
+                "a": 0,
+                "e": "'direct sunlight can overheat rooms and damage paper books' → làm phòng nóng và hỏng sách giấy."
+              },
+              {
+                "q": "What benefit did the new lighting design achieve?",
+                "o": [
+                  "Doubled the number of reading desks",
+                  "Cut lighting electricity use by forty percent",
+                  "Eliminated the need for roof repairs"
+                ],
+                "a": 1,
+                "e": "'electricity use for lighting has fallen by forty percent' → giảm 40% điện chiếu sáng."
+              }
+            ]
+          },
+          {
+            "topic": "Preserving wooden bridges in mountain villages",
+            "script": [
+              {
+                "s": "m",
+                "t": "Across our mountain valley, seven covered timber bridges still stand after more than a century of heavy snow."
+              },
+              {
+                "s": "m",
+                "t": "The wooden roofs were never just decorative; they protected the main beams from rain so the structure would not rot."
+              },
+              {
+                "s": "m",
+                "t": "When one bridge needed repairs last winter, engineers discovered that modern steel bolts actually split the dry oak."
+              },
+              {
+                "s": "m",
+                "t": "Instead, retired carpenters were invited to train apprentices in carving traditional wooden pegs that expand and contract with the timber."
+              },
+              {
+                "s": "m",
+                "t": "The repair took slightly longer, yet it saved both the bridge and a craft that was nearly lost."
+              }
+            ],
+            "questions": [
+              {
+                "q": "What was the original purpose of the roofs on the wooden bridges?",
+                "o": [
+                  "To shelter travellers from snow",
+                  "To keep rain off the structural beams",
+                  "To support heavier vehicles"
+                ],
+                "a": 1,
+                "e": "'protected the main beams from rain so the structure would not rot' → che mưa bảo vệ dầm gỗ khỏi mục."
+              },
+              {
+                "q": "Why did the repair team use wooden pegs instead of steel bolts?",
+                "o": [
+                  "Steel bolts were out of stock",
+                  "Steel bolts damaged the dry oak",
+                  "Wooden pegs were much faster to install"
+                ],
+                "a": 1,
+                "e": "'modern steel bolts actually split the dry oak' → bu-lông thép làm nứt gỗ sồi khô."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
 ];

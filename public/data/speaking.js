@@ -1811,4 +1811,226 @@ window.FA_SPEAKING = [
       "s": "I would like to talk about how I met Linh, who is now one of my closest friends. We met about three years ago at an English club in my city. On my first evening there, I was very nervous because I did not know anyone and my speaking was not very good. The organiser put us in the same group for a discussion about travel, and Linh was really friendly and helped me when I could not find the right words. After the meeting, we found out that we both loved hiking and Japanese food, so we went for dinner together the following week. Since then, we have been on many trips together, including a hiking trip to Sa Pa, and we often practise English with each other. What I like most about her is that she is honest and always positive, even when things go wrong. Meeting Linh taught me that it is worth stepping out of my comfort zone, because if I had not joined the club that evening, I would never have met such a great friend. Now I always encourage shy people to try new activities."
     }
   },
+  {
+    "id": "s28",
+    "title": "Đề 28 — Asking good questions and learning",
+    "p1": [
+      {
+        "q": "What kind of music do you like listening to?",
+        "s": "I really enjoy listening to acoustic pop and soft indie music. I usually put on a calm playlist while studying or commuting because it helps me stay relaxed and focused. At weekends, I sometimes listen to upbeat pop songs when I am cleaning my room or going for a jog."
+      },
+      {
+        "q": "Tell me about your favorite season of the year.",
+        "s": "My favourite season is autumn because the weather is cool, dry and comfortable after the hot summer. In my city, there is a gentle breeze and the sky is clear, which makes it wonderful for walking in the park or sitting at a street cafe with friends."
+      },
+      {
+        "q": "What do you like to do in your free time?",
+        "s": "In my free time, I like reading short novels, trying out simple cooking recipes and playing badminton with my friends. Whenever I have a free Sunday, I also enjoy cycling around the lake to get some fresh air and take a break from screens."
+      }
+    ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s28-1.jpg",
+        "cap": "A multi-generational family playing video games together in a living room."
+      },
+      "questions": [
+        {
+          "q": "Describe the picture.",
+          "s": "In this picture, I can see a multi-generational family spending time together in a bright living room. Parents, grandparents and children are sitting on the sofa and the floor, holding game controllers and looking towards the screen. Everyone is smiling and seems excited, so it looks like they are enjoying a friendly video game competition at the weekend."
+        },
+        {
+          "q": "When was the last time you played games with everyone?",
+          "s": "The last time I played games with my whole family was during the Lunar New Year holiday a few months ago. After dinner, my parents, my sister and my cousins sat around the living room table and played a board game together. We laughed a lot, especially when my father kept losing, and it was a really warm evening."
+        },
+        {
+          "q": "Do you think we should play games with everyone?",
+          "s": "Yes, I think playing games together is a great idea for families and friends. It helps people of different ages connect, communicate and relax without worrying about work or study. Games also encourage teamwork and create happy shared memories, as long as everyone plays in a friendly spirit."
+        }
+      ]
+    },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s28-2.jpg",
+          "cap": "Learning by observing in a practical setting."
+        },
+        {
+          "img": "assets/img/speaking/s28-3.jpg",
+          "cap": "Learning by reading books in a quiet space."
+        }
+      ],
+      "questions": [
+        {
+          "q": "Describe the pictures.",
+          "s": "The first picture shows learning by observing, where someone is watching a real demonstration closely in order to understand how something works in practice. In contrast, the second picture shows learning by reading, with a person focusing quietly on a book. While the first method is hands-on and visual, the second is more independent and calm."
+        },
+        {
+          "q": "Is learning through reading or observing more effective?",
+          "s": "I think it depends on the skill you want to learn. For practical tasks like cooking, repairing something or playing a sport, observing an experienced person is much more effective because you can see every step clearly. However, for theory, history or deep academic knowledge, reading gives you structured details that you can review at your own pace."
+        },
+        {
+          "q": "Why do some people prefer learning in a quiet library?",
+          "s": "Many people prefer studying in a quiet library because there are fewer distractions than at home. You are surrounded by other focused learners, which naturally motivates you to stay on task. Libraries also offer good lighting, comfortable desks and easy access to reference books whenever you need to check information."
+        }
+      ]
+    },
+    "p4": {
+      "questions": [
+        "Tell me about a time when you asked a good question. Say what the situation was, what question you asked, who you asked it to, and why you think it was a good question.",
+        "Why are some students or employees afraid to ask questions in front of others?",
+        "How can teachers and managers encourage people to ask more thoughtful questions?",
+        "Do you think asking the right questions is more important than knowing all the answers? Why or why not?"
+      ],
+      "time": 120,
+      "s": "I would like to talk about a time I asked a useful question during a group project workshop at university last semester. Our lecturer was explaining how to conduct a survey for our marketing assignment, and everyone seemed ready to copy a long list of twenty questions from an online template. I raised my hand and asked the lecturer: 'Which three decisions will we actually make from this survey, and what happens if respondents skip half of it?' The lecturer paused, smiled, and said that was the most practical point of the session. Thanks to that question, our team cut the survey down to eight focused questions and ended up getting twice as many completed replies.\nIn my view, many students and employees hesitate to ask questions because they are afraid of looking inexperienced or slowing the group down. To change that, teachers and managers should respond warmly, thank people for speaking up, and allow anonymous or written questions for quieter team members. Personally, I believe asking the right questions is often more valuable than knowing all the answers, because information is easy to look up today, whereas a sharp question reveals hidden problems and leads to better solutions."
+    }
+  },
+  {
+    "id": "s29",
+    "title": "Đề 29 — Crowded cities and daily routines",
+    "p1": [
+      {
+        "q": "Describe the room you are in.",
+        "s": "I am currently sitting in my study room at home. It is a modest, tidy room with a wooden desk near the window, a bookshelf packed with textbooks and novels, and a small potted plant on the windowsill. The natural light makes it a comfortable place to work."
+      },
+      {
+        "q": "Describe your journey here today.",
+        "s": "My journey today was fairly smooth and took about twenty-five minutes. I left home at half past seven and took the bus along the main avenue. Traffic was slightly slow near the bridge, so I listened to an English podcast until I arrived."
+      },
+      {
+        "q": "What are you wearing today?",
+        "s": "Today I am wearing a light blue cotton shirt, dark trousers and comfortable white trainers. I chose this outfit because the weather is quite warm and I wanted something neat yet practical for moving around all day."
+      }
+    ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s29-1.jpg",
+        "cap": "A large crowd of pedestrians walking along a wide city street."
+      },
+      "questions": [
+        {
+          "q": "Describe the picture.",
+          "s": "This picture shows a huge crowd of pedestrians walking along a wide street in a busy city centre. People of different ages are moving in both directions, carrying bags and wearing casual or office clothes. Tall buildings and shop signs line the street on both sides, giving the impression of a lively commercial district during peak hours."
+        },
+        {
+          "q": "What do you think about living in a crowded city?",
+          "s": "Living in a crowded city has clear advantages and drawbacks. On the one hand, you have easy access to good jobs, universities, hospitals and lively cultural events. On the other hand, high living costs, traffic congestion and constant noise can make daily life quite tiring, so I think it helps to visit quiet parks regularly."
+        },
+        {
+          "q": "Why do many people hate crowded places?",
+          "s": "Many people dislike crowded places because they lose their personal space and feel stressed by the noise and heat. Simple tasks like queueing for food or getting onto a train take much longer, and some people also worry about safety or pickpockets when a place is packed."
+        }
+      ]
+    },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s29-2.jpg",
+          "cap": "Taking photos to preserve memories."
+        },
+        {
+          "img": "assets/img/speaking/s29-3.jpg",
+          "cap": "Writing in a notebook to preserve memories."
+        }
+      ],
+      "questions": [
+        {
+          "q": "Describe the pictures.",
+          "s": "The first picture shows taking photos to preserve memories, capturing a visual moment quickly with a camera or smartphone. The second picture shows writing in a journal, which is a slower, quieter way to record thoughts and experiences. Both pictures are about keeping memories alive, but one focuses on images while the other focuses on words."
+        },
+        {
+          "q": "Do you like taking photos or writing to preserve memories?",
+          "s": "Personally, I prefer taking photos because it is fast and lets me capture faces, scenery and colours in an instant. However, after a special trip, I also like writing a few short notes next to my favourite pictures so I remember how I felt at that moment."
+        },
+        {
+          "q": "Some people prefer to save their memories by writing rather than taking pictures. What do you think about this?",
+          "s": "I think writing is a very meaningful way to keep memories. A photo shows what a place looked like, but a journal captures your emotions, conversations and small details that a camera can miss. Writing also encourages you to reflect calmly rather than spending the whole trip looking through a phone screen."
+        }
+      ]
+    },
+    "p4": {
+      "questions": [
+        "Tell me about a time when you changed your daily routine. Say what the change was, why you decided to make it, how you adapted to it, and how you felt about the result.",
+        "Why do many people find it difficult to change their daily habits?",
+        "What are the benefits of having a well-structured daily routine?",
+        "Do you think modern technology makes people's daily routines better or worse? Why?"
+      ],
+      "time": 120,
+      "s": "About six months ago, I decided to change my morning routine by waking up an hour earlier at six o'clock instead of seven. Before that, I used to rush out of the door without breakfast and felt stressed all morning. The first two weeks were quite tough because I was used to scrolling on my phone late at night, so I started leaving my phone outside the bedroom and going to sleep before eleven. Gradually my body adapted, and I began using that extra hour to stretch, make a proper breakfast and review my tasks for the day. I felt much calmer, healthier and more productive as a result.\nMany people struggle to change daily habits because old routines feel comfortable and automatic, while new ones require effort before the rewards appear. Having a well-structured routine reduces decision fatigue, improves time management and helps protect sleep and exercise. As for modern technology, I think it is a double-edged sword: calendar apps and reminders can keep us organised, but endless notifications and late-night social media can easily ruin a healthy schedule if we do not set clear limits."
+    }
+  },
+  {
+    "id": "s30",
+    "title": "Đề 30 — Shopping, friendships and generations",
+    "p1": [
+      {
+        "q": "What is a popular book in your country that you would recommend?",
+        "s": "I would recommend 'I See Yellow Flowers on the Green Grass' by Nguyen Nhat Anh. It is a well-loved story about childhood in a peaceful Vietnamese countryside village. The writing is gentle, nostalgic and easy to relate to, so it appeals to both teenagers and adults."
+      },
+      {
+        "q": "Tell me about the last time you talked with your mother.",
+        "s": "The last time I talked with my mother was last night on a video call. We chatted for about twenty minutes about how her garden was doing, what I had cooked for dinner and our plans for the upcoming weekend. Talking with her always makes me feel encouraged."
+      },
+      {
+        "q": "How do you relax in the evening?",
+        "s": "In the evening, I usually take a warm shower, make a cup of herbal tea and watch an episode of a comedy series or read a few chapters of a book. I try to put my work away after nine so my mind can wind down before bed."
+      }
+    ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s30-1.jpg",
+        "cap": "Shoppers checking product information on a shelf in a supermarket aisle."
+      },
+      "questions": [
+        {
+          "q": "Describe the picture.",
+          "s": "In this picture, I can see shoppers standing in a bright supermarket aisle and carefully checking the label on a product. The shelves are neatly stocked with many different food items and packages. The customers look thoughtful, as if they are comparing ingredients, prices or expiry dates before deciding whether to put the item in their basket."
+        },
+        {
+          "q": "Tell me about a time you shopped in a small local market.",
+          "s": "Last Sunday morning, I went to a small local market near my grandparents' house to buy fresh vegetables and fruit. The atmosphere was lively and colourful, and the stallholders greeted everyone warmly. I bought mangoes, herbs and sticky rice, and the vendor even gave me cooking tips, which is something you rarely get in a big supermarket."
+        },
+        {
+          "q": "Why do people love shopping on the Internet?",
+          "s": "People love online shopping mainly because it saves time and offers huge convenience. You can compare prices, read customer reviews and order almost anything from home at any hour of the day. Many websites also offer fast home delivery and discount vouchers, which makes shopping easier for busy families."
+        }
+      ]
+    },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s30-2.jpg",
+          "cap": "A group of friends enjoying time together outdoors."
+        },
+        {
+          "img": "assets/img/speaking/s30-3.jpg",
+          "cap": "Two people shaking hands in a one-to-one interaction."
+        }
+      ],
+      "questions": [
+        {
+          "q": "Describe the pictures.",
+          "s": "The first picture shows a group of friends spending time together outdoors, looking relaxed, smiling and enjoying each other's company in an informal setting. The second picture shows two people shaking hands, which looks much more focused on a one-to-one connection or a formal greeting. Together, they contrast lively group socialising with a direct personal interaction."
+        },
+        {
+          "q": "Has social media changed friends? How?",
+          "s": "Yes, social media has changed friendship in several ways. On the positive side, it makes it effortless to stay in touch with old classmates or friends living abroad through messages and photos. However, it can also make relationships feel more superficial, because liking someone's post is not the same as having a real face-to-face conversation."
+        },
+        {
+          "q": "How is spending time with one 'best' friend different from spending time in a group?",
+          "s": "Spending time with one close friend is usually deeper and calmer; you can share personal worries honestly and really listen to each other. In contrast, hanging out in a larger group is more energetic and fun for activities like trips or parties, though it is harder to have a long, private conversation."
+        }
+      ]
+    },
+    "p4": {
+      "questions": [
+        "Tell me about a time when you spent time with someone much older or younger than you. Say who that person was, what you did together, what you talked about, and how you felt about the experience.",
+        "What can younger people learn from spending time with older generations?",
+        "Why is it sometimes difficult for people of different ages to understand each other?",
+        "Do you think modern society encourages enough interaction between different age groups? Why or why not?"
+      ],
+      "time": 120,
+      "s": "Last summer, I spent a whole afternoon with my grandfather, who is in his late seventies, helping him organise his old photo albums at his house. While we sorted the black-and-white pictures, he told me stories about how he repaired bicycles as a young man and how our town looked fifty years ago. In return, I showed him how to scan his favourite photos onto his tablet so he could share them with my cousins. I felt deeply moved and realised how much family history I would have missed if I had not slowed down to listen.\nI believe younger people can gain patience, practical life perspective and a stronger sense of gratitude from older generations. Sometimes different age groups struggle to understand one another because they grew up with very different technology, values and communication styles. Unfortunately, modern society does not encourage enough intergenerational contact, as work, schools and leisure spaces tend to separate people by age. Community workshops, mentoring programmes and shared neighbourhood events could help bridge that gap."
+    }
+  },
 ];

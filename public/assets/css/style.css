@@ -1459,68 +1459,87 @@ button.gym-src { display: flex; flex-direction: row; gap: 12px; align-items: cen
 }
 
 /* ======================================================
-   LOGO (thiết kế lại): huy hiệu tròn + linh vật nhô đầu, chữ "Flash" gradient tia chớp, dòng phụ "Luyện thi Aptis"
+   LOGO (Neo-Tactile): huy hiệu squircle 3D + linh vật gọn gàng, chữ "Flash" gradient tia chớp, thẻ phụ xanh mực
    ====================================================== */
-.logo { gap: 12px; }
+.logo { gap: 11px; align-items: center; }
 .logo-badge {
-  position: relative; flex: none; display: grid; place-items: end center; width: 58px; height: 58px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 38%, #fff7ed 0%, #fed7aa 62%, #fdba74 100%);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px rgba(249, 115, 22, .35), 0 8px 18px -8px rgba(234, 88, 12, .65);
+  position: relative; flex: none; display: grid; place-items: end center;
+  width: 46px; height: 46px; border-radius: 14px;
+  background: linear-gradient(145deg, #fff7ed 0%, #ffedd5 45%, #fdba74 100%);
+  border: 1.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--orange-500);
+  transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s;
 }
 .logo-badge .logo-img {
-  position: absolute; left: 50%; bottom: -3px; width: 70px !important; height: 70px !important; transform: translateX(-50%);
-  filter: drop-shadow(0 3px 4px rgba(124, 45, 18, .3)); transition: transform .35s cubic-bezier(.3, 1.6, .5, 1);
+  position: absolute; left: 50%; bottom: -1px; width: 48px !important; height: 48px !important;
+  object-fit: contain; transform: translateX(-50%);
+  filter: drop-shadow(0 2px 3px rgba(124, 45, 18, .28));
+  transition: transform .3s cubic-bezier(.3, 1.5, .5, 1);
 }
-.logo:hover .logo-badge .logo-img { transform: translateX(-50%) translateY(-4px) rotate(-6deg) scale(1.05); }
-.logo-text { display: grid; gap: 3px; line-height: 1; }
-.logo-name { display: inline-flex; align-items: baseline; letter-spacing: -.035em; position: relative; overflow: hidden; padding-bottom: 2px; }
+.logo:hover .logo-badge {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--orange-600);
+}
+.logo:hover .logo-badge .logo-img { transform: translateX(-50%) translateY(-3px) rotate(-5deg) scale(1.06); }
+.logo-text { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; line-height: 1; }
+.logo-name { display: inline-flex; align-items: baseline; letter-spacing: -.04em; position: relative; overflow: hidden; padding-bottom: 1px; }
 .logo .flash {
-  background: linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ea580c 75%, #c2410c 100%);
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 80%, #c2410c 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800;
 }
 .logo .aptis { color: var(--ink); font-weight: 800; }
 /* vệt sáng lướt qua chữ khi rê chuột */
 .logo-name::after {
   content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .75), transparent); transform: skewX(-18deg); opacity: 0;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .8), transparent); transform: skewX(-18deg); opacity: 0;
 }
-.logo:hover .logo-name::after { animation: logo-shine .8s ease-out; }
+.logo:hover .logo-name::after { animation: logo-shine .75s ease-out; }
 @keyframes logo-shine { 0% { left: -60%; opacity: 1; } 100% { left: 130%; opacity: 0; } }
-.logo-tag { font-family: var(--font-body, inherit); font-size: .6rem; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: var(--orange-700); padding-left: 2px; }
+.logo-tag {
+  font-family: var(--font-body, inherit); font-size: .56rem; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-accent, #0f766e);
+  background: var(--sk-reading-soft, #f0fdfa); border: 1px solid var(--sk-reading-bd, #5eead4);
+  padding: 2px 6px; border-radius: 6px; line-height: 1.1;
+}
 /* header */
-.site-header .logo { font-size: 1.9rem; }
-.site-header .logo-tag { font-size: .58rem; }
+.site-header .logo { font-size: 1.55rem; }
+.site-header .logo-tag { font-size: .55rem; }
 /* chân trang */
-.logo-foot .logo-badge { width: 48px; height: 48px; }
-.logo-foot .logo-badge .logo-img { width: 58px !important; height: 58px !important; }
+.logo-foot .logo-badge { width: 42px; height: 42px; border-radius: 12px; }
+.logo-foot .logo-badge .logo-img { width: 44px !important; height: 44px !important; }
 /* chế độ tối */
 :root[data-theme="dark"] .logo-badge {
-  background: radial-gradient(circle at 50% 38%, #4a2a16 0%, #3a2012 60%, #2a170d 100%);
-  box-shadow: 0 0 0 2px #1c1512, 0 0 0 3.5px rgba(251, 146, 60, .45), 0 0 22px -4px rgba(249, 115, 22, .55);
+  background: linear-gradient(145deg, #4a2a16 0%, #3a2012 55%, #2a170d 100%);
+  border-color: var(--orange-400);
+  box-shadow: 3px 3px 0 #9a3412;
 }
+:root[data-theme="dark"] .logo:hover .logo-badge { box-shadow: 4px 4px 0 #c2410c; }
 :root[data-theme="dark"] .logo .flash { background-image: linear-gradient(135deg, #fdba74 0%, #fb923c 45%, #f97316 100%); }
 :root[data-theme="dark"] .logo .aptis { color: #fff7ed; }
-:root[data-theme="dark"] .logo-tag { color: var(--orange-300); }
+:root[data-theme="dark"] .logo-tag {
+  color: #5eead4; background: #112a29; border-color: #0f766e;
+}
 :root[data-theme="dark"] .logo-name::after { background: linear-gradient(100deg, transparent, rgba(255, 237, 213, .45), transparent); }
 /* laptop: header chật hơn */
 @media (min-width: 1340px) and (max-width: 1500px) {
-  .site-header .logo { font-size: 1.55rem; gap: 10px; }
-  .site-header .logo-badge { width: 50px; height: 50px; }
-  .site-header .logo-badge .logo-img { width: 60px !important; height: 60px !important; }
+  .site-header .logo { font-size: 1.4rem; gap: 9px; }
+  .site-header .logo-badge { width: 42px; height: 42px; border-radius: 12px; }
+  .site-header .logo-badge .logo-img { width: 44px !important; height: 44px !important; }
 }
 /* điện thoại: bỏ dòng phụ, thu nhỏ huy hiệu */
 @media (max-width: 560px) {
-  .site-header .logo { font-size: 1.3rem; gap: 8px; }
-  .site-header .logo-badge { width: 40px; height: 40px; }
-  .site-header .logo-badge .logo-img { width: 48px !important; height: 48px !important; bottom: -2px; }
+  .site-header .logo { font-size: 1.28rem; gap: 8px; }
+  .site-header .logo-badge { width: 38px; height: 38px; border-radius: 11px; box-shadow: 2px 2px 0 var(--orange-500); }
+  .site-header .logo-badge .logo-img { width: 40px !important; height: 40px !important; }
   .site-header .logo-tag { display: none; }
 }
 @media (max-width: 400px) {
-  .site-header .logo { font-size: 1.1rem; gap: 6px; }
-  .site-header .logo-badge { width: 34px; height: 34px; }
-  .site-header .logo-badge .logo-img { width: 42px !important; height: 42px !important; }
+  .site-header .logo { font-size: 1.12rem; gap: 6px; }
+  .site-header .logo-badge { width: 34px; height: 34px; border-radius: 10px; }
+  .site-header .logo-badge .logo-img { width: 36px !important; height: 36px !important; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .logo:hover .logo-badge { transform: none; }
   .logo:hover .logo-badge .logo-img { transform: translateX(-50%); }
   .logo:hover .logo-name::after { animation: none; }
 }
@@ -1531,4 +1550,268 @@ button.gym-src { display: flex; flex-direction: row; gap: 12px; align-items: cen
   .site-header .container { gap: 6px; padding-left: 10px; padding-right: 10px; }
   .header-actions { gap: 4px; }
   .login-btn { padding: 0 9px; font-size: .84rem; letter-spacing: 0; }
+}
+
+/* ===========================================================
+   Gói 1 (Nâng cấp đậm nét): Neo-Tactile Study Desk + 5-Skill Palette
+   =========================================================== */
+:root {
+  --bg: #f8f3ec;
+  --line-2: #dfcfc0;
+  --ink-accent: #0f766e;
+
+  --sk-grammar: #ea580c;   --sk-grammar-bg: #ffedd5;   --sk-grammar-soft: #fff7ed;   --sk-grammar-bd: #fb923c;
+  --sk-listening: #1d4ed8; --sk-listening-bg: #dbeafe; --sk-listening-soft: #eff6ff; --sk-listening-bd: #60a5fa;
+  --sk-reading: #0f766e;   --sk-reading-bg: #ccfbf1;   --sk-reading-soft: #f0fdfa;   --sk-reading-bd: #2dd4bf;
+  --sk-writing: #4338ca;   --sk-writing-bg: #e0e7ff;   --sk-writing-soft: #eef2ff;   --sk-writing-bd: #818cf8;
+  --sk-speaking: #be123c;  --sk-speaking-bg: #ffe4e6;  --sk-speaking-soft: #fff1f2;  --sk-speaking-bd: #fb7185;
+  --tactile-line: #d6c3b1;
+}
+:root[data-theme="dark"] {
+  --bg: #14110f;
+  --line-2: #3d332c;
+  --ink-accent: #2dd4bf;
+
+  --sk-grammar: #fb923c;   --sk-grammar-bg: #3b2213;   --sk-grammar-soft: #261810;   --sk-grammar-bd: #c2410c;
+  --sk-listening: #60a5fa; --sk-listening-bg: #17284a; --sk-listening-soft: #111c33; --sk-listening-bd: #2563eb;
+  --sk-reading: #2dd4bf;   --sk-reading-bg: #123331;   --sk-reading-soft: #0e2423;   --sk-reading-bd: #0d9488;
+  --sk-writing: #818cf8;   --sk-writing-bg: #23204d;   --sk-writing-soft: #181636;   --sk-writing-bd: #4f46e5;
+  --sk-speaking: #fb7185;  --sk-speaking-bg: #3d1725;  --sk-speaking-soft: #2a111a;  --sk-speaking-bd: #e11d48;
+  --tactile-line: #090706;
+}
+
+/* 1) Nền giấy sổ chấm bi rõ nét + ánh sáng Hero hai tông (Cam + Xanh mực) */
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(154, 52, 18, .17) 1.15px, transparent 1.15px);
+  background-size: 24px 24px;
+}
+:root[data-theme="dark"] body {
+  background-image: radial-gradient(rgba(253, 186, 116, .13) 1.15px, transparent 1.15px);
+}
+.hero::after {
+  background: radial-gradient(circle, rgba(15, 118, 110, .22), transparent 70%);
+}
+:root[data-theme="dark"] .hero::after {
+  background: radial-gradient(circle, rgba(45, 212, 191, .16), transparent 70%);
+}
+
+/* 2) Floating Pill Header nổi trên desktop (giữ nguyên gọn trên mobile) */
+@media (min-width: 900px) {
+  .site-header {
+    top: 10px;
+    margin: 10px auto 0;
+    width: calc(100% - 32px);
+    max-width: 1420px;
+    border: 1.5px solid var(--line-2);
+    border-radius: 22px;
+    background: rgba(255, 252, 248, .88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 0 var(--tactile-line), 0 14px 32px -18px rgba(31, 26, 23, .22);
+  }
+  .site-header.scrolled {
+    background: rgba(255, 252, 248, .96);
+    box-shadow: 0 4px 0 var(--tactile-line), 0 18px 36px -16px rgba(31, 26, 23, .28);
+  }
+  :root[data-theme="dark"] .site-header,
+  :root[data-theme="dark"] .site-header.scrolled {
+    background: rgba(26, 22, 20, .9);
+    box-shadow: 0 4px 0 #090706, 0 16px 34px -16px rgba(0, 0, 0, .65);
+  }
+  .site-header .container { height: 70px; }
+}
+
+/* 3) Thẻ & nút bấm Neo-Tactile đậm nét (kiểu vật lý có chiều sâu 4px) */
+:where(.card, .q-card, .stat, details.faq) {
+  border-width: 1.5px;
+  border-color: var(--line-2);
+  box-shadow: 0 4px 0 var(--tactile-line), 0 12px 24px -18px rgba(31, 26, 23, .2);
+}
+a.card:hover, button.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 0 var(--tactile-line), 0 16px 28px -18px rgba(31, 26, 23, .28);
+}
+a.card:active, button.card:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--tactile-line);
+}
+
+/* Hero Demo Card nghiêng nhẹ kiểu tờ bài thi đặt trên bàn học */
+.demo-card {
+  border: 2px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--orange-500);
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s;
+}
+:root[data-theme="dark"] .demo-card {
+  border-color: var(--orange-400);
+  box-shadow: 6px 6px 0 #9a3412;
+}
+@media (min-width: 901px) {
+  .demo-card { transform: rotate(1.2deg); }
+  .demo-card:hover { transform: rotate(0deg) translateY(-2px); box-shadow: 8px 8px 0 var(--orange-500); }
+}
+.demo-result {
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink-accent);
+}
+:root[data-theme="dark"] .demo-result {
+  border-color: var(--ink-accent);
+  box-shadow: 4px 4px 0 #115e59;
+}
+
+/* Nút bấm 3D tactile bấm lún đã tay */
+.btn { border-width: 1.5px; }
+.btn-primary {
+  border-color: #9a3412;
+  box-shadow: 0 4px 0 #9a3412, 0 10px 20px -10px rgba(194, 65, 12, .55), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #9a3412, 0 12px 22px -10px rgba(194, 65, 12, .65), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+.btn-primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #9a3412;
+}
+.btn-outline, .btn-ghost {
+  border-color: var(--line-2);
+  box-shadow: 0 3px 0 var(--tactile-line);
+}
+.btn-outline:hover, .btn-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 var(--tactile-line);
+}
+.btn-outline:active, .btn-ghost:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--tactile-line);
+}
+
+.chip {
+  border-width: 1.5px;
+  box-shadow: 0 3px 0 var(--tactile-line);
+  transition: transform .12s, box-shadow .15s, border-color .15s, background .15s, color .15s;
+}
+.chip:hover { transform: translateY(-2px); box-shadow: 0 5px 0 var(--tactile-line); }
+.chip:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--tactile-line); }
+
+.opt, .demo-opt {
+  border-width: 1.5px;
+  box-shadow: 0 3px 0 var(--tactile-line);
+  transition: transform .1s, box-shadow .15s, border-color .15s, background .15s;
+}
+.opt:hover:not(:disabled), .demo-opt:hover { transform: translateY(-1px); box-shadow: 0 4px 0 var(--tactile-line); }
+.opt:active:not(:disabled), .demo-opt:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--tactile-line); }
+
+/* Stats trang chủ: nhấn số đậm + dải màu trên đầu mỗi thẻ */
+.stats .stat:nth-child(1) { border-top: 4px solid var(--sk-grammar); }
+.stats .stat:nth-child(2) { border-top: 4px solid var(--sk-reading); }
+.stats .stat:nth-child(3) { border-top: 4px solid var(--sk-listening); }
+.stats .stat:nth-child(4) { border-top: 4px solid var(--sk-writing); }
+.stats .stat:nth-child(1) b { color: var(--sk-grammar); }
+.stats .stat:nth-child(2) b { color: var(--sk-reading); }
+.stats .stat:nth-child(3) b { color: var(--sk-listening); }
+.stats .stat:nth-child(4) b { color: var(--sk-writing); }
+
+/* CTA Band: đổi sang tông xanh mực đậm tương phản với điểm nhấn cam */
+.cta-band {
+  background: linear-gradient(135deg, #132a2e 0%, #1e293b 55%, #3b1d12 100%);
+  border: 2px solid #0f172a;
+  box-shadow: 0 6px 0 #0f172a, 0 24px 50px -22px rgba(15, 23, 42, .55);
+}
+.cta-band .btn-outline {
+  background: var(--orange-500);
+  color: #fff;
+  border: 1.5px solid #9a3412;
+  box-shadow: 0 4px 0 #9a3412;
+}
+.cta-band .btn-outline:hover {
+  background: var(--orange-600);
+  color: #fff;
+}
+
+/* 4) Mã màu 5 kỹ năng đậm nét trên thẻ chọn kỹ năng & chip */
+a.skill-tile[href*="#/grammar"], a.skill-card[href*="#/grammar"]     { --sk: var(--sk-grammar);   --sk-bg: var(--sk-grammar-bg);   --sk-soft: var(--sk-grammar-soft);   --sk-bd: var(--sk-grammar-bd); }
+a.skill-tile[href*="#/listening"], a.skill-card[href*="#/listening"] { --sk: var(--sk-listening); --sk-bg: var(--sk-listening-bg); --sk-soft: var(--sk-listening-soft); --sk-bd: var(--sk-listening-bd); }
+a.skill-tile[href*="#/reading"], a.skill-card[href*="#/reading"]     { --sk: var(--sk-reading);   --sk-bg: var(--sk-reading-bg);   --sk-soft: var(--sk-reading-soft);   --sk-bd: var(--sk-reading-bd); }
+a.skill-tile[href*="#/writing"], a.skill-card[href*="#/writing"]     { --sk: var(--sk-writing);   --sk-bg: var(--sk-writing-bg);   --sk-soft: var(--sk-writing-soft);   --sk-bd: var(--sk-writing-bd); }
+a.skill-tile[href*="#/speaking"], a.skill-card[href*="#/speaking"]   { --sk: var(--sk-speaking);  --sk-bg: var(--sk-speaking-bg);  --sk-soft: var(--sk-speaking-soft);  --sk-bd: var(--sk-speaking-bd); }
+
+a.skill-tile[href*="#/"] {
+  background: linear-gradient(180deg, var(--sk-soft, var(--surface)) 0%, var(--surface) 75%);
+  border: 1.5px solid var(--sk-bd, var(--line-2));
+  border-top: 4px solid var(--sk, var(--orange-500));
+  box-shadow: 0 4px 0 var(--sk-bd, var(--tactile-line));
+}
+a.skill-tile[href*="#/"] .icon {
+  display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; font-size: 22px;
+  background: var(--sk-bg, var(--orange-50)); border: 1.5px solid var(--sk-bd, var(--orange-200)); margin-bottom: 8px;
+}
+a.skill-tile[href*="#/"] b { color: var(--ink); }
+a.skill-tile[href*="#/"]:hover, a.skill-card[href*="#/"]:hover {
+  transform: translateY(-3px);
+  border-color: var(--sk, var(--orange-500));
+  box-shadow: 0 7px 0 var(--sk, var(--orange-500));
+}
+a.skill-tile[href*="#/"]:active, a.skill-card[href*="#/"]:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--sk, var(--orange-500));
+}
+
+a.skill-card[href*="#/"] {
+  background: linear-gradient(160deg, var(--sk-soft, var(--surface)) 0%, var(--surface) 60%);
+  border-color: var(--sk-bd, var(--line-2));
+  border-top: 4px solid var(--sk, var(--orange-500));
+  box-shadow: 0 4px 0 var(--sk-bd, var(--tactile-line));
+}
+a.skill-card[href*="#/"] .icon {
+  background: var(--sk-bg, var(--orange-50));
+  border: 1.5px solid var(--sk-bd, var(--orange-200));
+}
+a.skill-card[href*="#/"] .go { color: var(--sk, var(--orange-600)); }
+
+a.chip[href*="#/grammar"]   { border-color: var(--sk-grammar-bd);   background: var(--sk-grammar-soft);   color: var(--sk-grammar); }
+a.chip[href*="#/listening"] { border-color: var(--sk-listening-bd); background: var(--sk-listening-soft); color: var(--sk-listening); }
+a.chip[href*="#/reading"]   { border-color: var(--sk-reading-bd);   background: var(--sk-reading-soft);   color: var(--sk-reading); }
+a.chip[href*="#/writing"]   { border-color: var(--sk-writing-bd);   background: var(--sk-writing-soft);   color: var(--sk-writing); }
+a.chip[href*="#/speaking"]  { border-color: var(--sk-speaking-bd);  background: var(--sk-speaking-soft);  color: var(--sk-speaking); }
+a.chip[href*="#/grammar"]:hover   { background: var(--sk-grammar-bg);   box-shadow: 0 4px 0 var(--sk-grammar-bd); }
+a.chip[href*="#/listening"]:hover { background: var(--sk-listening-bg); box-shadow: 0 4px 0 var(--sk-listening-bd); }
+a.chip[href*="#/reading"]:hover   { background: var(--sk-reading-bg);   box-shadow: 0 4px 0 var(--sk-reading-bd); }
+a.chip[href*="#/writing"]:hover   { background: var(--sk-writing-bg);   box-shadow: 0 4px 0 var(--sk-writing-bd); }
+a.chip[href*="#/speaking"]:hover  { background: var(--sk-speaking-bg);  box-shadow: 0 4px 0 var(--sk-speaking-bd); }
+
+/* 5) Mã màu đậm nét trong phòng thi & danh sách đề (exam.html #app[data-skill]) */
+#app[data-skill="grammar"]   { --sk: var(--sk-grammar);   --sk-bg: var(--sk-grammar-bg);   --sk-soft: var(--sk-grammar-soft);   --sk-bd: var(--sk-grammar-bd); }
+#app[data-skill="listening"] { --sk: var(--sk-listening); --sk-bg: var(--sk-listening-bg); --sk-soft: var(--sk-listening-soft); --sk-bd: var(--sk-listening-bd); }
+#app[data-skill="reading"]   { --sk: var(--sk-reading);   --sk-bg: var(--sk-reading-bg);   --sk-soft: var(--sk-reading-soft);   --sk-bd: var(--sk-reading-bd); }
+#app[data-skill="writing"]   { --sk: var(--sk-writing);   --sk-bg: var(--sk-writing-bg);   --sk-soft: var(--sk-writing-soft);   --sk-bd: var(--sk-writing-bd); }
+#app[data-skill="speaking"]  { --sk: var(--sk-speaking);  --sk-bg: var(--sk-speaking-bg);  --sk-soft: var(--sk-speaking-soft);  --sk-bd: var(--sk-speaking-bd); }
+
+#app[data-skill] .eyebrow,
+#app[data-skill] .test-card .go,
+#app[data-skill] .list-summary .ls-num { color: var(--sk); }
+#app[data-skill] .q-part {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--sk-bg);
+  color: var(--sk);
+  border: 1px solid var(--sk-bd);
+  margin-bottom: 10px;
+}
+#app[data-skill] .list-summary {
+  background: linear-gradient(135deg, var(--sk-soft) 0%, var(--surface) 75%);
+  border-color: var(--sk-bd);
+  border-left: 5px solid var(--sk);
+}
+#app[data-skill] .progress { background: var(--sk-bg); }
+#app[data-skill] .progress > i { background: var(--sk); }
+#app[data-skill] .tab.active { background: var(--sk); border-color: var(--sk); color: #fff; box-shadow: 0 3px 0 var(--tactile-line); }
+#app[data-skill] .opt.selected { border-color: var(--sk); background: var(--sk-soft); box-shadow: 0 3px 0 var(--sk-bd); }
+#app[data-skill] .opt.selected .key { background: var(--sk); color: #fff; }
+#app[data-skill] .q-card { border-top: 4px solid var(--sk); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .card, .chip, .opt, .demo-opt, .demo-card { transition: none !important; transform: none !important; }
 }
