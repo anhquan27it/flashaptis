@@ -49,6 +49,7 @@
     cleanup.forEach((f) => { try { f(); } catch (e) {} });
     cleanup = [];
     FA.stopSpeak();
+    if (document.body && document.body.classList) document.body.classList.remove("focus-mode");
     running = false;
   }
   window.addEventListener("beforeunload", (e) => {
@@ -194,6 +195,7 @@
           <div class="spacer"></div>
           <div class="exam-bar">
             ${timeMin ? `<div class="timer" id="timer">--:--</div>` : ""}
+            ${!mockRun ? `<button class="btn btn-ghost btn-sm" id="focusBtn" type="button" title="Ẩn thanh điều hướng để tập trung (Esc để thoát)">🎯 Tập trung</button>` : ""}
             ${FA.reportBtn({ live: true }, "Báo lỗi")}
             <button class="btn btn-primary btn-sm" id="submitBtn">Nộp bài</button>
             <button class="btn btn-ghost btn-sm" id="exitBtn">${mockRun ? "Bỏ thi" : "Thoát"}</button>
@@ -202,6 +204,23 @@
         <div id="stage"></div>
       </div></div>`;
     running = true;
+    const focusBtn = app.querySelector("#focusBtn");
+    if (focusBtn && document.body && document.body.classList) {
+      const syncFocus = () => {
+        const on = document.body.classList.contains("focus-mode");
+        focusBtn.textContent = on ? "✕ Thoát tập trung" : "🎯 Tập trung";
+        focusBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      };
+      focusBtn.onclick = () => { document.body.classList.toggle("focus-mode"); syncFocus(); };
+      const onEsc = (e) => {
+        if (e.key === "Escape" && document.body.classList.contains("focus-mode")) {
+          document.body.classList.remove("focus-mode");
+          syncFocus();
+        }
+      };
+      document.addEventListener("keydown", onEsc);
+      cleanup.push(() => document.removeEventListener("keydown", onEsc));
+    }
     app.querySelector("#exitBtn").onclick = async () => {
       if (mockRun) {
         if (await FA.confirm("Kết thúc Full Test ngay? Phần đang làm và các phần chưa làm tính 0 điểm.", { title: "Bỏ Full Test?", okText: "Kết thúc", cancelText: "Làm tiếp", danger: true })) { clearRun(); mockEnd("aborted"); }
@@ -386,6 +405,40 @@
       return nx ? `còn ${nx[0] - ov} điểm lên ${nx[1]}` : "đã đạt bậc cao nhất";
     };
 
+    const radarSVG = (bySkill, m) => {
+      const axes = [
+        ["grammar", "Grammar"],
+        ["listening", "Listening"],
+        ["reading", "Reading"],
+        ["writing", "Writing"],
+        ["speaking", "Speaking"],
+      ];
+      const cx = 140, cy = 128, R = 82;
+      const pt = (i, r) => {
+        const ang = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
+        return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)];
+      };
+      const poly = (rFn) => axes.map((_, i) => pt(i, rFn(i)).map((v) => v.toFixed(1)).join(",")).join(" ");
+      const vals = axes.map(([k]) => (bySkill[k][m] ? bySkill[k][m].score : 0));
+      const rings = [20, 35, 50].map((v) => `<polygon class="radar-grid" points="${poly(() => (v / 50) * R)}"/>`).join("");
+      const spokes = axes.map((_, i) => {
+        const [x, y] = pt(i, R);
+        return `<line class="radar-axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+      }).join("");
+      const dataPoly = `<polygon class="radar-area" points="${poly((i) => Math.max(4, (vals[i] / 50) * R))}"/>`;
+      const dots = vals.map((v, i) => {
+        const [x, y] = pt(i, Math.max(4, (v / 50) * R));
+        return `<circle class="radar-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>`;
+      }).join("");
+      const labels = axes.map(([k, name], i) => {
+        const [x, y] = pt(i, R + 22);
+        const sc = bySkill[k][m] ? `${bySkill[k][m].score}` : "—";
+        const anchor = Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end";
+        return `<text class="radar-lbl" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}">${name} (${sc})</text>`;
+      }).join("");
+      return `<svg class="radar-svg" viewBox="0 0 280 250" role="img" aria-label="Biểu đồ Radar 5 kỹ năng">${rings}${spokes}${dataPoly}${dots}${labels}</svg>`;
+    };
+
     const draw = () => {
       const ov = stats.overall(mode);
       const ovLv = FA.toCEFR("overall", ov);
@@ -403,19 +456,25 @@
           </div>
 
           <div class="card">
-            <div class="result-hero">
-              <div class="ring-lg" style="--p:${Math.round((ov / 200) * 100)}"><div><b>${ov}</b><span>/200</span></div></div>
-              <div>
-                <span class="eyebrow">Overall ước lượng (${mode === "latest" ? "lần gần nhất" : "điểm cao nhất"})</span>
-                <div class="row"><span class="cefr-badge">${ovLv}</span><span class="muted">· ${ovNext(ov)}</span></div>
-                <p class="muted mt-1 mb-0" style="font-size:.9rem">${miss.length ? `Còn ${miss.length} kỹ năng chưa thi (${esc(miss.join(", "))}) — hoàn thành đủ 4 kỹ năng chính để ước lượng Overall sát hơn.` : "Đã có điểm cả 4 kỹ năng chính (Listening + Reading + Speaking + Writing)."}</p>
-                <div class="breakdown">
-                  ${CORE_SKILLS.map((k) => {
-                    const pick = stats.bySkill[k][mode];
-                    const sc = pick ? pick.score : 0;
-                    return `<div class="bar-row"><span>${SKILLS[k].icon} ${esc(short(k))}</span><div class="progress"><i style="width:${sc * 2}%"></i></div><b>${pick ? `${sc}/50` : "—"}</b></div>`;
-                  }).join("")}
+            <div class="progress-hero-grid">
+              <div class="result-hero">
+                <div class="ring-lg" style="--p:${Math.round((ov / 200) * 100)}"><div><b>${ov}</b><span>/200</span></div></div>
+                <div>
+                  <span class="eyebrow">Overall ước lượng (${mode === "latest" ? "lần gần nhất" : "điểm cao nhất"})</span>
+                  <div class="row"><span class="cefr-badge">${ovLv}</span><span class="muted">· ${ovNext(ov)}</span></div>
+                  <p class="muted mt-1 mb-0" style="font-size:.9rem">${miss.length ? `Còn ${miss.length} kỹ năng chưa thi (${esc(miss.join(", "))}) — hoàn thành đủ 4 kỹ năng chính để ước lượng Overall sát hơn.` : "Đã có điểm cả 4 kỹ năng chính (Listening + Reading + Speaking + Writing)."}</p>
+                  <div class="breakdown">
+                    ${CORE_SKILLS.map((k) => {
+                      const pick = stats.bySkill[k][mode];
+                      const sc = pick ? pick.score : 0;
+                      return `<div class="bar-row"><span>${SKILLS[k].icon} ${esc(short(k))}</span><div class="progress"><i style="width:${sc * 2}%"></i></div><b>${pick ? `${sc}/50` : "—"}</b></div>`;
+                    }).join("")}
+                  </div>
                 </div>
+              </div>
+              <div class="radar-wrap">
+                <div class="radar-title">Biểu đồ cân bằng 5 kỹ năng (/50)</div>
+                ${radarSVG(stats.bySkill, mode)}
               </div>
             </div>
             <div class="row mt-3">
@@ -982,6 +1041,11 @@
         <div class="q-card">
           <div class="q-part">${esc(p.title)}</div>
           <div class="q-instr">${esc(p.instr)}</div>
+          <div class="hl-bar">
+            <button type="button" class="btn btn-ghost btn-sm" id="hlBtn">🖍️ Tô vàng đoạn đã chọn</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="hlClear">Xóa tô vàng</button>
+            <span class="muted" style="font-size:.82rem">Bôi đen chữ trong bài đọc rồi bấm Tô vàng (nhấn vào chữ vàng để gỡ)</span>
+          </div>
           ${readingPartHTML(p, st.ans[st.i], false)}
         </div>
         <div class="exam-nav">
@@ -1011,6 +1075,45 @@
         };
       });
       const go = (k) => { st.i = k; auto.flush(); render(); window.scrollTo(0, 0); };
+      const qCard = sh.stage.querySelector(".q-card");
+      const hlBtn = sh.stage.querySelector("#hlBtn"), hlClear = sh.stage.querySelector("#hlClear");
+      if (qCard && hlBtn) {
+        hlBtn.onclick = () => {
+          const sel = window.getSelection && window.getSelection();
+          if (!sel || sel.isCollapsed || !sel.rangeCount) return FA.toast("Hãy bôi đen đoạn chữ trong bài đọc trước.");
+          const range = sel.getRangeAt(0);
+          const anc = range.commonAncestorContainer;
+          const host = anc.nodeType === 1 ? anc : anc.parentElement;
+          if (!host || !qCard.contains(host) || host.closest("select,option,button,.hl-bar,.q-instr")) return FA.toast("Chỉ tô vàng được văn bản trong bài đọc.");
+          try {
+            const mark = document.createElement("mark");
+            mark.className = "rd-hl";
+            mark.title = "Bấm để gỡ tô vàng";
+            range.surroundContents(mark);
+            sel.removeAllRanges();
+          } catch (e) {
+            FA.toast("Hãy bôi đen trong cùng một đoạn văn (không cắt ngang ô chọn).");
+          }
+        };
+        qCard.addEventListener("click", (e) => {
+          const m = e.target.closest("mark.rd-hl");
+          if (!m) return;
+          const parent = m.parentNode;
+          while (m.firstChild) parent.insertBefore(m.firstChild, m);
+          parent.removeChild(m);
+          parent.normalize();
+        });
+      }
+      if (qCard && hlClear) {
+        hlClear.onclick = () => {
+          qCard.querySelectorAll("mark.rd-hl").forEach((m) => {
+            const parent = m.parentNode;
+            while (m.firstChild) parent.insertBefore(m.firstChild, m);
+            parent.removeChild(m);
+            parent.normalize();
+          });
+        };
+      }
       sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => go(+b.dataset.j)));
       const pv = sh.stage.querySelector("#prev"), nx = sh.stage.querySelector("#next"), fn = sh.stage.querySelector("#fin");
       if (pv) pv.onclick = () => go(st.i - 1);
@@ -1630,14 +1733,19 @@
     cleanup.push(stopSTT);
     if (replay) return finish(); // xem lại: bản ghi âm không được lưu, chỉ còn điểm, bản nhận dạng + nhận xét AI đã lưu và bài mẫu
 
-    function countdown(sec, label, onEnd) {
-      const el = sh.stage.querySelector("#bigTimer"), lb = sh.stage.querySelector("#stageLabel");
+    function countdown(sec, label, onEnd, phase) {
+      const el = sh.stage.querySelector("#bigTimer"), lb = sh.stage.querySelector("#stageLabel"), ring = sh.stage.querySelector("#speakRing");
       lb.innerHTML = label;
+      if (ring) ring.dataset.phase = phase || "speak";
       const end = Date.now() + sec * 1000;
       let id;
       const tick = () => {
-        const left = (end - Date.now()) / 1000;
+        const left = Math.max(0, (end - Date.now()) / 1000);
         el.textContent = FA.fmtTime(left);
+        if (ring) {
+          ring.style.setProperty("--p", Math.round((left / sec) * 100));
+          ring.classList.toggle("warn", left > 0 && left <= 5);
+        }
         if (left <= 0) { clearInterval(id); onEnd(); }
       };
       id = setInterval(tick, 250);
@@ -1658,7 +1766,8 @@
           ${s.photos ? `<div class="photos-2">${s.photos.map(photoHTML).join("")}</div>` : ""}
           ${qHTML}
           <div class="speak-stage">
-            <div><div class="stage-label" id="stageLabel">Sẵn sàng</div><div class="big-timer" id="bigTimer">${FA.fmtTime(s.time)}</div><div class="mic-meter hidden mt-1" id="micMeter" title="Mức âm lượng micro"><i id="micFill"></i></div></div>
+            <div class="speak-ring" id="speakRing" style="--p:100" data-phase="idle"><div class="big-timer" id="bigTimer">${FA.fmtTime(s.time)}</div></div>
+            <div><div class="stage-label" id="stageLabel">Sẵn sàng</div><div class="mic-meter hidden mt-1" id="micMeter" title="Mức âm lượng micro"><i id="micFill"></i></div></div>
             <div class="spacer"></div>
             <button class="btn btn-primary" id="goBtn">▶ Bắt đầu câu này</button>
             <button class="btn btn-outline hidden" id="doneBtn">Xong, câu tiếp →</button>
@@ -1686,13 +1795,13 @@
         done.classList.remove("hidden");
         startRec();
         startSTT(st.i);
-        countdown(s.time, `${st.stream ? '<span class="rec-dot"></span>Đang ghi âm' : "Đang nói"}`, next);
+        countdown(s.time, `${st.stream ? '<span class="rec-dot"></span>Đang ghi âm' : "Đang nói"}`, next, "speak");
       };
       if (s.prep) {
         done.textContent = "Nói ngay →";
         done.onclick = () => { stopTick(); speak(); };
         done.classList.remove("hidden");
-        countdown(s.prep, "⏳ Thời gian chuẩn bị", () => { stopTick(); speak(); });
+        countdown(s.prep, "⏳ Thời gian chuẩn bị", () => { stopTick(); speak(); }, "prep");
       } else speak();
     }
     function next() {

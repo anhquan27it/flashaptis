@@ -41,11 +41,19 @@
         </div>
         <div style="position:relative">
           <div class="demo-card" id="demo">
-            <div class="demo-top"><span>GRAMMAR · CÂU 7/50</span><span class="timer-badge">24:51</span></div>
-            <div class="q">She _______ to work by bus every day.</div>
-            <div class="demo-opt" data-k="0"><b>A</b> go</div>
-            <div class="demo-opt" data-k="1"><b>B</b> goes</div>
-            <div class="demo-opt" data-k="2"><b>C</b> going</div>
+            <div class="demo-tabs" role="tablist" aria-label="Thử nhanh kỹ năng">
+              <button type="button" class="demo-tab active" data-tab="grammar">🧩 Grammar</button>
+              <button type="button" class="demo-tab" data-tab="vocab">⚡ Từ vựng</button>
+              <button type="button" class="demo-tab" data-tab="listening">🎧 Nghe 5s</button>
+            </div>
+            <div class="demo-top"><span id="demoMeta">GRAMMAR · CÂU 7/50</span><span class="timer-badge" id="demoTimer">24:51</span></div>
+            <div id="demoAudio" class="hidden mt-1"><button type="button" class="btn btn-outline btn-sm" id="demoPlay">🔊 Nghe đoạn mẫu (5s)</button></div>
+            <div class="q" id="demoQ">She _______ to work by bus every day.</div>
+            <div id="demoOpts">
+              <div class="demo-opt" data-k="0"><b>A</b> go</div>
+              <div class="demo-opt" data-k="1"><b>B</b> goes</div>
+              <div class="demo-opt" data-k="2"><b>C</b> going</div>
+            </div>
             <div class="muted" style="font-size:.85rem" id="demoMsg">Thử bấm chọn một đáp án 👆</div>
           </div>
           <div class="demo-result">
@@ -79,12 +87,19 @@
           <a class="card skill-tile" href="exam.html#/writing"><span class="icon">✍️</span><b>Writing</b><small>4 part · 50 phút</small></a>
           <a class="card skill-tile" href="exam.html#/speaking"><span class="icon">🎙️</span><b>Speaking</b><small>4 part · 12 phút</small></a>
         </div>
-        <div class="quick-skills mt-2">
-          <span class="label">Luyện thêm:</span>
-          <a class="chip" href="exam.html#/gym">📚 Ôn tập nhanh 10 câu</a>
-          <a class="chip" href="flashcards.html">⚡ Flashcard từ vựng</a>
-          <a class="chip" href="tips.html">💡 Lộ trình 20 mẹo</a>
-          <a class="chip" href="calculator.html">🧮 Tính điểm → CEFR</a>
+        <div class="bento-row mt-3">
+          <a class="card bento-feat" href="exam.html#/mock">
+            <span class="pill hot">🏁 Mô phỏng thi thật</span>
+            <h3 class="mt-2 mb-1">Full Test 5 phần chuẩn Aptis ESOL</h3>
+            <p class="muted mb-2">Thi liền mạch Grammar, Listening, Reading, Writing và Speaking (~2 giờ 40 phút), ước lượng bậc Overall CEFR ngay sau khi nộp.</p>
+            <span class="go">Vào phòng thi Full Test →</span>
+          </a>
+          <div class="bento-side">
+            <a class="card bento-mini" href="exam.html#/gym"><span class="icon">📚</span><div><b>Ôn tập nhanh 10 câu</b><small>Luyện phản xạ + Sổ câu sai</small></div></a>
+            <a class="card bento-mini" href="flashcards.html"><span class="icon">⚡</span><div><b>Flashcard từ vựng</b><small>A1–C2 & 23 chủ đề</small></div></a>
+            <a class="card bento-mini" href="grammar.html"><span class="icon">📘</span><div><b>Học ngữ pháp</b><small>101 chủ điểm có ví dụ</small></div></a>
+            <a class="card bento-mini" href="calculator.html"><span class="icon">🧮</span><div><b>Tính điểm → CEFR</b><small>Quy đổi 0–200 tức thì</small></div></a>
+          </div>
         </div>
       </div>
     </section>
@@ -141,14 +156,59 @@
     document.getElementById("statR").textContent = FA_READING.length;
     document.getElementById("statL").textContent = FA_LISTENING.length;
     document.getElementById("statV").textContent = (FA_VOCAB.reduce((n, d) => n + d.cards.length, 0) + (window.FA_VOCAB_INDEX || []).reduce((n, d) => n + d.n, 0)).toLocaleString("vi-VN");
-    // demo tương tác
-    document.querySelectorAll("#demo .demo-opt").forEach((el) => el.addEventListener("click", () => {
-      document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok", "bad"));
-      const ok = el.dataset.k === "1";
-      document.querySelector('#demo .demo-opt[data-k="1"]').classList.add("ok");
-      if (!ok) el.classList.add("bad");
-      document.getElementById("demoMsg").innerHTML = ok ? "✓ Chính xác! Chủ ngữ số ít <b>she</b> → <b>goes</b>." : "✗ Chưa đúng. Chủ ngữ số ít <b>she</b> → động từ thêm -es: <b>goes</b>.";
-    }));
+    // demo tương tác 3 kỹ năng
+    const DEMOS = {
+      grammar: {
+        meta: "GRAMMAR · CÂU 7/50", timer: "24:51",
+        q: "She _______ to work by bus every day.",
+        opts: ["go", "goes", "going"], a: 1,
+        ok: "✓ Chính xác! Chủ ngữ số ít <b>she</b> → <b>goes</b>.",
+        bad: "✗ Chưa đúng. Chủ ngữ số ít <b>she</b> → động từ thêm -es: <b>goes</b>.",
+      },
+      vocab: {
+        meta: "VOCABULARY · B1", timer: "19:40",
+        q: "The 08:15 train was _______ by twenty minutes due to thick fog.",
+        opts: ["delayed", "arrived", "reserved"], a: 0,
+        ok: "✓ Chính xác! <b>delayed</b> = bị hoãn / trễ chuyến.",
+        bad: "✗ Chưa đúng. Bị trễ chuyến do sương mù dùng <b>delayed</b>.",
+      },
+      listening: {
+        meta: "LISTENING · PART 1", timer: "39:15",
+        audio: "Attention passengers. The 08:15 train to Bristol has moved from Platform 3 to Platform 7.",
+        q: "Which platform does the 08:15 train to Bristol leave from?",
+        opts: ["Platform 3", "Platform 7", "Platform 9"], a: 1,
+        ok: "✓ Chuẩn luôn! Thông báo đổi từ Platform 3 sang <b>Platform 7</b>.",
+        bad: "✗ Chưa đúng. Nghe kỹ câu chốt: <i>moved from Platform 3 to <b>Platform 7</b></i>.",
+      },
+    };
+    let curDemo = "grammar";
+    function renderDemo(key) {
+      curDemo = key;
+      const d = DEMOS[key];
+      document.querySelectorAll("#demo .demo-tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === key));
+      document.getElementById("demoMeta").textContent = d.meta;
+      document.getElementById("demoTimer").textContent = d.timer;
+      document.getElementById("demoQ").textContent = d.q;
+      const aud = document.getElementById("demoAudio");
+      aud.classList.toggle("hidden", !d.audio);
+      document.getElementById("demoOpts").innerHTML = d.opts.map((o, i) => `<div class="demo-opt" data-k="${i}"><b>${"ABC"[i]}</b> ${o}</div>`).join("");
+      document.getElementById("demoMsg").textContent = d.audio ? "Bấm nghe đoạn mẫu rồi chọn đáp án 🎧" : "Thử bấm chọn một đáp án 👆";
+      document.querySelectorAll("#demo .demo-opt").forEach((el) => el.addEventListener("click", () => {
+        document.querySelectorAll("#demo .demo-opt").forEach((x) => x.classList.remove("ok", "bad"));
+        const ok = +el.dataset.k === d.a;
+        document.querySelector(`#demo .demo-opt[data-k="${d.a}"]`).classList.add("ok");
+        if (!ok) el.classList.add("bad");
+        document.getElementById("demoMsg").innerHTML = ok ? d.ok : d.bad;
+      }));
+    }
+    document.querySelectorAll("#demo .demo-tab").forEach((b) => (b.onclick = () => { FA.stopSpeak(); renderDemo(b.dataset.tab); }));
+    document.getElementById("demoPlay").onclick = () => {
+      const d = DEMOS[curDemo];
+      if (!d.audio) return;
+      if (FA.ttsSupported()) FA.speak(d.audio, { gender: "f" });
+      else document.getElementById("demoMsg").innerHTML = `🔊 <i>“${d.audio}”</i>`;
+    };
+    renderDemo("grammar");
   </script>
 </body>
 </html>

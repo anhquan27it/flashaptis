@@ -1815,3 +1815,95 @@ a.chip[href*="#/speaking"]:hover  { background: var(--sk-speaking-bg);  box-shad
 @media (prefers-reduced-motion: reduce) {
   .btn, .card, .chip, .opt, .demo-opt, .demo-card { transition: none !important; transform: none !important; }
 }
+
+/* ===========================================================
+   Gói 2 & 3: Focus Mode, Reading Highlighter, Speaking Ring, Radar Chart, Demo 3-tab, Bento Grid
+   =========================================================== */
+/* Focus Mode phòng thi */
+body.focus-mode .site-header,
+body.focus-mode .site-footer { display: none !important; }
+body.focus-mode .page { padding-top: 18px; }
+body.focus-mode .exam-top {
+  position: sticky; top: 10px; z-index: 40;
+  background: var(--surface); border: 1.5px solid var(--line-2); border-radius: 16px;
+  padding: 10px 14px; margin-bottom: 14px;
+  box-shadow: 0 4px 0 var(--tactile-line), 0 12px 28px -16px rgba(15, 23, 42, .3);
+}
+
+/* Reading Highlighter */
+.hl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+mark.rd-hl {
+  background: #fef08a; color: #1c1917; padding: 1px 3px; border-radius: 4px;
+  cursor: pointer; transition: background .15s;
+}
+mark.rd-hl:hover { background: #fde047; }
+:root[data-theme="dark"] mark.rd-hl { background: #854d0e; color: #fef9c3; }
+
+/* Speaking Countdown Ring */
+.speak-ring {
+  --p: 100; --ring-c: var(--sk-speaking, #e11d48);
+  width: 82px; height: 82px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--ring-c) calc(var(--p) * 1%), var(--line) 0);
+  transition: background .25s;
+}
+.speak-ring[data-phase="prep"] { --ring-c: var(--sk-reading, #0f766e); }
+.speak-ring[data-phase="idle"] { --ring-c: var(--orange-500); }
+.speak-ring.warn { --ring-c: var(--red); }
+.speak-ring .big-timer {
+  width: 66px; height: 66px; border-radius: 50%; background: var(--surface);
+  display: grid; place-items: center; font-size: 1.2rem !important; margin: 0;
+  border: 1.5px solid var(--line-2);
+}
+
+/* Biểu đồ Radar 5 kỹ năng trong #/progress */
+.progress-hero-grid { display: grid; grid-template-columns: 1.25fr .85fr; gap: 20px; align-items: center; }
+@media (max-width: 780px) { .progress-hero-grid { grid-template-columns: 1fr; } }
+.radar-wrap {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 12px; border-radius: 16px; background: var(--surface-2); border: 1.5px solid var(--line-2);
+}
+.radar-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+.radar-svg { width: 100%; max-width: 260px; height: auto; overflow: visible; }
+.radar-grid { fill: none; stroke: var(--line-2); stroke-width: 1.2; }
+.radar-axis { stroke: var(--line-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.radar-area { fill: rgba(249, 115, 22, .22); stroke: var(--orange-500); stroke-width: 2.2; stroke-linejoin: round; }
+.radar-dot { fill: var(--orange-600); stroke: var(--surface); stroke-width: 1.8; }
+.radar-lbl { font-size: 10.5px; font-weight: 700; fill: var(--ink-2); font-family: var(--font); }
+:root[data-theme="dark"] .radar-area { fill: rgba(251, 146, 60, .24); stroke: var(--orange-400); }
+:root[data-theme="dark"] .radar-dot { fill: var(--orange-400); }
+
+/* Hero Demo 3-tab */
+.demo-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.demo-tab {
+  flex: 1; padding: 6px 8px; border-radius: 10px; border: 1.5px solid var(--line-2);
+  background: var(--surface-2); color: var(--ink-2); font: inherit; font-size: .8rem; font-weight: 600;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.demo-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+:root[data-theme="dark"] .demo-tab.active { background: var(--orange-500); border-color: var(--orange-500); color: #fff; }
+
+/* Bento Grid trên Trang chủ */
+.bento-row { display: grid; grid-template-columns: 1.1fr 1.2fr; gap: 16px; }
+@media (max-width: 820px) { .bento-row { grid-template-columns: 1fr; } }
+a.card.bento-feat {
+  display: flex; flex-direction: column; justify-content: center;
+  background: linear-gradient(145deg, #fff7ed 0%, #ffedd5 55%, #f0fdfa 100%);
+  border: 1.5px solid var(--orange-300); border-left: 5px solid var(--orange-500);
+  box-shadow: 0 4px 0 var(--orange-300);
+}
+:root[data-theme="dark"] a.card.bento-feat {
+  background: linear-gradient(145deg, #2d1b10 0%, #1e1a18 60%, #102625 100%);
+  border-color: var(--orange-700); box-shadow: 0 4px 0 #7c2d12;
+}
+a.card.bento-feat .go { font-weight: 700; color: var(--orange-600); }
+.bento-side { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 480px) { .bento-side { grid-template-columns: 1fr; } }
+a.card.bento-mini {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+}
+a.card.bento-mini .icon {
+  flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+  font-size: 20px; background: var(--surface-2); border: 1.5px solid var(--line-2);
+}
+a.card.bento-mini b { display: block; font-size: .95rem; font-family: var(--font-head); color: var(--ink); }
+a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
