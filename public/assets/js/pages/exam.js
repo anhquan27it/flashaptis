@@ -2270,7 +2270,7 @@
       const it = items[i];
       const ans = chosen != null;
       body.innerHTML = `
-        <div class="row mb-1" style="gap:8px">
+        <div class="row mb-2" style="gap:8px;margin-bottom:14px">
           <button type="button" class="btn btn-ghost btn-sm" id="gExit">← Đổi nguồn</button>
           <div class="spacer"></div>
           ${combo >= 2 ? `<span class="pill hot">🔥 Combo ×${combo}</span>` : ""}

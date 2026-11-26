@@ -1975,6 +1975,18 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 }
 .tips-hero-side { display: flex; flex-direction: column; align-items: center; }
 .tips-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+.tips-jump {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1.5px solid var(--line-2);
+  font-size: .88rem; color: var(--ink-2);
+}
+.tree-row.tip-pulse .tip-card {
+  animation: tip-highlight 1.6s ease-out;
+}
+@keyframes tip-highlight {
+  0%   { box-shadow: 0 0 0 5px var(--orange-400), 0 6px 0 var(--orange-500); }
+  100% { box-shadow: 0 4px 0 var(--tactile-line); }
+}
 @media (max-width: 720px) {
   .tips-hero { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
   .tips-hero-side { flex-direction: row; justify-content: space-between; width: 100%; border-top: 1px dashed var(--line-2); padding-top: 12px; }
@@ -2035,6 +2047,16 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
   background: var(--green); border-color: var(--green); color: #fff;
   box-shadow: 0 0 0 4px var(--bg), 0 3px 0 #15803d;
 }
+.tree-row.current .tree-node {
+  background: var(--sk, var(--orange-500)); color: #fff;
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px var(--sk-bd, var(--orange-200));
+}
+.tree-row.locked { opacity: .62; }
+.tree-row.locked .tree-node {
+  background: var(--surface-2); border-color: var(--line-2); color: var(--muted); font-size: .78rem;
+  box-shadow: 0 0 0 4px var(--bg);
+}
+.tree-row.locked .tip-card { background: var(--surface); }
 .tree-row:hover .tree-node { transform: scale(1.12); }
 .tree-row.left .tip-card { grid-column: 1; grid-row: 1; margin-right: 14px; position: relative; }
 .tree-row.right .tip-card { grid-column: 3; grid-row: 1; margin-left: 14px; position: relative; }

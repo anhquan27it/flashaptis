@@ -22,8 +22,9 @@
       <div class="tips-hero-main">
         <span class="eyebrow">Lộ trình mẹo thi thực chiến</span>
         <h1 class="page-title mb-1">💡 20 mẹo ăn điểm Aptis ESOL</h1>
-        <p class="page-sub mb-2">Xem tự do mọi kỹ năng, đánh dấu mẹo đã nắm vững hoặc lưu ⭐ mẹo hay để ôn nhanh trước ngày thi.</p>
+        <p class="page-sub mb-2">Đọc từng mẹo, làm nhiệm vụ nhỏ rồi bấm “Đánh dấu đã nắm” để mở khóa mẹo tiếp theo trên cây lộ trình.</p>
         <div class="tips-bars" id="tipBars"></div>
+        <div class="tips-jump mt-2" id="tipJump"></div>
       </div>
       <div class="tips-hero-side">
         <div class="ring-lg" id="tipRing" style="--p:0"><div><b id="tipCount">0</b><span>/20 mẹo</span></div></div>
@@ -79,8 +80,26 @@
 
     const done = () => FA.store.get("tips-done", []);
     const favs = () => FA.store.get("tips-fav", []);
+    const lastDone = () => FA.store.get("tips-last", null);
     let activeFilter = "all";
     let searchQ = "";
+
+    function jumpToTip(idx) {
+      if (activeFilter !== "all" || searchQ) {
+        activeFilter = "all";
+        searchQ = "";
+        const s = document.getElementById("tipSearch");
+        if (s) s.value = "";
+        renderTabs();
+        renderList();
+      }
+      const el = document.getElementById("tip-" + idx);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.remove("tip-pulse");
+      void el.offsetWidth;
+      el.classList.add("tip-pulse");
+    }
 
     function renderSummary() {
       const d = done();
@@ -91,6 +110,20 @@
         const got = idxs.filter((i) => d.includes(i)).length;
         return `<div class="tip-mini-bar" data-sk="${m.key}"><span>${m.ic} ${sk}</span><div class="progress" style="height:6px"><i style="width:${Math.round((got / idxs.length) * 100)}%"></i></div><b>${got}/${idxs.length}</b></div>`;
       }).join("");
+      const jump = document.getElementById("tipJump");
+      const last = lastDone();
+      const lastIdx = last && Number.isInteger(last.i) && d.includes(last.i) ? last.i : (d.length ? Math.max(...d) : -1);
+      const nextIdx = TIPS.findIndex((_, k) => !d.includes(k));
+      if (d.length >= TIPS.length) {
+        jump.innerHTML = `<span class="pill green">🎉 Bạn đã hoàn thành trọn bộ ${TIPS.length}/${TIPS.length} mẹo!</span>`;
+      } else {
+        const lastTxt = lastIdx >= 0
+          ? `<span>📌 Lần cuối xong: <b>Mẹo #${lastIdx + 1}</b> (${FA.esc(TIPS[lastIdx][0])})${last && last.i === lastIdx && last.at ? ` · ${FA.fmtDate(last.at)}` : ""}</span>`
+          : `<span class="muted">Chưa hoàn thành mẹo nào — bắt đầu từ mẹo đầu tiên nhé!</span>`;
+        jump.innerHTML = `${lastTxt}<button type="button" class="btn btn-primary btn-sm" id="tipJumpBtn">▶ ${lastIdx >= 0 ? `Tới mẹo tiếp theo (#${nextIdx + 1})` : "Bắt đầu Mẹo #1"} →</button>`;
+        const btn = document.getElementById("tipJumpBtn");
+        if (btn) btn.onclick = () => jumpToTip(nextIdx);
+      }
     }
 
     function renderTabs() {
@@ -122,11 +155,12 @@
         road.innerHTML = `<div class="card empty"><div class="big">${activeFilter === "fav" ? "⭐" : "🔍"}</div><p>${activeFilter === "fav" ? "Bạn chưa lưu mẹo nào. Bấm nút ☆ trên thẻ mẹo để lưu lại ôn nhanh trước ngày thi." : `Không tìm thấy mẹo nào khớp “${FA.esc(searchQ)}”.`}</p></div>`;
         return;
       }
+      const nextUnlock = TIPS.findIndex((_, idx) => !d.includes(idx));
       let lastSkill = "";
       let branchIdx = 0;
       const html = [];
       shown.forEach(({ t: [skill, title, body, mission, link, tpl], i }) => {
-        const isDone = d.includes(i), isFav = f.includes(i), meta = SK_META[skill];
+        const isDone = d.includes(i), isCurrent = !isDone && i === nextUnlock, locked = !isDone && !isCurrent, isFav = f.includes(i), meta = SK_META[skill];
         if (skill !== lastSkill) {
           lastSkill = skill;
           const allSk = TIPS.map((x, idx) => (x[0] === skill ? idx : -1)).filter((idx) => idx >= 0);
@@ -134,18 +168,18 @@
           html.push(`<div class="tree-stage" data-sk="${meta.key}"><span class="tree-stage-pill">${meta.ic} ${skill} <b>${gotSk}/${allSk.length}</b></span></div>`);
         }
         const side = branchIdx++ % 2 === 0 ? "left" : "right";
-        html.push(`<div class="tree-row ${side} ${isDone ? "done" : ""}" data-sk="${meta.key}">
-          <div class="tree-node" title="Mẹo #${i + 1}">${isDone ? "✓" : i + 1}</div>
-          <article class="card tip-card ${isDone ? "done" : ""}" data-sk="${meta.key}">
+        html.push(`<div class="tree-row ${side} ${isDone ? "done" : ""} ${isCurrent ? "current" : ""} ${locked ? "locked" : ""}" id="tip-${i}" data-sk="${meta.key}">
+          <div class="tree-node" title="${locked ? `Hoàn thành Mẹo #${i} để mở khóa` : `Mẹo #${i + 1}`}">${isDone ? "✓" : locked ? "🔒" : i + 1}</div>
+          <article class="card tip-card ${isDone ? "done" : ""} ${locked ? "locked" : ""}" data-sk="${meta.key}">
             <div class="row" style="gap:8px">
               <span class="tip-num">#${i + 1}</span>
               <span class="tip-sk-pill">${meta.ic} ${skill}</span>
-              ${isDone ? `<span class="pill green">✓ Đã nắm</span>` : ""}
+              ${isDone ? `<span class="pill green">✓ Đã nắm</span>` : isCurrent ? `<span class="pill hot">⚡ Đang mở</span>` : `<span class="muted" style="font-size:.82rem">🔒 Hoàn thành Mẹo #${i} để mở</span>`}
               <div class="spacer"></div>
-              <button type="button" class="tip-fav-btn ${isFav ? "on" : ""}" data-fav="${i}" title="${isFav ? "Bỏ lưu mẹo" : "Lưu mẹo này"}" aria-label="Lưu mẹo">${isFav ? "★" : "☆"}</button>
+              ${locked ? "" : `<button type="button" class="tip-fav-btn ${isFav ? "on" : ""}" data-fav="${i}" title="${isFav ? "Bỏ lưu mẹo" : "Lưu mẹo này"}" aria-label="Lưu mẹo">${isFav ? "★" : "☆"}</button>`}
             </div>
-            <h3 class="mt-2 mb-1">${title}</h3>
-            <p class="mb-2" style="color:var(--ink-2)">${body}</p>
+            <h3 class="mt-2 ${locked ? "mb-0" : "mb-1"}">${title}</h3>
+            ${locked ? "" : `<p class="mb-2" style="color:var(--ink-2)">${body}</p>
             <div class="tip-mission">🎯 <b>Nhiệm vụ áp dụng:</b> ${mission}</div>
             <div class="row mt-2" style="gap:8px">
               ${isDone
@@ -153,7 +187,7 @@
                 : `<button type="button" class="btn btn-primary btn-sm" data-done="${i}">✓ Đánh dấu đã nắm</button>`}
               ${link ? `<a class="btn btn-outline btn-sm" href="${link}">Thực hành →</a>` : ""}
               ${tpl ? `<button type="button" class="btn btn-ghost btn-sm" data-copy="${FA.esc(tpl)}">📋 Chép mẫu</button>` : ""}
-            </div>
+            </div>`}
           </article>
         </div>`);
       });
@@ -162,7 +196,8 @@
         const idx = +b.dataset.done;
         const cur = done();
         if (!cur.includes(idx)) FA.store.set("tips-done", [...cur, idx]);
-        FA.toast("Tuyệt! Đã đánh dấu nắm vững mẹo #" + (idx + 1) + " ⚡");
+        FA.store.set("tips-last", { i: idx, at: Date.now() });
+        FA.toast("Tuyệt! Đã lưu mốc Mẹo #" + (idx + 1) + " ⚡");
         draw();
       }));
       road.querySelectorAll("[data-undo]").forEach((b) => (b.onclick = () => {
@@ -185,6 +220,7 @@
     document.getElementById("tipReset").onclick = async () => {
       if (await FA.confirm("Xóa toàn bộ tiến độ lộ trình mẹo?", { okText: "Xóa tiến độ", danger: true })) {
         FA.store.set("tips-done", []);
+        FA.store.set("tips-last", null);
         draw();
       }
     };
