@@ -2243,7 +2243,7 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 }
 .fa-loader-ring {
   position: relative; width: 82px; height: 82px; border-radius: 50%;
-  display: grid; place-items: center; perspective: 420px;
+  display: grid; place-items: center;
   background: radial-gradient(circle, #fff7ed 40%, #ffedd5 100%);
 }
 :root[data-theme="dark"] .fa-loader-ring { background: radial-gradient(circle, #3a2012 40%, #24150d 100%); }
@@ -2256,18 +2256,16 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 }
 .fa-loader-ring img {
   width: 62px; height: 62px; object-fit: contain;
-  transform-style: preserve-3d;
-  animation: fa-frog-coin .9s linear infinite;
+  animation: fa-frog-hop .75s ease-in-out infinite;
 }
 .fa-loader-txt {
   font-family: var(--font-head); font-weight: 700; font-size: .95rem;
   color: var(--ink); letter-spacing: -.01em;
 }
 @keyframes fa-spin { to { transform: rotate(360deg); } }
-@keyframes fa-frog-coin {
-  0%   { transform: rotateY(0deg); }
-  50%  { transform: rotateY(180deg); }
-  100% { transform: rotateY(360deg); }
+@keyframes fa-frog-hop {
+  0%, 100% { transform: translateY(2px) rotate(-4deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .fa-loader-ring::before, .fa-loader-ring img { animation: none; }
