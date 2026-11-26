@@ -1857,19 +1857,22 @@ mark.rd-hl:hover { background: #fde047; }
 }
 
 /* Biểu đồ Radar 5 kỹ năng trong #/progress */
+.progress-container { max-width: 900px; }
+.progress-shortcuts { justify-content: center; }
 .progress-hero-grid { display: grid; grid-template-columns: 1.25fr .85fr; gap: 20px; align-items: center; }
 @media (max-width: 780px) { .progress-hero-grid { grid-template-columns: 1fr; } }
 .radar-wrap {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 12px; border-radius: 16px; background: var(--surface-2); border: 1.5px solid var(--line-2);
+  min-width: 0; padding: 12px; border-radius: 16px; background: var(--surface-2); border: 1.5px solid var(--line-2);
 }
-.radar-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
-.radar-svg { width: 100%; max-width: 260px; height: auto; overflow: visible; }
+.radar-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; text-align: center; }
+.radar-svg { display: block; width: 100%; max-width: 350px; height: auto; }
 .radar-grid { fill: none; stroke: var(--line-2); stroke-width: 1.2; }
 .radar-axis { stroke: var(--line-2); stroke-width: 1; stroke-dasharray: 3 3; }
 .radar-area { fill: rgba(249, 115, 22, .22); stroke: var(--orange-500); stroke-width: 2.2; stroke-linejoin: round; }
 .radar-dot { fill: var(--orange-600); stroke: var(--surface); stroke-width: 1.8; }
-.radar-lbl { font-size: 10.5px; font-weight: 700; fill: var(--ink-2); font-family: var(--font); }
+.radar-lbl { font-size: 15px; font-weight: 700; fill: var(--ink-2); font-family: var(--font); }
+.radar-value { font-size: 14px; fill: var(--orange-700); }
 :root[data-theme="dark"] .radar-area { fill: rgba(251, 146, 60, .24); stroke: var(--orange-400); }
 :root[data-theme="dark"] .radar-dot { fill: var(--orange-400); }
 
@@ -2113,7 +2116,6 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
   .demo-tab { font-size: .74rem; padding: 6px 4px; }
   .demo-card { padding: 16px; }
   .speak-stage { flex-wrap: wrap; gap: 12px; }
-  .radar-lbl { font-size: 9.5px; }
 }
 
 /* ===========================================================

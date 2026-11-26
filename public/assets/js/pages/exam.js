@@ -407,13 +407,13 @@
 
     const radarSVG = (bySkill, m) => {
       const axes = [
-        ["grammar", "Grammar"],
-        ["listening", "Listening"],
-        ["reading", "Reading"],
-        ["writing", "Writing"],
-        ["speaking", "Speaking"],
+        ["grammar", "Grammar", 160, 18],
+        ["listening", "Listening", 270, 88],
+        ["reading", "Reading", 234, 182],
+        ["writing", "Writing", 86, 182],
+        ["speaking", "Speaking", 50, 88],
       ];
-      const cx = 140, cy = 128, R = 82;
+      const cx = 160, cy = 114, R = 72;
       const pt = (i, r) => {
         const ang = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
         return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)];
@@ -430,13 +430,12 @@
         const [x, y] = pt(i, Math.max(4, (v / 50) * R));
         return `<circle class="radar-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>`;
       }).join("");
-      const labels = axes.map(([k, name], i) => {
-        const [x, y] = pt(i, R + 22);
-        const sc = bySkill[k][m] ? `${bySkill[k][m].score}` : "—";
-        const anchor = Math.abs(x - cx) < 8 ? "middle" : x > cx ? "start" : "end";
-        return `<text class="radar-lbl" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}">${name} (${sc})</text>`;
-      }).join("");
-      return `<svg class="radar-svg" viewBox="0 0 280 250" role="img" aria-label="Biểu đồ Radar 5 kỹ năng">${rings}${spokes}${dataPoly}${dots}${labels}</svg>`;
+      const labels = axes.map(([k, name, x, y]) => `
+        <text class="radar-lbl" x="${x}" y="${y}" text-anchor="middle">
+          <tspan x="${x}">${name}</tspan><tspan class="radar-value" x="${x}" dy="17">${bySkill[k][m]?.score ?? "—"}</tspan>
+        </text>`).join("");
+      const summary = axes.map(([k, name]) => `${name}: ${bySkill[k][m]?.score ?? "chưa có điểm"}`).join(", ");
+      return `<svg class="radar-svg" viewBox="0 0 320 212" role="img" aria-label="${esc(summary)}">${rings}${spokes}${dataPoly}${dots}${labels}</svg>`;
     };
 
     const draw = () => {
@@ -444,7 +443,7 @@
       const ovLv = FA.toCEFR("overall", ov);
       const miss = CORE_SKILLS.filter((k) => !stats.bySkill[k].latest).map((k) => short(k));
       app.innerHTML = `
-        <div class="page"><div class="container narrow">
+        <div class="page"><div class="container progress-container">
           <div class="crumbs"><a href="#/">← Kỹ năng</a> / Tiến độ & lịch sử</div>
           <div class="row mb-2">
             <div><h1 class="page-title mb-0">📊 Bảng tiến độ học tập</h1></div>
@@ -477,7 +476,7 @@
                 ${radarSVG(stats.bySkill, mode)}
               </div>
             </div>
-            <div class="row mt-3">
+            <div class="row mt-3 progress-shortcuts">
               <a class="btn btn-outline btn-sm" href="calculator.html">🧮 Mở máy tính CEFR</a>
               <a class="btn btn-ghost btn-sm" href="#/gym/wrong">📒 Sổ câu sai (${wrongN})</a>
               <a class="btn btn-ghost btn-sm" href="flashcards.html">⚡ Flashcard (${fcN} từ đã thuộc)</a>
