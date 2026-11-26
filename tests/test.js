@@ -720,6 +720,21 @@ test("FA.spell: nhận diện địa danh Việt Nam (Da Nang…) và hỗ trợ
   }
 });
 
+test("FA_STATS (data/stats.js): khớp 100% với số lượng thực tế trong ngân hàng đề", () => {
+  const s2 = createSandbox();
+  loadScripts(s2, ["public/data/stats.js"]);
+  const st = s2.FA_STATS;
+  assert.ok(st && typeof st === "object", "thiếu FA_STATS");
+  assert.equal(st.grammarQuestions, FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0));
+  assert.equal(st.grammarTests, FA_GRAMMAR.length);
+  assert.equal(st.readingTests, FA_READING.length);
+  assert.equal(st.listeningTests, FA_LISTENING.length);
+  assert.equal(st.writingTests, FA_WRITING.length);
+  assert.equal(st.speakingTests, FA_SPEAKING.length);
+  assert.equal(st.mockTests, FA_MOCK.length);
+  assert.equal(st.vocabCards, FA_VOCAB.reduce((n, d) => n + d.cards.length, 0) + FA_VOCAB_INDEX.reduce((n, d) => n + d.n, 0));
+});
+
 if (process.exitCode) {
   console.error("\nMột số kiểm thử thất bại!");
 } else {

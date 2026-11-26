@@ -61,7 +61,7 @@
     SK.forEach(([k]) => { saved[k] = clampInt(saved[k], def[k]); });
     const invalid = new Set();
     const calc = document.getElementById("calc");
-    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" step="1" value="${saved[k]}" data-k="${k}" aria-label="${n} (thanh trượt)"><input class="inp" type="number" min="0" max="50" step="1" inputmode="numeric" value="${saved[k]}" data-n="${k}" aria-label="${n} (ô nhập)"><span class="lv" data-lv="${k}"></span><div class="calc-err" data-err="${k}" role="alert"></div></div>`).join("");
+    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row" data-sk="${k}"><b>${n}</b><input type="range" min="0" max="50" step="1" value="${saved[k]}" data-k="${k}" aria-label="${n} (thanh trượt)"><input class="inp" type="number" min="0" max="50" step="1" inputmode="numeric" value="${saved[k]}" data-n="${k}" aria-label="${n} (ô nhập)"><span class="lv" data-lv="${k}"></span><div class="calc-err" data-err="${k}" role="alert"></div></div>`).join("");
     function nextGap(skill, score) {
       const t = FA.CEFR[skill].slice().reverse(); // tăng dần
       const nx = t.find(([min]) => score < min);

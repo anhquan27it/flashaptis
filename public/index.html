@@ -139,23 +139,45 @@
       </div>
     </section>
   </main>
+  <div class="resume-dock hidden" id="resumeWrap" role="region" aria-label="Tiếp tục bài đang làm dở"></div>
 
   <script src="assets/js/core/common.js"></script>
   <script src="assets/js/firebase/firebase-config.js"></script>
   <script src="assets/js/firebase/cloud.js"></script>
   <script src="assets/js/firebase/plan.js"></script>
   <script>FA.renderShell("home");</script>
-  <script src="data/grammar.js"></script>
-  <script src="data/reading.js"></script>
-  <script src="data/listening.js"></script>
-  <script src="data/vocab.js"></script>
-  <script src="data/vocab-index.js"></script>
+  <script src="data/stats.js"></script>
   <script>
-    // số liệu thật từ ngân hàng đề
-    document.getElementById("statQ").textContent = FA_GRAMMAR.reduce((n, t) => n + t.questions.length, 0);
-    document.getElementById("statR").textContent = FA_READING.length;
-    document.getElementById("statL").textContent = FA_LISTENING.length;
-    document.getElementById("statV").textContent = (FA_VOCAB.reduce((n, d) => n + d.cards.length, 0) + (window.FA_VOCAB_INDEX || []).reduce((n, d) => n + d.n, 0)).toLocaleString("vi-VN");
+    // số liệu thật từ ngân hàng đề (tải gọn ~0.3 KB thay vì ~1.2 MB dữ liệu đề)
+    if (window.FA_STATS) {
+      document.getElementById("statQ").textContent = FA_STATS.grammarQuestions.toLocaleString("vi-VN");
+      document.getElementById("statR").textContent = FA_STATS.readingTests;
+      document.getElementById("statL").textContent = FA_STATS.listeningTests;
+      document.getElementById("statV").textContent = FA_STATS.vocabCards.toLocaleString("vi-VN");
+    }
+    // banner "Tiếp tục bài đang làm dở" đọc từ localStorage (< 24h)
+    (function () {
+      const NAMES = { grammar: ["🧩", "Grammar"], reading: ["📖", "Reading"], listening: ["🎧", "Listening"], writing: ["✍️", "Writing"] };
+      let latest = null;
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (!k || k.indexOf("flashaptis:draft:") !== 0) continue;
+          const d = JSON.parse(localStorage.getItem(k) || "null");
+          if (!d || !d.savedAt || Date.now() - d.savedAt > 24 * 3600 * 1000) continue;
+          const [, , sk, tid] = k.split(":");
+          if (!NAMES[sk] || !tid) continue;
+          if (!latest || d.savedAt > latest.savedAt) latest = { sk, tid, savedAt: d.savedAt, leftSec: d.leftSec || 0 };
+        }
+      } catch (e) {}
+      if (!latest) return;
+      const wrap = document.getElementById("resumeWrap");
+      const [ic, nm] = NAMES[latest.sk];
+      wrap.classList.remove("hidden");
+      wrap.innerHTML = `<div class="card resume-banner"><span class="resume-ic">${ic}</span><div class="resume-info"><b>Bài ${nm} đang làm dở</b><div class="muted" style="font-size:.8rem">Còn ${FA.fmtTime(latest.leftSec)} · ${FA.fmtDate(latest.savedAt)}</div></div><a class="btn btn-primary btn-sm" href="exam.html#/${latest.sk}/${encodeURIComponent(latest.tid)}">▶ Làm tiếp</a><button type="button" class="resume-x" id="resumeClose" aria-label="Ẩn thông báo" title="Ẩn">✕</button></div>`;
+      const closeBtn = document.getElementById("resumeClose");
+      if (closeBtn) closeBtn.onclick = () => wrap.classList.add("hidden");
+    })();
     // demo tương tác 3 kỹ năng
     const DEMOS = {
       grammar: {

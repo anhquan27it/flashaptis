@@ -2,107 +2,233 @@
    Ảnh minh họa thật được lưu trong public/assets/img/speaking/. */
 window.FA_SPEAKING = [
   {
-    id: "s1",
-    title: "Đề 1 — Daily life",
-    hot: true,
-    p1: [
-      { q: "Please tell me about your family.", s: "There are four people in my family: my parents, my younger sister and me. My father is an engineer and my mother is a teacher. We often have dinner together and talk about our day." },
-      { q: "What do you like to do in your free time?", s: "In my free time, I usually listen to music or go jogging in the park near my house. At weekends I like watching films with my friends because it helps me relax after a busy week." },
-      { q: "Describe the weather in your country.", s: "Vietnam has a tropical climate. In the north there are four seasons, and winter can be quite cold. In the south it is hot all year, with a rainy season from May to October." },
+    "id": "s1",
+    "title": "Đề 1 — Daily life",
+    "hot": true,
+    "p1": [
+      {
+        "q": "Please tell me about your family.",
+        "s": "There are four people in my family: my parents, my younger sister and me. My father is an engineer and my mother is a teacher. We often have dinner together and talk about our day."
+      },
+      {
+        "q": "What do you like to do in your free time?",
+        "s": "In my free time, I usually listen to music or go jogging in the park near my house. At weekends I like watching films with my friends because it helps me relax after a busy week."
+      },
+      {
+        "q": "Describe the weather in your country.",
+        "s": "Vietnam has a tropical climate. In the north there are four seasons, and winter can be quite cold. In the south it is hot all year, with a rainy season from May to October."
+      }
     ],
-    p2: {
-      photo: { img: "assets/img/speaking/s1-1.jpg", cap: "A family having dinner together at home" },
-      questions: [
-        { q: "Describe this picture.", s: "In this picture I can see a family having dinner at home. There are probably three people: parents and a little girl. They are sitting around a table with lots of food. They look happy and relaxed, so maybe it is a weekend evening." },
-        { q: "How often do you eat with your family?", s: "I eat with my family almost every evening. During the week we are all busy, so dinner is the only time we can sit together. My mother usually cooks traditional dishes like rice, fish and vegetable soup." },
-        { q: "Why is it important for families to spend time together?", s: "I think it is very important because it helps family members understand each other. When we talk during meals, parents can know about their children's problems. It also creates good memories and makes the relationship stronger." },
-      ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s1-1.jpg",
+        "cap": "A family having dinner together at home"
+      },
+      "questions": [
+        {
+          "q": "Describe this picture.",
+          "s": "In this picture I can see a family having dinner at home. There are probably three people: parents and a little girl. They are sitting around a table with lots of food. They look happy and relaxed, so maybe it is a weekend evening."
+        },
+        {
+          "q": "How often do you eat with your family?",
+          "s": "I eat with my family almost every evening. During the week we are all busy, so dinner is the only time we can sit together. My mother usually cooks traditional dishes like rice, fish and vegetable soup."
+        },
+        {
+          "q": "Why is it important for families to spend time together?",
+          "s": "I think it is very important because it helps family members understand each other. When we talk during meals, parents can know about their children's problems. It also creates good memories and makes the relationship stronger."
+        }
+      ]
     },
-    p3: {
-      photos: [{ img: "assets/img/speaking/s1-2.jpg", cap: "People travelling by bus in a city" }, { img: "assets/img/speaking/s1-3.jpg", cap: "A person cycling in the countryside" }],
-      questions: [
-        { q: "Tell me what you see in the two pictures.", s: "The first picture shows a crowded bus in a big city, while the second shows a person cycling alone on a quiet country road. The first one looks busy and noisy, but the second looks peaceful and healthy." },
-        { q: "Which type of transport do you prefer and why?", s: "I prefer cycling because it is good for my health and it doesn't cause pollution. However, for long distances, the bus is more convenient and cheaper than a taxi." },
-        { q: "How could cities encourage people to use public transport more?", s: "Cities could make tickets cheaper and buses more frequent. They could also build special lanes so buses are not stuck in traffic. If public transport is fast and comfortable, more people will leave their cars at home." },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s1-2.jpg",
+          "cap": "People travelling by bus in a city"
+        },
+        {
+          "img": "assets/img/speaking/s1-3.jpg",
+          "cap": "A person cycling in the countryside"
+        }
       ],
+      "questions": [
+        {
+          "q": "Tell me what you see in the two pictures.",
+          "s": "The first picture shows a crowded bus in a big city, while the second shows a person cycling alone on a quiet country road. The first one looks busy and noisy, but the second looks peaceful and healthy."
+        },
+        {
+          "q": "Which type of transport do you prefer and why?",
+          "s": "I prefer cycling because it is good for my health and it doesn't cause pollution. However, for long distances, the bus is more convenient and cheaper than a taxi."
+        },
+        {
+          "q": "How could cities encourage people to use public transport more?",
+          "s": "Cities could make tickets cheaper and buses more frequent. They could also build special lanes so buses are not stuck in traffic. If public transport is fast and comfortable, more people will leave their cars at home."
+        }
+      ]
     },
-    p4: {
-      photo: { img: "assets/img/speaking/s1-4.jpg", cap: "Someone receiving a prize on stage" },
-      questions: [
+    "p4": {
+      "photo": {
+        "img": "assets/img/speaking/s1-4.jpg",
+        "cap": "Someone receiving a prize on stage"
+      },
+      "questions": [
         "Tell me about a time when you achieved something important.",
         "How did you feel at that time?",
-        "Do you think competition is good for young people?",
+        "Do you think competition is good for young people?"
       ],
-      s: "I'd like to talk about the time I passed my university entrance exam. I studied very hard for almost a year, often until midnight, and I sometimes felt stressed and wanted to give up. When I saw my result online, I was so happy that I cried. My parents were extremely proud of me, and we celebrated with a big dinner. I felt that all my hard work had paid off.\nIn my opinion, competition is good for young people to some extent. It motivates them to work harder and to discover their abilities. However, too much pressure can make them anxious, so parents and teachers should encourage them to compete with themselves rather than with others.",
-    },
+      "s": "I'd like to talk about the time I passed my university entrance exam. I studied very hard for almost a year, often until midnight, and I sometimes felt stressed and wanted to give up. When I saw my result online, I was so happy that I cried. My parents were extremely proud of me, and we celebrated with a big dinner. I felt that all my hard work had paid off.\nIn my opinion, competition is good for young people to some extent. It motivates them to work harder and to discover their abilities. However, too much pressure can make them anxious, so parents and teachers should encourage them to compete with themselves rather than with others."
+    }
   },
   {
-    id: "s2",
-    title: "Đề 2 — Work & study",
-    p1: [
-      { q: "What is your job, or what do you study?", s: "I'm a third-year student at a university in Hanoi. I study business administration. I chose this major because I want to open my own company in the future." },
-      { q: "Tell me about your best friend.", s: "My best friend is called Hoa. We have known each other since primary school. She is funny, kind and always ready to help me when I have problems." },
-      { q: "What did you do last weekend?", s: "Last weekend I visited my grandparents in the countryside. We cooked lunch together and in the afternoon I helped my grandfather in his garden. It was very peaceful." },
+    "id": "s2",
+    "title": "Đề 2 — Work & study",
+    "p1": [
+      {
+        "q": "What is your job, or what do you study?",
+        "s": "I'm a third-year student at a university in Hanoi. I study business administration. I chose this major because I want to open my own company in the future."
+      },
+      {
+        "q": "Tell me about your best friend.",
+        "s": "My best friend is called Hoa. We have known each other since primary school. She is funny, kind and always ready to help me when I have problems."
+      },
+      {
+        "q": "What did you do last weekend?",
+        "s": "Last weekend I visited my grandparents in the countryside. We cooked lunch together and in the afternoon I helped my grandfather in his garden. It was very peaceful."
+      }
     ],
-    p2: {
-      photo: { img: "assets/img/speaking/s2-1.jpg", cap: "A woman working on a laptop in a café" },
-      questions: [
-        { q: "Describe this picture.", s: "This picture shows a young woman working on her laptop in a café. There is a cup of coffee and a small plant on the table. She looks focused, so maybe she is a student or someone who works remotely." },
-        { q: "Do you like studying or working in cafés?", s: "Yes, sometimes. I like the atmosphere and the smell of coffee. However, when it is too noisy I cannot concentrate, so for important work I prefer the library." },
-        { q: "What are the advantages of working from home?", s: "Working from home saves a lot of travelling time and money. People can also organise their schedules more flexibly. On the other hand, some people feel lonely and find it hard to separate work and private life." },
-      ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s2-1.jpg",
+        "cap": "A woman working on a laptop in a café"
+      },
+      "questions": [
+        {
+          "q": "Describe this picture.",
+          "s": "This picture shows a young woman working on her laptop in a café. There is a cup of coffee and a small plant on the table. She looks focused, so maybe she is a student or someone who works remotely."
+        },
+        {
+          "q": "Do you like studying or working in cafés?",
+          "s": "Yes, sometimes. I like the atmosphere and the smell of coffee. However, when it is too noisy I cannot concentrate, so for important work I prefer the library."
+        },
+        {
+          "q": "What are the advantages of working from home?",
+          "s": "Working from home saves a lot of travelling time and money. People can also organise their schedules more flexibly. On the other hand, some people feel lonely and find it hard to separate work and private life."
+        }
+      ]
     },
-    p3: {
-      photos: [{ img: "assets/img/speaking/s2-2.jpg", cap: "Students in a traditional classroom" }, { img: "assets/img/speaking/s2-3.jpg", cap: "A student taking an online class at home" }],
-      questions: [
-        { q: "Tell me what you see in the two pictures.", s: "The first picture shows students learning in a classroom with a teacher, while the second shows a student studying online at home. In the first one, students can interact directly, but in the second one the student is alone in front of a computer." },
-        { q: "Which way of learning do you think is more effective?", s: "I think classroom learning is more effective because students can ask questions immediately and work in groups. Online learning is convenient, but it is easy to lose concentration at home." },
-        { q: "How will education change in the future?", s: "I believe technology will play a bigger role. Students may use artificial intelligence to get personal feedback, and many courses will mix online and face-to-face lessons. However, teachers will still be very important." },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s2-2.jpg",
+          "cap": "Students in a traditional classroom"
+        },
+        {
+          "img": "assets/img/speaking/s2-3.jpg",
+          "cap": "A student taking an online class at home"
+        }
       ],
+      "questions": [
+        {
+          "q": "Tell me what you see in the two pictures.",
+          "s": "The first picture shows students learning in a classroom with a teacher, while the second shows a student studying online at home. In the first one, students can interact directly, but in the second one the student is alone in front of a computer."
+        },
+        {
+          "q": "Which way of learning do you think is more effective?",
+          "s": "I think classroom learning is more effective because students can ask questions immediately and work in groups. Online learning is convenient, but it is easy to lose concentration at home."
+        },
+        {
+          "q": "How will education change in the future?",
+          "s": "I believe technology will play a bigger role. Students may use artificial intelligence to get personal feedback, and many courses will mix online and face-to-face lessons. However, teachers will still be very important."
+        }
+      ]
     },
-    p4: {
-      photo: { img: "assets/img/speaking/s2-4.jpg", cap: "A young person at an airport with a suitcase" },
-      questions: [
+    "p4": {
+      "photo": {
+        "img": "assets/img/speaking/s2-4.jpg",
+        "cap": "A young person at an airport with a suitcase"
+      },
+      "questions": [
         "Tell me about a time you had to learn something new quickly.",
         "How did you feel about it?",
-        "Do you think it is important to keep learning throughout life?",
+        "Do you think it is important to keep learning throughout life?"
       ],
-      s: "I want to talk about my first part-time job in a coffee shop. On my first day, I had to learn how to make more than twenty kinds of drinks very quickly. At first I was nervous and made a lot of mistakes, but my manager was patient and my colleagues helped me. After about a week, I felt much more confident and even enjoyed it.\nI strongly believe that lifelong learning is important. The world changes very fast, especially technology, so if we stop learning we will fall behind. Learning new things also keeps our minds active and makes life more interesting.",
-    },
+      "s": "I want to talk about my first part-time job in a coffee shop. On my first day, I had to learn how to make more than twenty kinds of drinks very quickly. At first I was nervous and made a lot of mistakes, but my manager was patient and my colleagues helped me. After about a week, I felt much more confident and even enjoyed it.\nI strongly believe that lifelong learning is important. The world changes very fast, especially technology, so if we stop learning we will fall behind. Learning new things also keeps our minds active and makes life more interesting."
+    }
   },
   {
-    id: "s3",
-    title: "Đề 3 — Technology & environment",
-    p1: [
-      { q: "How often do you use your mobile phone?", s: "I use my mobile phone every day, probably for three or four hours in total. I mostly use it to message my friends, check emails and read the news on the bus." },
-      { q: "What is your favourite season of the year?", s: "My favourite season is autumn because the weather is cool and dry. In Hanoi, the streets look very romantic with yellow leaves, and it is comfortable to walk outside." },
-      { q: "Do you like cooking? Why or why not?", s: "Yes, I enjoy cooking simple meals at weekends. It is much healthier and cheaper than eating out, and I feel happy when my family enjoys the dishes I make." },
+    "id": "s3",
+    "title": "Đề 3 — Technology & environment",
+    "p1": [
+      {
+        "q": "How often do you use your mobile phone?",
+        "s": "I use my mobile phone every day, probably for three or four hours in total. I mostly use it to message my friends, check emails and read the news on the bus."
+      },
+      {
+        "q": "What is your favourite season of the year?",
+        "s": "My favourite season is autumn because the weather is cool and dry. In Hanoi, the streets look very romantic with yellow leaves, and it is comfortable to walk outside."
+      },
+      {
+        "q": "Do you like cooking? Why or why not?",
+        "s": "Yes, I enjoy cooking simple meals at weekends. It is much healthier and cheaper than eating out, and I feel happy when my family enjoys the dishes I make."
+      }
     ],
-    p2: {
-      photo: { img: "assets/img/speaking/s3-1.jpg", cap: "People planting young trees in a city park" },
-      questions: [
-        { q: "Describe this picture.", s: "In this picture I can see a group of volunteers planting young trees in a park. Some people are digging holes while others are watering the plants. They are wearing casual clothes and smiling, so it looks like a community weekend activity." },
-        { q: "Are there many green spaces where you live?", s: "There are a few small parks in my neighbourhood, and a large lake about ten minutes away. However, because the city is growing fast, many trees have been cut down to build apartments." },
-        { q: "Why are trees important for big cities?", s: "Trees produce oxygen and absorb carbon dioxide, which helps reduce air pollution. They also provide shade on hot summer days and give birds and insects a place to live." },
-      ],
+    "p2": {
+      "photo": {
+        "img": "assets/img/speaking/s3-1.jpg",
+        "cap": "People planting young trees in a city park"
+      },
+      "questions": [
+        {
+          "q": "Describe this picture.",
+          "s": "In this picture I can see a group of volunteers planting young trees in a park. Some people are digging holes while others are watering the plants. They are wearing casual clothes and smiling, so it looks like a community weekend activity."
+        },
+        {
+          "q": "Are there many green spaces where you live?",
+          "s": "There are a few small parks in my neighbourhood, and a large lake about ten minutes away. However, because the city is growing fast, many trees have been cut down to build apartments."
+        },
+        {
+          "q": "Why are trees important for big cities?",
+          "s": "Trees produce oxygen and absorb carbon dioxide, which helps reduce air pollution. They also provide shade on hot summer days and give birds and insects a place to live."
+        }
+      ]
     },
-    p3: {
-      photos: [{ img: "assets/img/speaking/s3-2.jpg", cap: "A shopper paying at a busy store counter" }, { img: "assets/img/speaking/s3-3.jpg", cap: "Someone ordering products online from a sofa" }],
-      questions: [
-        { q: "Tell me what you see in the two pictures.", s: "The first picture shows a customer shopping inside a busy store and paying at the counter, while the second shows someone ordering items on a phone at home. In the shop you can touch the products, whereas online shopping looks much more relaxed." },
-        { q: "Which way of shopping do you prefer and why?", s: "I prefer online shopping for books and electronics because it saves time and it is easy to compare prices. However, for clothes and shoes, I still go to shops so I can try them on first." },
-        { q: "How has online shopping affected local businesses?", s: "Small local shops face stronger competition from big websites that offer lower prices and fast delivery. However, shops that build a good website or social media page can now reach customers across the whole country." },
+    "p3": {
+      "photos": [
+        {
+          "img": "assets/img/speaking/s3-2.jpg",
+          "cap": "A shopper paying at a busy store counter"
+        },
+        {
+          "img": "assets/img/speaking/s3-3.jpg",
+          "cap": "Someone ordering products online from a sofa"
+        }
       ],
+      "questions": [
+        {
+          "q": "Tell me what you see in the two pictures.",
+          "s": "The first picture shows a customer shopping inside a busy store and paying at the counter, while the second shows someone ordering items on a phone at home. In the shop you can touch the products, whereas online shopping looks much more relaxed."
+        },
+        {
+          "q": "Which way of shopping do you prefer and why?",
+          "s": "I prefer online shopping for books and electronics because it saves time and it is easy to compare prices. However, for clothes and shoes, I still go to shops so I can try them on first."
+        },
+        {
+          "q": "How has online shopping affected local businesses?",
+          "s": "Small local shops face stronger competition from big websites that offer lower prices and fast delivery. However, shops that build a good website or social media page can now reach customers across the whole country."
+        }
+      ]
     },
-    p4: {
-      photo: { img: "assets/img/speaking/s3-4.jpg", cap: "Friends camping in nature without looking at phones" },
-      questions: [
+    "p4": {
+      "photo": {
+        "img": "assets/img/speaking/s3-4.jpg",
+        "cap": "Friends camping in nature without looking at phones"
+      },
+      "questions": [
         "Tell me about a time when you had to live without the internet or your phone.",
         "How did that experience affect you?",
-        "Do you think people today depend too much on technology?",
+        "Do you think people today depend too much on technology?"
       ],
-      s: "Last summer I went on a two-day camping trip in the mountains where there was no mobile signal at all. At first I felt a bit anxious because I couldn't check messages or take photos to post online. However, after a few hours I stopped reaching for my pocket. My friends and I cooked over a fire, played card games and talked until midnight. I slept better than I had in months and felt completely refreshed when I returned to the city.\nI definitely think many people depend too much on technology today. We check our phones dozens of times a day without even thinking, which reduces real conversation with family and friends. Technology is wonderful for work and study, but we need to set healthy limits.",
-    },
+      "s": "Last summer I went on a two-day camping trip in the mountains where there was no mobile signal at all. At first I felt a bit anxious because I couldn't check messages or take photos to post online. However, after a few hours I stopped reaching for my pocket. My friends and I cooked over a fire, played card games and talked until midnight. I slept better than I had in months and felt completely refreshed when I returned to the city.\nI definitely think many people depend too much on technology today. We check our phones dozens of times a day without even thinking, which reduces real conversation with family and friends. Technology is wonderful for work and study, but we need to set healthy limits."
+    }
   },
   {
     "id": "s4",
@@ -169,12 +295,11 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Talk about a time when you learned something from a mistake. Say what happened, what you learned, and how the experience changed what you do now.",
-        "Do people learn more from success or from failure? Why?",
-        "Is it important for schools and workplaces to allow people to make mistakes? Why or why not?",
-        "What advice would you give to someone who is afraid of making mistakes?"
+        "Talk about a time when you learned something from a mistake.",
+        "How did you feel about that experience?",
+        "Do people learn more from success or from failure? Why?"
       ],
-      "time": 90,
+      "time": 120,
       "s": "A few years ago, I had to give an important presentation at university, but I was too confident and only started preparing the night before. The next morning my slides were full of mistakes and I could not answer my teacher's questions, so I got a very low mark. I felt embarrassed, but I learned that good preparation is essential. Since then, I always make a plan and start my work at least a week before the deadline.\nIn my opinion, people learn more from failure than from success. When we fail, we have to think carefully about what went wrong, while success often makes us stop thinking.\nI also believe schools and workplaces should allow people to make mistakes. If students and employees are always afraid of being punished, they will never try new ideas or be creative.\nMy advice to someone who is afraid of making mistakes is to remember that everyone makes them. Start with small challenges, ask for feedback and treat every mistake as a lesson rather than a disaster."
     }
   },
@@ -187,12 +312,12 @@ window.FA_SPEAKING = [
         "s": "My name is Minh and I am twenty-two years old. I am a final-year student at a university in Hanoi, and my major is business. I am quite friendly and outgoing, and I love meeting new people. In my free time, I enjoy playing badminton and reading books about successful companies."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "At the weekend I usually try to relax after a busy week at university. On Saturday I often go swimming in the morning and visit my grandparents in the afternoon. On Sunday evening my friends and I sometimes go to the cinema or try a new street food stall in the city centre."
+        "q": "What is your favourite type of food?",
+        "s": "My favourite food is Vietnamese pho because the broth is warm, fragrant and comforting. I especially enjoy eating it on cool mornings with fresh herbs and a squeeze of lime."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Hue, an old city in central Vietnam. It is well known for the ancient Citadel, the royal tombs and the peaceful Perfume River. The food there is quite spicy but delicious, especially the beef noodle soup. Life in Hue is slow and calm, so I always feel relaxed when I go back."
+        "q": "How do you usually travel to work or school?",
+        "s": "I usually travel by motorbike because it is quick and flexible on narrow city streets. On rainy days, I prefer taking the bus so I can stay dry and listen to music."
       }
     ],
     "p2": {
@@ -243,10 +368,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Tell me about a time you saved money to do something."
+        "Tell me about a time you saved money to do something.",
+        "How did you feel when you finally achieved your goal?",
+        "Why do some people find it hard to save money nowadays?"
       ],
-      "time": 90,
-      "s": "When I was in my second year at university, I decided to save money to buy my first laptop. My old computer was very slow, and I needed a better one for my studies and for some freelance design work. The laptop I wanted cost about twenty million dong, which was a lot of money for a student.\nTo save enough, I started teaching English to two secondary school students three evenings a week. I also changed my daily habits. Instead of buying milk tea and eating out with friends, I cooked at home and brought my own lunch to university. I wrote down every expense in a small notebook, so I could see exactly where my money was going.\nAfter about eight months, I finally had enough money and bought the laptop. I felt incredibly proud because I had paid for it myself. The experience taught me to be patient and to manage my money carefully, and I still keep a spending notebook today."
+      "time": 120,
+      "s": "When I was in my second year at university, I decided to save money to buy my first laptop. My old computer was very slow, and I needed a better one for my studies and for some freelance design work. The laptop I wanted cost about twenty million dong, which was a lot of money for a student.\nTo save enough, I started teaching English to two secondary school students three evenings a week. I also changed my daily habits. Instead of buying milk tea and eating out with friends, I cooked at home and brought my own lunch to university. I wrote down every expense in a small notebook, so I could see exactly where my money was going.\nAfter about eight months, I finally had enough money and bought the laptop. I felt incredibly proud because I had paid for it myself. The experience taught me to be patient and to manage my money carefully, and I still keep a spending notebook today.\nIn my opinion, many people struggle to save money today because the cost of living is high and online shopping makes impulse buying extremely easy. Advertising and social media also tempt young people to spend on trends, so setting a clear monthly budget is essential."
     }
   },
   {
@@ -258,12 +385,12 @@ window.FA_SPEAKING = [
         "s": "One of the most famous places in Vietnam is Ha Long Bay in the north. It has thousands of limestone islands rising out of clear green water, and it is a UNESCO World Heritage Site. Tourists usually take a boat trip, explore the caves and try kayaking. I went there with my family two years ago and the view was amazing."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "During the week I am really busy with work, so at weekends I like to slow down. On Saturday I usually clean my flat, do some grocery shopping and then cook a nice meal. On Sunday I often go hiking with friends outside the city or simply stay at home and watch a good film."
+        "q": "What do you normally do in the morning?",
+        "s": "I usually wake up around half past six, do some light stretching and make a quick breakfast with eggs and coffee. Then I check my schedule for the day before heading out."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I grew up in Can Tho, the biggest city in the Mekong Delta. It is famous for its floating market, where people sell fruit and vegetables from their boats early in the morning. The people there are very friendly and the weather is warm all year. What I miss most is the fresh tropical fruit."
+        "q": "Do you prefer watching films at home or at the cinema?",
+        "s": "I prefer the cinema for big action or sci-fi films because the huge screen and sound system make it exciting. For comedies or dramas, watching at home on the sofa is much more comfortable."
       }
     ],
     "p2": {
@@ -314,10 +441,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Tell me about a time you asked a good question."
+        "Tell me about a time you asked a good question.",
+        "How did asking that question help you or others?",
+        "Why are some people afraid to ask questions in public?"
       ],
-      "time": 90,
-      "s": "I remember a time in my first job at a marketing company when I asked a question that turned out to be really useful. Our team was preparing an advertising campaign for a new juice drink, and everyone was focused on making the advertisement look attractive.\nDuring a meeting, I asked a simple question: who exactly are we trying to sell this product to? Suddenly the room went quiet. We realised that we had never clearly decided on our target customers. Some people thought it was for teenagers, while others thought it was for busy office workers.\nBecause of my question, my manager asked us to do a short survey before continuing. The results showed that the drink was most popular with young office workers, so we changed the design and the message of the campaign. In the end, sales were much higher than expected.\nMy manager thanked me in front of the whole team, and I felt very proud. Since then, I have never been afraid to ask basic questions, because sometimes they are the most important ones."
+      "time": 120,
+      "s": "I remember a time in my first job at a marketing company when I asked a question that turned out to be really useful. Our team was preparing an advertising campaign for a new juice drink, and everyone was focused on making the advertisement look attractive.\nDuring a meeting, I asked a simple question: who exactly are we trying to sell this product to? Suddenly the room went quiet. We realised that we had never clearly decided on our target customers. Some people thought it was for teenagers, while others thought it was for busy office workers.\nBecause of my question, my manager asked us to do a short survey before continuing. The results showed that the drink was most popular with young office workers, so we changed the design and the message of the campaign. In the end, sales were much higher than expected.\nMy manager thanked me in front of the whole team, and I felt very proud. Since then, I have never been afraid to ask basic questions, because sometimes they are the most important ones.\nI think many people hesitate to ask questions in public because they worry about looking uninformed or interrupting the speaker. However, asking thoughtful questions actually shows curiosity and often clarifies points that other listeners were also unsure about."
     }
   },
   {
@@ -329,12 +458,12 @@ window.FA_SPEAKING = [
         "s": "In my opinion, the best way to travel around Vietnam is by motorbike. It is cheap and flexible, so you can stop wherever you like and visit small villages that buses do not reach. However, for long distances, such as from Hanoi to Ho Chi Minh City, flying is much faster. The train is also great if you want to enjoy the scenery."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "I usually spend my weekends with my family and friends. On Saturday mornings I go jogging in the park near my house, and in the afternoon I sometimes take an English class. On Sunday we often have a big family lunch at home, and in the evening I relax by reading or watching a football match."
+        "q": "Tell me about a sport or exercise you enjoy.",
+        "s": "I really enjoy playing badminton with my friends twice a week. It is a fun way to stay fit, relieve stress after work and catch up with people at the same time."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Nha Trang, a seaside city in the south-central part of Vietnam. It is famous for its beautiful beaches, coral reefs and fresh seafood, so it attracts lots of tourists every year. The weather is sunny for most of the year. What I like most is swimming in the sea early in the morning before work."
+        "q": "What kind of clothes do you like wearing?",
+        "s": "I like wearing simple, comfortable clothes such as cotton shirts, jeans and trainers. I usually choose neutral colours like navy, white or beige because they are easy to match."
       }
     ],
     "p2": {
@@ -385,10 +514,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Tell me about a time you read a good book."
+        "Tell me about a time you read a good book.",
+        "Why did this book leave a strong impression on you?",
+        "Do you think young people read less today than in the past?"
       ],
-      "time": 90,
-      "s": "I would like to talk about the time I read The Alchemist by Paulo Coelho. I read it about two years ago, when I had just finished high school and felt confused about what to study at university. A close friend gave me the book as a present and said it might help me.\nThe story is about a young shepherd called Santiago who travels from Spain to Egypt to find a treasure he dreamed about. Along the way, he meets many interesting people and learns important lessons about life. The language is simple, so I finished it in just two evenings, but the ideas really stayed with me.\nThe main message of the book is that we should follow our dreams and not be afraid of difficulties. After reading it, I felt more confident to choose a subject that I really loved instead of one that my relatives expected. I still read some pages again whenever I feel lost, and I often recommend it to my friends."
+      "time": 120,
+      "s": "I would like to talk about the time I read The Alchemist by Paulo Coelho. I read it about two years ago, when I had just finished high school and felt confused about what to study at university. A close friend gave me the book as a present and said it might help me.\nThe story is about a young shepherd called Santiago who travels from Spain to Egypt to find a treasure he dreamed about. Along the way, he meets many interesting people and learns important lessons about life. The language is simple, so I finished it in just two evenings, but the ideas really stayed with me.\nThe main message of the book is that we should follow our dreams and not be afraid of difficulties. After reading it, I felt more confident to choose a subject that I really loved instead of one that my relatives expected. I still read some pages again whenever I feel lost, and I often recommend it to my friends.\nCompared with the past, I believe many young people read fewer printed books because short videos and social media compete for their attention. Still, e-books and audiobooks have made reading more accessible, so habits are changing rather than disappearing completely."
     }
   },
   {
@@ -400,12 +531,12 @@ window.FA_SPEAKING = [
         "s": "My best friend is Lan. We met in the first year of secondary school and have been close ever since. She is kind, funny and always honest with me, even when the truth is hard to hear. Now she works as a nurse, so she is quite busy, but we still meet every weekend for coffee and a long chat."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "My weekends are usually quite relaxing. On Saturday morning I do the laundry and tidy my room, and then I often meet friends for lunch. In the afternoon I like going to a bookshop or a coffee shop to read. On Sunday I usually visit my parents and help my mother cook dinner for the whole family."
+        "q": "Tell me about your favourite place in your neighbourhood.",
+        "s": "My favourite place nearby is a small tree-lined lake about five minutes from my house. In the late afternoon, I love walking around it to get fresh air and watch the sunset."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I come from Hai Phong, a big port city in the north of Vietnam. It is known for its flame trees, which turn the streets bright red in early summer, and for delicious dishes like crab noodle soup. Although it is an industrial city, it is close to beautiful places like Cat Ba Island, so there is plenty to do there."
+        "q": "How often do you eat out at restaurants?",
+        "s": "I eat out about once or twice a week, usually on Friday evening or at the weekend with friends. During weekdays I prefer home-cooked meals because they are healthier and cheaper."
       }
     ],
     "p2": {
@@ -456,10 +587,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Tell me about a time you went to see a work of art."
+        "Tell me about a time you went to see a work of art.",
+        "How did seeing it make you feel?",
+        "Should governments spend public money on art galleries and museums?"
       ],
-      "time": 90,
-      "s": "Last summer, I visited the Vietnam Fine Arts Museum in Hanoi with my cousin, who studies painting at university. I had never been very interested in art, but she persuaded me to go with her one Sunday afternoon.\nThe work of art that impressed me most was a large lacquer painting of a village festival. At first, I just thought it looked nice, but my cousin explained how the artist had used many thin layers of lacquer and even pieces of eggshell to create the bright colours and the shining effect. She told me that a painting like that can take months to finish. When I looked at it again more closely, I noticed lots of small details, like children playing and old people chatting under a tree.\nI stood in front of it for almost twenty minutes. The visit completely changed my attitude towards art, because I realised that every work has a story and a lot of hard work behind it. Since then, I have been to two more exhibitions, and I enjoy them much more than I expected."
+      "time": 120,
+      "s": "Last summer, I visited the Vietnam Fine Arts Museum in Hanoi with my cousin, who studies painting at university. I had never been very interested in art, but she persuaded me to go with her one Sunday afternoon.\nThe work of art that impressed me most was a large lacquer painting of a village festival. At first, I just thought it looked nice, but my cousin explained how the artist had used many thin layers of lacquer and even pieces of eggshell to create the bright colours and the shining effect. She told me that a painting like that can take months to finish. When I looked at it again more closely, I noticed lots of small details, like children playing and old people chatting under a tree.\nI stood in front of it for almost twenty minutes. The visit completely changed my attitude towards art, because I realised that every work has a story and a lot of hard work behind it. Since then, I have been to two more exhibitions, and I enjoy them much more than I expected.\nI believe governments should continue funding museums and galleries because art preserves cultural heritage and inspires creativity. When exhibitions are free or affordable, people from all backgrounds can enjoy them, not only wealthy collectors."
     }
   },
   {
@@ -471,12 +604,12 @@ window.FA_SPEAKING = [
         "s": "Today the weather is quite pleasant. It is sunny this morning with a light breeze, and the temperature is around twenty-five degrees, so it is neither too hot nor too cold. However, the weather forecast says it might rain in the late afternoon, so I am bringing an umbrella just in case."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually do a mix of relaxing and useful things. On Saturday morning I go to a yoga class, and after that I have brunch with my friends. In the afternoon I often study English or work on my own projects. On Sunday I like to stay at home, cook something new and call my grandparents."
+        "q": "What kind of books or articles do you like reading?",
+        "s": "I enjoy reading short non-fiction books about psychology and everyday science, as well as travel articles online. Reading before bed helps me relax and learn new vocabulary."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Da Lat, a small city in the Central Highlands of Vietnam. It is famous for its cool weather all year round, its pine forests and its beautiful flower gardens. Many couples go there for their honeymoon. I love the peaceful atmosphere and the fresh strawberries, but in recent years it has become quite crowded with tourists."
+        "q": "Tell me about a festival or holiday you enjoy.",
+        "s": "My favourite holiday is Tet, the Lunar New Year, because my whole family gathers together. We clean and decorate the house, cook traditional dishes and visit our relatives."
       }
     ],
     "p2": {
@@ -527,10 +660,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you had many options to choose from."
+        "Describe a time when you had many options to choose from.",
+        "How did you decide which option to choose?",
+        "Do you think having too many choices makes life harder?"
       ],
-      "time": 90,
-      "s": "I would like to describe the time when I had to choose a university after finishing high school. My exam results were quite good, so I was accepted by four different universities, and I had to make a decision within two weeks.\nEach option had advantages and disadvantages. One university in Hanoi had an excellent reputation for economics, but the fees were very high. Another one in my hometown was cheaper and close to my family, but its programmes were not as modern. There was also a university in Ho Chi Minh City that offered me a small scholarship, which was very attractive.\nTo decide, I wrote a list of pros and cons for each university and talked to my parents, my teachers and some older students. In the end, I chose the university with the scholarship, because it had a strong international business programme and it reduced the financial pressure on my family.\nLooking back, I think it was the right choice. The experience taught me that when there are many options, it is important to stay calm, collect information and focus on what really matters."
+      "time": 120,
+      "s": "I would like to describe the time when I had to choose a university after finishing high school. My exam results were quite good, so I was accepted by four different universities, and I had to make a decision within two weeks.\nEach option had advantages and disadvantages. One university in Hanoi had an excellent reputation for economics, but the fees were very high. Another one in my hometown was cheaper and close to my family, but its programmes were not as modern. There was also a university in Ho Chi Minh City that offered me a small scholarship, which was very attractive.\nTo decide, I wrote a list of pros and cons for each university and talked to my parents, my teachers and some older students. In the end, I chose the university with the scholarship, because it had a strong international business programme and it reduced the financial pressure on my family.\nLooking back, I think it was the right choice. The experience taught me that when there are many options, it is important to stay calm, collect information and focus on what really matters.\nHaving some choice is certainly positive, yet too many options can make people anxious and afraid of choosing the wrong one. In everyday life, narrowing choices down to two or three realistic criteria usually leads to happier decisions."
     }
   },
   {
@@ -542,12 +677,12 @@ window.FA_SPEAKING = [
         "s": "One of my best memories is my eighteenth birthday. My friends secretly organised a surprise party at a small restaurant near my house. When I walked in, everyone shouted and started singing. I felt so touched because they had planned it for weeks, and we laughed and talked until midnight."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually try to relax after a busy week. On Saturday morning I go jogging in the park, and in the afternoon I often meet my friends for coffee. On Sunday I stay at home, help my mother with the housework and watch a film in the evening."
+        "q": "Do you like shopping? Why or why not?",
+        "s": "I enjoy shopping occasionally when I need something specific, especially in small local shops. However, I dislike crowded shopping malls at weekends because the queues are too long."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is a small city in the north of Vietnam. It is quite peaceful, with a lovely lake in the centre where people walk and exercise in the evening. The food there is delicious, especially the noodle soup. I love it because life is slower and people are very friendly."
+        "q": "What languages would you like to learn in the future?",
+        "s": "Besides improving my English, I would love to learn Japanese because I admire Japanese culture and cuisine. Knowing another language would also be very useful for travelling."
       }
     ],
     "p2": {
@@ -598,10 +733,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you worked in a team."
+        "Describe a time when you worked in a team.",
+        "What made that teamwork successful or challenging?",
+        "Do you think working in a team is always better than working alone?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I worked in a team at university. In my second year, our teacher asked us to make a short video about plastic pollution in our city, and I was in a group with four classmates. At first it was quite difficult because everyone had different ideas and we argued a lot. Then we decided to divide the work clearly. One person wrote the script, two people filmed the interviews, and I was responsible for editing the video. We met every Friday evening to check our progress and help each other. The hardest part was finishing on time, because we had to edit late at night for the last few days. In the end, our video was chosen as the best in the class and it was even shown at a university event. I felt really proud of our group. This experience taught me that good communication and clear roles are the key to successful teamwork, and I also learned to listen to other people's opinions instead of insisting on my own."
+      "time": 120,
+      "s": "I'd like to talk about a time when I worked in a team at university. In my second year, our teacher asked us to make a short video about plastic pollution in our city, and I was in a group with four classmates. At first it was quite difficult because everyone had different ideas and we argued a lot. Then we decided to divide the work clearly. One person wrote the script, two people filmed the interviews, and I was responsible for editing the video. We met every Friday evening to check our progress and help each other. The hardest part was finishing on time, because we had to edit late at night for the last few days. In the end, our video was chosen as the best in the class and it was even shown at a university event. I felt really proud of our group. This experience taught me that good communication and clear roles are the key to successful teamwork, and I also learned to listen to other people's opinions instead of insisting on my own.\nTeamwork is not always better than working alone. Collaboration shines when a project needs diverse skills and fresh ideas, whereas focused solo work is often faster for writing, deep analysis or tasks with a very tight deadline."
     }
   },
   {
@@ -613,12 +750,12 @@ window.FA_SPEAKING = [
         "s": "I really like trying new food with my friends. Every couple of weeks we choose a restaurant or a street food stall that none of us has been to before. We also enjoy playing badminton on Sunday mornings. These activities help us stay close, even though we are all busy with work."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually get up a bit later than on weekdays. On Saturday I clean my room, do some shopping and then meet my friends in the evening. On Sunday I often visit my grandparents and have lunch with them. In the evening I prepare for the new week."
+        "q": "Tell me about your favourite time of day.",
+        "s": "My favourite time of day is early morning before the streets get noisy. The air is cool and fresh, and my mind feels clear enough to plan my work calmly."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I come from a coastal town in central Vietnam. It is famous for its long sandy beach and fresh seafood. The town is not very big, so it is quiet and clean, and the air is fresh. In summer a lot of tourists come, so it becomes much busier and more lively."
+        "q": "Do you prefer spending time indoors or outdoors?",
+        "s": "I prefer being outdoors whenever the weather is pleasant. Walking in a park or sitting at an outdoor cafe gives me much more energy than staying inside all day."
       }
     ],
     "p2": {
@@ -669,10 +806,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you did an extreme sport."
+        "Describe a time when you did an extreme sport.",
+        "How did you feel before and after trying it?",
+        "Why do some people enjoy taking risks in sports?"
       ],
-      "time": 90,
-      "s": "I'd like to tell you about the time I went paragliding for the first time. It happened last summer when I travelled to a mountain area in the north of Vietnam with two close friends. One of them had tried it before, and she persuaded us to try it too. Of course, I didn't fly alone, I flew together with a professional instructor. Before the flight, he explained the safety rules and checked all the equipment carefully. When we ran towards the edge of the hill and suddenly left the ground, my heart was beating very fast and I screamed. After a minute, however, I started to relax and enjoy the amazing view. I could see the golden rice fields, small villages and the river far below us. The flight lasted about fifteen minutes, but it felt both very long and very short at the same time. When we landed, I felt incredibly proud because I had always been scared of heights. This experience taught me that facing your fears can bring you some of the best moments in your life, and I would definitely love to do it again."
+      "time": 120,
+      "s": "I'd like to tell you about the time I went paragliding for the first time. It happened last summer when I travelled to a mountain area in the north of Vietnam with two close friends. One of them had tried it before, and she persuaded us to try it too. Of course, I didn't fly alone, I flew together with a professional instructor. Before the flight, he explained the safety rules and checked all the equipment carefully. When we ran towards the edge of the hill and suddenly left the ground, my heart was beating very fast and I screamed. After a minute, however, I started to relax and enjoy the amazing view. I could see the golden rice fields, small villages and the river far below us. The flight lasted about fifteen minutes, but it felt both very long and very short at the same time. When we landed, I felt incredibly proud because I had always been scared of heights. This experience taught me that facing your fears can bring you some of the best moments in your life, and I would definitely love to do it again.\nI think people are drawn to extreme sports because overcoming fear brings an unforgettable rush of confidence and excitement. It also offers a sharp contrast to predictable office routines, as long as proper safety equipment and training are in place."
     }
   },
   {
@@ -684,12 +823,12 @@ window.FA_SPEAKING = [
         "s": "In my free time I like reading novels and cooking. Reading helps me forget about stress, and I usually read for half an hour before going to bed. At the weekend I enjoy cooking new dishes for my family, because I can be creative and everyone is happy to try them."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "I usually spend my weekends in a balanced way. On Saturday morning I play football with my colleagues, and in the afternoon I do my laundry and clean the house. On Sunday I often go to the cinema or a shopping centre with my friends, and I have dinner with my family in the evening."
+        "q": "What kind of TV programmes or videos do you watch?",
+        "s": "I mostly watch short documentaries, travel vlogs and cooking channels on YouTube. They are both entertaining and practical, and I often pick up useful ideas from them."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is a big city in the south of Vietnam. It is very busy and full of motorbikes, but it is also exciting because there are many markets, coffee shops and shopping centres. What I like most is the street food, which you can find on almost every corner, even late at night."
+        "q": "Tell me about a café or restaurant you like going to.",
+        "s": "There is a quiet little coffee shop near my university with wooden tables and lots of green plants. I like going there to read or revise for exams while drinking iced tea."
       }
     ],
     "p2": {
@@ -740,10 +879,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time you explored a forest."
+        "Describe a time you explored a forest.",
+        "What did you enjoy most about being in nature?",
+        "Why is it important to protect forests and natural areas?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about the time I explored Cuc Phuong National Park, which is a large forest in the north of Vietnam. I went there two years ago with a group of classmates as part of a weekend trip organised by our university. We got up very early in the morning and hiked for about five hours with a local guide. The path was narrow and muddy because it had rained the night before, so we had to walk very carefully. Along the way, the guide showed us many tall, ancient trees, colourful butterflies and different kinds of plants that are used as medicine. The most exciting part was when we reached a huge tree that is said to be about a thousand years old. It was so big that six of us had to hold hands to go around it. I also remember the sounds of birds and insects everywhere, which made the forest feel alive. Although I was exhausted at the end of the day, it was an amazing experience. It made me realise how beautiful nature is and how important it is to protect our forests."
+      "time": 120,
+      "s": "I'd like to talk about the time I explored Cuc Phuong National Park, which is a large forest in the north of Vietnam. I went there two years ago with a group of classmates as part of a weekend trip organised by our university. We got up very early in the morning and hiked for about five hours with a local guide. The path was narrow and muddy because it had rained the night before, so we had to walk very carefully. Along the way, the guide showed us many tall, ancient trees, colourful butterflies and different kinds of plants that are used as medicine. The most exciting part was when we reached a huge tree that is said to be about a thousand years old. It was so big that six of us had to hold hands to go around it. I also remember the sounds of birds and insects everywhere, which made the forest feel alive. Although I was exhausted at the end of the day, it was an amazing experience. It made me realise how beautiful nature is and how important it is to protect our forests.\nProtecting forests is vital because trees absorb carbon dioxide, prevent soil erosion and provide habitats for countless species. Natural areas also give city residents a peaceful place to recharge their mental health."
     }
   },
   {
@@ -755,12 +896,12 @@ window.FA_SPEAKING = [
         "s": "Last night I stayed at home because I was quite tired after work. I cooked a simple dinner of rice, fried fish and vegetables with my sister. After that, I spent about an hour studying English vocabulary for my exam, and then I watched an episode of a comedy series before going to bed."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually take some time for myself. I often go swimming on Saturday morning, and then I have lunch with my friends at our favourite restaurant. On Sunday I like to visit a bookshop or a coffee shop and read for a few hours. Sometimes I also go back to my hometown to see my parents."
+        "q": "Do you like animals or pets?",
+        "s": "Yes, I really like dogs because they are loyal, playful and always happy to see you. My family used to have a small brown dog that loved going for evening walks with us."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is a small town in the Mekong Delta. It is surrounded by rice fields, rivers and fruit gardens, so it is very green. People there are friendly and life is quite simple. My favourite thing is the floating market in the early morning, where people sell fruit and vegetables from their boats."
+        "q": "What do you usually do when you feel stressed?",
+        "s": "When I feel stressed, I step away from my computer and go for a brisk twenty-minute walk. Listening to calm instrumental music or chatting with a close friend also helps a lot."
       }
     ],
     "p2": {
@@ -811,10 +952,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you achieved something."
+        "Describe a time when you achieved something.",
+        "How did you celebrate or feel after achieving it?",
+        "What qualities help people achieve long-term goals?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about the time I got an IELTS score of 7.0, which was a big achievement for me. When I was in my third year at university, I realised that I needed a good English certificate to apply for a scholarship to study abroad. At that time my English was not very good, especially my speaking. So I made a strict plan and studied for about two hours every day for six months. I watched English videos, practised speaking with a friend every evening and wrote one essay every week for my teacher to check. There were many moments when I felt tired and wanted to give up, especially when my practice scores did not improve. However, my family and my teacher kept encouraging me. When I finally received my result and saw that I had got 7.0, I was so happy that I called my parents immediately. I felt that all my hard work had paid off. This experience taught me that patience and a clear plan are the keys to success, and it gave me more confidence to set bigger goals for the future."
+      "time": 120,
+      "s": "I'd like to talk about the time I got an IELTS score of 7.0, which was a big achievement for me. When I was in my third year at university, I realised that I needed a good English certificate to apply for a scholarship to study abroad. At that time my English was not very good, especially my speaking. So I made a strict plan and studied for about two hours every day for six months. I watched English videos, practised speaking with a friend every evening and wrote one essay every week for my teacher to check. There were many moments when I felt tired and wanted to give up, especially when my practice scores did not improve. However, my family and my teacher kept encouraging me. When I finally received my result and saw that I had got 7.0, I was so happy that I called my parents immediately. I felt that all my hard work had paid off. This experience taught me that patience and a clear plan are the keys to success, and it gave me more confidence to set bigger goals for the future.\nIn my view, consistency and patience matter even more than talent when pursuing long-term goals. Breaking a big ambition into small weekly milestones and learning from setbacks helps people stay motivated when progress feels slow."
     }
   },
   {
@@ -826,12 +969,12 @@ window.FA_SPEAKING = [
         "s": "My first school was a small primary school about ten minutes from my house. It had only two floors and a big yard with an old tree in the middle, where we played games during the break. I still remember my first teacher, Ms Lan, who was very patient and kind to all of us."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually try to do something active. On Saturday morning I go cycling around the lake with a few friends, and after that we have breakfast together. In the afternoon I do some housework. On Sunday I relax at home, watch films or play board games with my younger brother."
+        "q": "Tell me about your favourite subject at school.",
+        "s": "My favourite subject at school was geography because I loved learning about different countries, climates and maps. Our teacher always shared fascinating travel stories during lessons."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I grew up in a mountain town in the north of Vietnam. It is cool all year round, and in winter it can be really cold and foggy. The scenery is beautiful, with hills, tea fields and waterfalls. Many ethnic minority people live there, so there are colourful markets every weekend."
+        "q": "How do you usually keep in touch with your friends?",
+        "s": "I mostly keep in touch through messaging apps and voice notes during busy weekdays. Whenever we have free time at the weekend, we try to meet up for coffee or dinner."
       }
     ],
     "p2": {
@@ -882,10 +1025,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you learned a new skill."
+        "Describe a time when you learned a new skill.",
+        "What was the hardest part of learning it?",
+        "Do you think adults find it harder to learn new skills than children?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about the time I learned how to swim. Surprisingly, I could not swim until I was nineteen, because there was no swimming pool near my house when I was a child. When I started university, my friends often went to the beach together, and I felt embarrassed because I always had to stay on the sand. So I decided to sign up for a swimming course at a sports centre near my university. The course lasted two months, with three lessons a week in the early morning. At the beginning it was really difficult, because I was afraid of putting my face under the water and I kept swallowing water. My instructor was very patient. He taught me how to breathe properly and how to float, step by step. After about a month, I could swim twenty-five metres without stopping, and I felt incredibly proud. Last summer I finally went swimming in the sea with my friends. Learning this skill taught me that it is never too late to learn something new, as long as you are patient and willing to practise."
+      "time": 120,
+      "s": "I'd like to talk about the time I learned how to swim. Surprisingly, I could not swim until I was nineteen, because there was no swimming pool near my house when I was a child. When I started university, my friends often went to the beach together, and I felt embarrassed because I always had to stay on the sand. So I decided to sign up for a swimming course at a sports centre near my university. The course lasted two months, with three lessons a week in the early morning. At the beginning it was really difficult, because I was afraid of putting my face under the water and I kept swallowing water. My instructor was very patient. He taught me how to breathe properly and how to float, step by step. After about a month, I could swim twenty-five metres without stopping, and I felt incredibly proud. Last summer I finally went swimming in the sea with my friends. Learning this skill taught me that it is never too late to learn something new, as long as you are patient and willing to practise.\nAdults often feel learning is harder mainly because they have less free time and fear making mistakes. However, adults also have stronger self-discipline and clearer goals, which can help them learn practical skills very effectively."
     }
   },
   {
@@ -897,12 +1042,12 @@ window.FA_SPEAKING = [
         "s": "My journey here today was quite easy. I left home at about seven o'clock and rode my motorbike for around twenty-five minutes. The traffic was heavy near the city centre, so I had to drive slowly, but luckily it didn't rain. I arrived about fifteen minutes early, so I had time to relax before the test."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually spend time with my family. On Saturday we often go to the market together in the morning, and then my mother and I cook lunch. In the afternoon I take a nap or read a book. On Sunday evening I usually go out for a walk or a drink with my best friends."
+        "q": "What kind of weather do you like best?",
+        "s": "I like cool, sunny weather with a light breeze, like in autumn. It is comfortable for walking or cycling, and you do not need heavy coats or air conditioning."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Hue, an old city in central Vietnam. It used to be the capital, so there are many historic places, like the Imperial City and royal tombs. The Perfume River runs through the city, and it is lovely to walk along it in the evening. Hue is also famous for its spicy beef noodle soup."
+        "q": "Do you enjoy cooking at home?",
+        "s": "Yes, I enjoy cooking simple meals like stir-fried vegetables, omelettes and noodle soup. Cooking at home lets me control the ingredients and helps me unwind after a long day."
       }
     ],
     "p2": {
@@ -953,10 +1098,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you helped someone."
+        "Describe a time when you helped someone.",
+        "How did helping that person make you feel?",
+        "Do you think people in big cities help each other less than in the past?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I helped an elderly woman who was lost in the city. It happened last winter, on a cold evening when I was walking home from work. I noticed an old lady standing at a bus stop, looking confused and holding a small piece of paper. When I asked if she needed help, she told me that she had come from the countryside to visit her son, but she had got off the bus at the wrong stop and her phone battery was dead. The paper had her son's address on it, but she had no idea how to get there. First, I lent her my phone so she could call her son, but he did not answer. So I checked the address on my map and found that it was only about two kilometres away. I booked a taxi for her and decided to go with her, because she seemed very worried. When we arrived, her son was so grateful that he invited me to stay for tea. I felt really happy that day, because a small action from me made a big difference to someone else."
+      "time": 120,
+      "s": "I'd like to talk about a time when I helped an elderly woman who was lost in the city. It happened last winter, on a cold evening when I was walking home from work. I noticed an old lady standing at a bus stop, looking confused and holding a small piece of paper. When I asked if she needed help, she told me that she had come from the countryside to visit her son, but she had got off the bus at the wrong stop and her phone battery was dead. The paper had her son's address on it, but she had no idea how to get there. First, I lent her my phone so she could call her son, but he did not answer. So I checked the address on my map and found that it was only about two kilometres away. I booked a taxi for her and decided to go with her, because she seemed very worried. When we arrived, her son was so grateful that he invited me to stay for tea. I felt really happy that day, because a small action from me made a big difference to someone else.\nPeople in big cities may seem busier and more cautious around strangers, yet kindness still exists everywhere. Online neighbourhood groups and volunteer clubs actually make it easier to organise community support when someone is in need."
     }
   },
   {
@@ -968,12 +1115,12 @@ window.FA_SPEAKING = [
         "s": "Today I'm wearing quite casual clothes: a white T-shirt, a pair of blue jeans and my favourite trainers. I also brought a light jacket because it was a bit cold this morning. I usually dress simply when I'm not at work because I want to feel comfortable."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually get up a bit later than on weekdays. On Saturday morning I clean my room and go to the market with my mother. In the evening I often meet my friends for coffee. On Sunday I try to relax, watch a film or read a book to prepare for the new week."
+        "q": "Tell me about a skill you would like to learn.",
+        "s": "I would like to learn basic photography so I can take better pictures when I travel. Understanding lighting and composition seems really interesting and creative."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is a small city in the centre of Vietnam. It is quiet and peaceful, and people there are very friendly. There is a beautiful river running through the city, and the food is cheap and delicious. Although it is not as modern as Hanoi, I always miss it when I am away."
+        "q": "What do you usually do on a rainy day?",
+        "s": "On a rainy day, I like staying indoors with a warm cup of tea, listening to the rain and watching a good film or tidying up my room."
       }
     ],
     "p2": {
@@ -1024,10 +1171,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you went to an amusement park."
+        "Describe a time when you went to an amusement park.",
+        "What was your favourite memory from that day?",
+        "Why are theme parks popular with people of all ages?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about the time I went to Sun World, a big amusement park in Da Nang, with my cousins about two years ago. We went there during our summer holiday, and it was the first time I had ever visited such a large park. We arrived early in the morning to avoid the long queues. First, we took the cable car up the mountain, and the view of the sea and the forest was absolutely stunning. After that, we tried lots of rides. The scariest one was a roller coaster that went very fast and turned upside down. I screamed the whole time, but when it finished, I wanted to ride it again. In the afternoon we watched a street show and ate ice cream in a garden that looked like a European village. We also took hundreds of photos together. By the evening we were exhausted, but very happy. That day was special because I rarely have time to hang out with my cousins, as we live in different cities. It also taught me that sometimes it is good to face your fears and try something new."
+      "time": 120,
+      "s": "I'd like to talk about the time I went to Sun World, a big amusement park in Da Nang, with my cousins about two years ago. We went there during our summer holiday, and it was the first time I had ever visited such a large park. We arrived early in the morning to avoid the long queues. First, we took the cable car up the mountain, and the view of the sea and the forest was absolutely stunning. After that, we tried lots of rides. The scariest one was a roller coaster that went very fast and turned upside down. I screamed the whole time, but when it finished, I wanted to ride it again. In the afternoon we watched a street show and ate ice cream in a garden that looked like a European village. We also took hundreds of photos together. By the evening we were exhausted, but very happy. That day was special because I rarely have time to hang out with my cousins, as we live in different cities. It also taught me that sometimes it is good to face your fears and try something new.\nTheme parks appeal to every age group because they combine thrilling rides for teenagers, colourful shows for young children and shared family time for parents. For a day, everyone can forget daily stress and simply have fun together."
     }
   },
   {
@@ -1039,12 +1188,12 @@ window.FA_SPEAKING = [
         "s": "I usually feel tired in the late afternoon, especially after a long day at work or school. If I didn't sleep well the night before, I feel exhausted after lunch too. I also get tired when I sit in front of a computer for many hours, so I try to take short breaks and drink some water."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "At the weekend I like to do things that I don't have time for during the week. On Saturday I often go swimming and then have lunch with my family. In the afternoon I sometimes go shopping or visit my grandparents. On Sunday evening I plan my schedule for the next week so that I feel ready."
+        "q": "Tell me about your daily routine on weekdays.",
+        "s": "On weekdays I work or study from eight to five, then exercise for about forty minutes before dinner. In the evening I spend an hour practising English and reading."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I come from a coastal town in the south of Vietnam. It is famous for its seafood and long sandy beaches, so many tourists visit it in summer. Life there is slower than in big cities, and the air is fresh. My favourite thing about my hometown is walking along the beach in the evening."
+        "q": "Do you prefer travelling by train, bus or plane?",
+        "s": "For medium distances, I prefer the train because it is spacious and you can enjoy the scenery through the window. For very long trips, flying is obviously much faster."
       }
     ],
     "p2": {
@@ -1095,10 +1244,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you wanted to buy something but couldn't."
+        "Describe a time when you wanted to buy something but couldn't.",
+        "How did you handle not being able to buy it?",
+        "Do you think advertising encourages people to buy things they do not need?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I really wanted to buy a new laptop but couldn't. It happened when I was in my second year at university. My old laptop was very slow, and it often turned off in the middle of my work, so I decided to buy a better one. I spent weeks reading reviews online and finally chose a light laptop with a long battery life. However, when I went to the shop, I found out that the price had gone up, and I didn't have enough money. I was really disappointed, because I had saved for several months. Instead of borrowing money from my parents, I decided to get a part-time job in a coffee shop. I worked there every weekend for about three months. It was tiring, but I learned a lot about responsibility and managing money. In the end, I bought the laptop during a sale, and it was even cheaper than before. Looking back, I think that experience was useful, because I learned to be patient and I valued the laptop much more since I had paid for it myself."
+      "time": 120,
+      "s": "I'd like to talk about a time when I really wanted to buy a new laptop but couldn't. It happened when I was in my second year at university. My old laptop was very slow, and it often turned off in the middle of my work, so I decided to buy a better one. I spent weeks reading reviews online and finally chose a light laptop with a long battery life. However, when I went to the shop, I found out that the price had gone up, and I didn't have enough money. I was really disappointed, because I had saved for several months. Instead of borrowing money from my parents, I decided to get a part-time job in a coffee shop. I worked there every weekend for about three months. It was tiring, but I learned a lot about responsibility and managing money. In the end, I bought the laptop during a sale, and it was even cheaper than before. Looking back, I think that experience was useful, because I learned to be patient and I valued the laptop much more since I had paid for it myself.\nModern advertising definitely pushes people towards unnecessary purchases, especially targeted ads on social media. Waiting a few days before buying anything non-essential is a simple habit that helps avoid regret."
     }
   },
   {
@@ -1110,12 +1261,12 @@ window.FA_SPEAKING = [
         "s": "A typical Vietnamese family meal usually has a bowl of rice for each person and several shared dishes in the middle of the table. There is often a meat or fish dish, some boiled or stir-fried vegetables and a bowl of soup. We also have fish sauce for dipping. Everyone eats together and talks about their day."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "I usually spend my weekends relaxing and doing my hobbies. On Saturday morning I play badminton with my friends, and in the afternoon I do some housework. On Sunday I often visit my grandparents and have lunch with them. In the evening I like watching a film or reading before going to bed early."
+        "q": "What is something you recently bought and liked?",
+        "s": "Recently I bought a lightweight insulated water bottle. It keeps water cold all day, encourages me to drink more, and helps me avoid buying plastic bottles."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is a small town in the north of Vietnam, surrounded by rice fields and hills. It is very green and peaceful, and the people know each other well. There isn't much entertainment there, but the food is excellent and the air is clean. I go back every Tet holiday to see my family."
+        "q": "Tell me about a place in your country you want to visit.",
+        "s": "I would love to visit Da Lat in the central highlands because it is famous for pine forests, flower gardens and cool weather all year round."
       }
     ],
     "p2": {
@@ -1166,10 +1317,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you hurried to do something."
+        "Describe a time when you hurried to do something.",
+        "How did you feel during that rushed moment?",
+        "Why does modern life seem faster than in the past?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I had to hurry to catch a flight. Last year I was going to Da Nang for my friend's wedding, and my flight was at seven in the morning. The night before, I stayed up late packing, and I forgot to set my alarm. When I woke up, it was already half past five. I panicked, jumped out of bed, put on my clothes and grabbed my suitcase in less than ten minutes. I booked a taxi, but there was heavy traffic on the way to the airport, so I kept checking the time and felt really stressed. When I arrived, the check-in counter was almost closed. Luckily, the staff were very kind and helped me check in quickly. I ran through the security check and reached the gate just as the last passengers were boarding. I was out of breath, but so relieved. I made it to the wedding on time, and my friends laughed when I told them the story. Since then, I always set two alarms and prepare everything early before an important trip."
+      "time": 120,
+      "s": "I'd like to talk about a time when I had to hurry to catch a flight. Last year I was going to Da Nang for my friend's wedding, and my flight was at seven in the morning. The night before, I stayed up late packing, and I forgot to set my alarm. When I woke up, it was already half past five. I panicked, jumped out of bed, put on my clothes and grabbed my suitcase in less than ten minutes. I booked a taxi, but there was heavy traffic on the way to the airport, so I kept checking the time and felt really stressed. When I arrived, the check-in counter was almost closed. Luckily, the staff were very kind and helped me check in quickly. I ran through the security check and reached the gate just as the last passengers were boarding. I was out of breath, but so relieved. I made it to the wedding on time, and my friends laughed when I told them the story. Since then, I always set two alarms and prepare everything early before an important trip.\nLife feels faster today largely because smartphones keep us constantly connected to work messages and instant updates. People expect immediate replies and fast delivery, which can create unnecessary pressure unless we intentionally slow down."
     }
   },
   {
@@ -1181,12 +1334,12 @@ window.FA_SPEAKING = [
         "s": "In my free time I really enjoy cooking and watching cooking videos online. I like trying new recipes from different countries, and then I invite my friends over to taste them. I also go jogging in the park near my house two or three times a week, because it helps me clear my mind after work."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually sleep a little longer and have a big breakfast with my family. On Saturday afternoon I often go to the cinema or a café with my friends. On Sunday I do my laundry, tidy my room and go to the supermarket to buy food for the week. Sometimes, if the weather is nice, we go on a short trip outside the city."
+        "q": "Do you like listening to podcasts or the radio?",
+        "s": "Yes, I often listen to English learning podcasts and short news shows while commuting or doing housework. It is an effortless way to practise listening every day."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Hue, which used to be the capital of Vietnam. It is famous for its old citadel, royal tombs and the beautiful Perfume River. The pace of life there is slow and relaxing, and people are gentle and polite. I love the local food, especially beef noodle soup, which is spicier than in other places."
+        "q": "How important is music in your daily life?",
+        "s": "Music is quite important to me because it instantly lifts my mood. I listen to upbeat songs when exercising and soft acoustic melodies when I need to concentrate."
       }
     ],
     "p2": {
@@ -1237,10 +1390,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you faced a difficult question."
+        "Describe a time when you faced a difficult question.",
+        "How did you react when you heard the question?",
+        "How can people prepare to handle unexpected questions calmly?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I faced a difficult question during a job interview. It was about a year ago, when I applied for a position at a marketing company. Everything was going well until the manager asked me, \"What is your biggest weakness?\" I wasn't prepared for this question at all, so my mind went blank for a few seconds and I felt my face getting red. I didn't want to give a fake answer like \"I work too hard\", so I decided to be honest. I told her that I sometimes find it difficult to speak in front of a large group of people. Then I explained that I had joined an English speaking club to practise presenting and become more confident. To my surprise, the manager smiled and said she appreciated my honesty. A week later, I received an email offering me the job. From that experience, I learned that it is better to answer difficult questions honestly and show how you are trying to improve, rather than pretending to be perfect. Now I always prepare for this kind of question before an interview."
+      "time": 120,
+      "s": "I'd like to talk about a time when I faced a difficult question during a job interview. It was about a year ago, when I applied for a position at a marketing company. Everything was going well until the manager asked me, \"What is your biggest weakness?\" I wasn't prepared for this question at all, so my mind went blank for a few seconds and I felt my face getting red. I didn't want to give a fake answer like \"I work too hard\", so I decided to be honest. I told her that I sometimes find it difficult to speak in front of a large group of people. Then I explained that I had joined an English speaking club to practise presenting and become more confident. To my surprise, the manager smiled and said she appreciated my honesty. A week later, I received an email offering me the job. From that experience, I learned that it is better to answer difficult questions honestly and show how you are trying to improve, rather than pretending to be perfect. Now I always prepare for this kind of question before an interview.\nTo handle difficult questions calmly, it helps to pause for a few seconds instead of rushing to speak. Taking a breath, asking for clarification if needed, and giving an honest, structured answer usually leaves a much better impression."
     }
   },
   {
@@ -1252,12 +1407,12 @@ window.FA_SPEAKING = [
         "s": "On a typical day I get up at about six thirty, have a quick breakfast and ride my motorbike to the office. I work from eight until five, with a lunch break at noon when I eat with my colleagues. After work I usually go to the gym or cook dinner at home. In the evening I study English for an hour and go to bed around eleven."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I try to rest and spend time with the people I love. On Saturday morning I usually have breakfast with my friends at a street food stall, and then we go for coffee. In the afternoon I clean my apartment. On Sunday I visit my parents, help my mother cook lunch and sometimes take my little brother to the park."
+        "q": "Tell me about a hobby you had as a child.",
+        "s": "When I was a child, I loved drawing comic characters and collecting colourful stamps. I spent hours at weekends sketching with my cousins."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I was born in Hai Phong, a port city in the north of Vietnam. It is famous for its red flamboyant flowers in summer and its delicious seafood, especially crab noodle soup. The city is not as crowded as Hanoi, and it is close to Cat Ba Island, so we often go to the beach. I'm very proud of my hometown."
+        "q": "Do you prefer living in a house or an apartment?",
+        "s": "I prefer a bright apartment on a middle floor because it is secure, easy to clean and usually close to shops and public transport."
       }
     ],
     "p2": {
@@ -1308,10 +1463,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you laughed out loud with a friend."
+        "Describe a time when you laughed out loud with a friend.",
+        "Why was that moment so funny to both of you?",
+        "Why is humour important in friendships?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a time when I laughed out loud with my best friend, Lan. It happened last summer, when we went to a small restaurant to celebrate her birthday. Lan wanted to order in English to practise for her trip abroad, so she spoke to the waiter in English, even though he was Vietnamese. The waiter was confused and kept answering in Vietnamese, while Lan kept speaking English very seriously. Then she tried to say she wanted grilled chicken, but she made a mistake and said she wanted a grilled kitchen. The waiter looked at her, then at me, and said in English, \"Sorry, we only have one kitchen.\" We both burst out laughing so loudly that everyone in the restaurant turned around to look at us. We laughed until we cried, and even the waiter couldn't stop smiling. In the end, he brought us a free dessert because it was her birthday. I remember this moment clearly because it was so natural and funny. Whenever one of us is sad, we only need to say grilled kitchen and we start laughing again. It reminded me how important it is to have friends who make you happy."
+      "time": 120,
+      "s": "I'd like to talk about a time when I laughed out loud with my best friend, Lan. It happened last summer, when we went to a small restaurant to celebrate her birthday. Lan wanted to order in English to practise for her trip abroad, so she spoke to the waiter in English, even though he was Vietnamese. The waiter was confused and kept answering in Vietnamese, while Lan kept speaking English very seriously. Then she tried to say she wanted grilled chicken, but she made a mistake and said she wanted a grilled kitchen. The waiter looked at her, then at me, and said in English, \"Sorry, we only have one kitchen.\" We both burst out laughing so loudly that everyone in the restaurant turned around to look at us. We laughed until we cried, and even the waiter couldn't stop smiling. In the end, he brought us a free dessert because it was her birthday. I remember this moment clearly because it was so natural and funny. Whenever one of us is sad, we only need to say grilled kitchen and we start laughing again. It reminded me how important it is to have friends who make you happy.\nHumour plays a huge role in friendships because shared laughter reduces stress and builds an instant bond. Friends who can laugh together during awkward or difficult situations usually stay close for many years."
     }
   },
   {
@@ -1323,12 +1480,12 @@ window.FA_SPEAKING = [
         "s": "One of my favourite places is a small coffee shop near my house. It is quiet, it has lots of plants and the owner plays soft music, so I often go there to read or study. Another place I love is the beach in Nha Trang, where I go every summer with my family, because the water is clear and the seafood is great."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "I usually spend my weekends doing relaxing activities. On Saturday morning I go to the swimming pool, and then I meet my friends for lunch. In the afternoon I often play chess or video games with my younger brother. On Sunday I help my parents clean the house and in the evening we usually eat out together at a local restaurant."
+        "q": "What do you usually have for breakfast?",
+        "s": "I usually have something quick and filling like bread with eggs, sticky rice or a bowl of oats with banana, along with a glass of water or black coffee."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Da Lat, a city in the Central Highlands of Vietnam. It is famous for its cool weather all year round, pine forests and beautiful flowers. Many tourists come there to escape the heat. Life is quite peaceful, and I love drinking hot soy milk at the night market when it is cold."
+        "q": "Tell me about a teacher you remember well.",
+        "s": "I still remember my high school English teacher because she was patient and creative. She used games and real conversations instead of just grammar exercises, which made me enjoy English."
       }
     ],
     "p2": {
@@ -1379,10 +1536,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you had a holiday/vacation."
+        "Describe a time when you had a holiday/vacation.",
+        "What made that holiday memorable for you?",
+        "Do you think people need regular holidays to work well?"
       ],
-      "time": 90,
-      "s": "I'd like to talk about a holiday I had in Phu Quoc, an island in the south of Vietnam, last summer. I went there with my parents and my younger sister for five days, and it was our first family trip by plane for a long time. We stayed in a small hotel near the beach, so every morning we could walk along the sand and swim before breakfast. One of the best days was when we took a boat tour to some small islands. We went snorkelling and saw lots of colourful fish and coral, which was amazing for me because I had never done it before. In the evenings we visited the night market and tried many kinds of seafood, such as grilled squid and sea urchins. The only problem was that it rained heavily on the third day, so we stayed in the hotel and played cards together, but even that was fun. This holiday was special to me because my parents usually work very hard and we rarely have time together. During those five days, we talked and laughed a lot, and I felt much closer to my family. I still look at the photos from that trip when I feel stressed."
+      "time": 120,
+      "s": "I'd like to talk about a holiday I had in Phu Quoc, an island in the south of Vietnam, last summer. I went there with my parents and my younger sister for five days, and it was our first family trip by plane for a long time. We stayed in a small hotel near the beach, so every morning we could walk along the sand and swim before breakfast. One of the best days was when we took a boat tour to some small islands. We went snorkelling and saw lots of colourful fish and coral, which was amazing for me because I had never done it before. In the evenings we visited the night market and tried many kinds of seafood, such as grilled squid and sea urchins. The only problem was that it rained heavily on the third day, so we stayed in the hotel and played cards together, but even that was fun. This holiday was special to me because my parents usually work very hard and we rarely have time together. During those five days, we talked and laughed a lot, and I felt much closer to my family. I still look at the photos from that trip when I feel stressed.\nRegular breaks are essential for good performance at work or school. Stepping away from daily routines prevents burnout, refreshes creativity and allows people to return with much better focus and energy."
     }
   },
   {
@@ -1394,12 +1553,12 @@ window.FA_SPEAKING = [
         "s": "Yes, I think sport is very popular in Vietnam. Football is definitely the favourite, and when the national team plays, the streets are full of fans. Many older people do exercise in the park early in the morning, while young people enjoy badminton, volleyball or going to the gym after work."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On Saturday mornings I usually sleep a bit later and then go to the market with my mother. In the afternoon I often meet my friends for coffee or play badminton. On Sunday I try to relax at home, do some housework and prepare for the week ahead, because Monday is always busy for me."
+        "q": "How much time do you spend on your phone each day?",
+        "s": "I spend around two to three hours a day on my phone, mainly checking messages, reading news and reviewing vocabulary flashcards. I try to put it away before sleeping."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I come from Hai Phong, a port city in the north of Vietnam, about two hours from Hanoi. It is famous for its seafood and the red flowers that bloom in early summer. It is not as crowded as Hanoi, so life there is more relaxed. I also love that it is close to the beach at Do Son."
+        "q": "Do you enjoy visiting parks or gardens?",
+        "s": "Yes, I love visiting city parks, especially early in the morning when people are jogging and doing tai chi. Seeing green trees really refreshes my mind."
       }
     ],
     "p2": {
@@ -1450,10 +1609,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you worked with both elderly people and children."
+        "Describe a time when you worked with both elderly people and children.",
+        "What did you learn from interacting with both age groups?",
+        "How can communities bring older and younger generations closer together?"
       ],
-      "time": 90,
-      "s": "Last summer I volunteered for a community project in my neighbourhood, where I worked with both elderly people and children. The local youth union organised a weekend programme at the community centre, and our task was to help old people and kids spend time together. On Saturday mornings, I helped the elderly people do some gentle exercises, and then we organised activities like making paper lanterns and telling traditional stories. The grandparents taught the children folk songs and old games, while the children showed them how to make video calls on a smartphone. At first, it was quite challenging for me, because the children were very energetic and noisy, whereas the old people needed patience and a slower pace. I had to explain things clearly and make sure everybody felt included. However, it turned out to be one of the most rewarding experiences I have ever had. I learnt that the two generations can learn a lot from each other, and I saw how happy the old people were to have company. Since then, I have become more patient, and I still visit the centre whenever I have free time."
+      "time": 120,
+      "s": "Last summer I volunteered for a community project in my neighbourhood, where I worked with both elderly people and children. The local youth union organised a weekend programme at the community centre, and our task was to help old people and kids spend time together. On Saturday mornings, I helped the elderly people do some gentle exercises, and then we organised activities like making paper lanterns and telling traditional stories. The grandparents taught the children folk songs and old games, while the children showed them how to make video calls on a smartphone. At first, it was quite challenging for me, because the children were very energetic and noisy, whereas the old people needed patience and a slower pace. I had to explain things clearly and make sure everybody felt included. However, it turned out to be one of the most rewarding experiences I have ever had. I learnt that the two generations can learn a lot from each other, and I saw how happy the old people were to have company. Since then, I have become more patient, and I still visit the centre whenever I have free time.\nCommunities can bridge the generation gap through shared workshops, neighbourhood gardening projects and mentoring programmes. When young and old collaborate on a practical goal, both sides gain respect and fresh perspectives."
     }
   },
   {
@@ -1465,12 +1626,12 @@ window.FA_SPEAKING = [
         "s": "The last time I talked with my mother was yesterday evening. I called her after work because I live in a different city from my family. We talked for about half an hour about her garden, my job and my plans for the next holiday. She always reminds me to eat well and get enough sleep, which makes me smile."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "At the weekend I like to do things I do not have time for during the week. On Saturday I usually go swimming in the morning and then clean my flat. In the evening I sometimes go to the cinema with friends. On Sunday I often visit my grandparents and have lunch with them, which is a nice way to finish the week."
+        "q": "Tell me about a gift you enjoyed receiving.",
+        "s": "Last year my best friend gave me a simple wristwatch for my birthday. I wear it every day because it is practical and reminds me of our friendship."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Da Lat, a small city in the Central Highlands of Vietnam. It is famous for its cool weather all year round, pine forests and beautiful flowers. There are lots of lakes and hills, so it is a popular place for tourists. What I like most is the fresh air and the local food, especially hot soy milk at the night market."
+        "q": "What makes a good neighbour in your opinion?",
+        "s": "A good neighbour is polite, respects quiet hours at night and is willing to help in small ways, like receiving a parcel when you are not home."
       }
     ],
     "p2": {
@@ -1521,10 +1682,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Describe a time when you made a great effort."
+        "Describe a time when you made a great effort.",
+        "Was the final result worth all the effort?",
+        "Do you think hard work is more important than natural talent?"
       ],
-      "time": 90,
-      "s": "I would like to talk about the time I prepared for my university entrance exam, which was the biggest effort I have ever made. When I was in my final year of high school, I really wanted to study at a top university in Hanoi, but my maths score was not good enough. So I decided to change my daily routine completely. For about six months, I got up at five o'clock every morning to review my lessons, and in the evening I attended an extra class. I also stopped playing computer games and spent much less time on social media. It was really hard, and sometimes I felt exhausted and wanted to give up, especially when I got low marks in the practice tests. Fortunately, my parents and my teacher encouraged me a lot and helped me find better ways to study. In the end, I passed the exam with a high score and got into the university I wanted. This experience taught me that hard work and patience really pay off, and now, whenever I face a difficult task, I remember how much I achieved during those months."
+      "time": 120,
+      "s": "I would like to talk about the time I prepared for my university entrance exam, which was the biggest effort I have ever made. When I was in my final year of high school, I really wanted to study at a top university in Hanoi, but my maths score was not good enough. So I decided to change my daily routine completely. For about six months, I got up at five o'clock every morning to review my lessons, and in the evening I attended an extra class. I also stopped playing computer games and spent much less time on social media. It was really hard, and sometimes I felt exhausted and wanted to give up, especially when I got low marks in the practice tests. Fortunately, my parents and my teacher encouraged me a lot and helped me find better ways to study. In the end, I passed the exam with a high score and got into the university I wanted. This experience taught me that hard work and patience really pay off, and now, whenever I face a difficult task, I remember how much I achieved during those months.\nI firmly believe hard work outweighs natural talent in the long run. Talent may give someone a quick start, but without steady practice, discipline and willingness to improve, it is hard to reach a high level."
     }
   },
   {
@@ -1536,12 +1699,12 @@ window.FA_SPEAKING = [
         "s": "I am in my bedroom at the moment. It is quite small but bright, because there is a big window next to my desk. There is a single bed, a wardrobe and a bookshelf full of English books. The walls are light blue, and I have a few photos of my family on them, so it feels cosy and relaxing."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "On weekends I usually spend time with my family and friends. On Saturday morning I go jogging along the river near my house, and in the afternoon I take an online course to improve my English. On Sunday we often have a big family lunch, and in the evening I watch a film or read a book to relax."
+        "q": "Do you prefer working or studying in the morning or at night?",
+        "s": "I definitely work better in the morning because my energy is highest after a good night's sleep. Late at night I tend to lose focus and make silly mistakes."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I grew up in Hue, the old capital of Vietnam, in the centre of the country. It is a peaceful city with the Perfume River running through it and many historical buildings like the Imperial City. The food there is spicy and delicious, especially beef noodle soup. Although it rains a lot, I love its quiet and traditional atmosphere."
+        "q": "Tell me about a memorable meal you had recently.",
+        "s": "Last weekend my family cooked hotpot together at home to celebrate my mother's birthday. The food was delicious and we stayed at the table talking for two hours."
       }
     ],
     "p2": {
@@ -1592,10 +1755,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Talk about a challenge you have faced."
+        "Talk about a challenge you have faced.",
+        "How did overcoming that challenge change you?",
+        "Do you think facing difficulties makes young people stronger?"
       ],
-      "time": 90,
-      "s": "One of the biggest challenges I have faced was moving to Ho Chi Minh City alone to start my first job after graduating. I had always lived with my parents in a small town, so suddenly I had to look after myself in a huge and busy city. At first, everything was difficult. I did not know anyone, the traffic was terrible, and I had to find a flat that I could afford with my small salary. At work, I also felt under a lot of pressure, because my colleagues were very experienced and I was afraid of making mistakes. To deal with this, I made a plan. I joined a badminton club to meet new people, I learnt to cook simple meals to save money, and I asked my manager for regular feedback so that I could improve quickly. After about six months, I felt much more confident and I even started to enjoy city life. Looking back, I am grateful for this challenge, because it made me more independent and taught me that I can adapt to new situations if I stay positive and keep trying."
+      "time": 120,
+      "s": "One of the biggest challenges I have faced was moving to Ho Chi Minh City alone to start my first job after graduating. I had always lived with my parents in a small town, so suddenly I had to look after myself in a huge and busy city. At first, everything was difficult. I did not know anyone, the traffic was terrible, and I had to find a flat that I could afford with my small salary. At work, I also felt under a lot of pressure, because my colleagues were very experienced and I was afraid of making mistakes. To deal with this, I made a plan. I joined a badminton club to meet new people, I learnt to cook simple meals to save money, and I asked my manager for regular feedback so that I could improve quickly. After about six months, I felt much more confident and I even started to enjoy city life. Looking back, I am grateful for this challenge, because it made me more independent and taught me that I can adapt to new situations if I stay positive and keep trying.\nFacing manageable challenges definitely helps young people build resilience and problem-solving skills. As long as they have supportive family or mentors to guide them, overcoming obstacles creates genuine self-confidence."
     }
   },
   {
@@ -1607,12 +1772,12 @@ window.FA_SPEAKING = [
         "s": "I am looking for a house that is not too far from my office, so I do not have to spend hours in traffic. I would like it to have at least two bedrooms and a big window with plenty of natural light. A small balcony or garden would be great, because I love growing plants and herbs."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "My weekends are usually quite relaxed. I often go to the gym on Saturday morning and then meet my friends for lunch. Sometimes we go shopping or visit a new café in town. On Sunday I like to stay at home, cook something special for my family and catch up on my favourite TV series."
+        "q": "Do you like taking photographs?",
+        "s": "Yes, I like taking casual photos of street scenes, food and nature on my phone. Looking back at old albums is a wonderful way to remember trips with friends."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I am from Can Tho, the biggest city in the Mekong Delta in the south of Vietnam. It is famous for its floating markets, where people sell fruit and vegetables from boats early in the morning. The weather is hot all year, and the people are very friendly. I love the rivers and the fresh tropical fruit there."
+        "q": "What kind of public transport is common in your city?",
+        "s": "Buses are the most common form of public transport in my city, and we also have an urban metro line now. They are affordable and helpful during peak traffic."
       }
     ],
     "p2": {
@@ -1663,10 +1828,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Talk about a busy time you had."
+        "Talk about a busy time you had.",
+        "How did you manage your time during that period?",
+        "How can people keep a healthy balance between work and rest?"
       ],
-      "time": 90,
-      "s": "The busiest time I have ever had was last December, at the end of my final semester at university. In the same month, I had to finish my graduation project, take three exams and work part-time at a coffee shop to pay my rent. On top of that, my sister was getting married, so I also had to help my family prepare for the wedding. For about four weeks, I hardly had any free time. I usually woke up at six, went to class or the library, worked at the café in the evening and then studied again until midnight. To survive, I wrote a detailed schedule every Sunday and divided my big tasks into small steps. I also asked my manager to give me fewer shifts during the exam week, and luckily he agreed. It was really stressful, and I was often tired, but I managed to finish everything on time. I got a good mark for my project and still enjoyed my sister's wedding. That experience taught me how important time management is, and now I always plan ahead when I know a busy period is coming."
+      "time": 120,
+      "s": "The busiest time I have ever had was last December, at the end of my final semester at university. In the same month, I had to finish my graduation project, take three exams and work part-time at a coffee shop to pay my rent. On top of that, my sister was getting married, so I also had to help my family prepare for the wedding. For about four weeks, I hardly had any free time. I usually woke up at six, went to class or the library, worked at the café in the evening and then studied again until midnight. To survive, I wrote a detailed schedule every Sunday and divided my big tasks into small steps. I also asked my manager to give me fewer shifts during the exam week, and luckily he agreed. It was really stressful, and I was often tired, but I managed to finish everything on time. I got a good mark for my project and still enjoyed my sister's wedding. That experience taught me how important time management is, and now I always plan ahead when I know a busy period is coming.\nMaintaining balance starts with setting clear boundaries, such as switching off work notifications in the evening and protecting time for sleep and exercise. Prioritising the most important tasks also stops busy weeks from becoming overwhelming."
     }
   },
   {
@@ -1678,12 +1845,12 @@ window.FA_SPEAKING = [
         "s": "I am learning English mainly for my career. I work for a company that has many foreign clients, so I need to write emails and join online meetings in English. Besides, English helps me travel more easily and watch films without subtitles. I also need an Aptis certificate to apply for a master's programme next year."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "I usually spend my weekends outdoors if the weather is nice. On Saturday I often go cycling with a group of friends around the lake, and we have breakfast together afterwards. In the afternoon I do some shopping and housework. On Sunday evening I like to stay in, read a book and get ready for the new week."
+        "q": "Tell me about a friend you spend a lot of time with.",
+        "s": "I spend a lot of time with my friend Minh, whom I met at university. He is easy-going, reliable and we share the same love for badminton and coffee."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "My hometown is Nha Trang, a coastal city in the south central part of Vietnam. It has a long, beautiful beach, clear blue water and lots of small islands, so many tourists come there for swimming and diving. The seafood is fresh and cheap. Although it has become busier recently, it is still a lovely place to live."
+        "q": "Do you like trying new foods?",
+        "s": "Yes, I love trying local specialities whenever I visit a new region. Trying unfamiliar dishes is one of the best ways to understand a place's culture."
       }
     ],
     "p2": {
@@ -1734,10 +1901,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Talk about a time you visited a new city."
+        "Talk about a time you visited a new city.",
+        "What surprised you most about that city?",
+        "What are the benefits of travelling to new places?"
       ],
-      "time": 90,
-      "s": "I would like to talk about my first trip to Singapore, which I visited two years ago with my best friend. We had saved money for months, so we were really excited when we finally landed there. The first thing I noticed was how clean and green the city was. There were trees and gardens everywhere, even on the roofs of tall buildings. We stayed for four days in a small hotel in Chinatown and used the underground to get around, because it was cheap, fast and very easy to use. During the day, we visited famous places like Gardens by the Bay and Sentosa Island, and in the evening we went to food centres to try local dishes such as chicken rice and chilli crab. What impressed me most was how people from different cultures live together peacefully, and you can hear many languages on the street. The only problem was that everything was quite expensive, so we had to be careful with our budget. Overall, it was a wonderful experience, and it made me want to travel more and discover other cities in Asia."
+      "time": 120,
+      "s": "I would like to talk about my first trip to Singapore, which I visited two years ago with my best friend. We had saved money for months, so we were really excited when we finally landed there. The first thing I noticed was how clean and green the city was. There were trees and gardens everywhere, even on the roofs of tall buildings. We stayed for four days in a small hotel in Chinatown and used the underground to get around, because it was cheap, fast and very easy to use. During the day, we visited famous places like Gardens by the Bay and Sentosa Island, and in the evening we went to food centres to try local dishes such as chicken rice and chilli crab. What impressed me most was how people from different cultures live together peacefully, and you can hear many languages on the street. The only problem was that everything was quite expensive, so we had to be careful with our budget. Overall, it was a wonderful experience, and it made me want to travel more and discover other cities in Asia.\nTravelling to unfamiliar places broadens our worldview by exposing us to different cuisines, architecture and ways of life. It also encourages independence and helps us appreciate our own hometown from a fresh angle."
     }
   },
   {
@@ -1749,12 +1918,12 @@ window.FA_SPEAKING = [
         "s": "I work as an accountant for a medium-sized logistics company in Hanoi. My main tasks are checking invoices, preparing monthly reports and working with the bank. It can be quite stressful at the end of each month, but I enjoy it because I like working with numbers and my colleagues are very supportive."
       },
       {
-        "q": "What do you usually do on weekends?",
-        "s": "At the weekend I try to rest and do something creative. I usually spend Saturday morning at a cooking class, because I want to learn how to make new dishes. In the afternoon I go for a walk or meet my cousins. On Sunday I often go back to my parents' house in the countryside to have lunch with them."
+        "q": "How do you usually spend a free evening?",
+        "s": "On a free evening I usually cook a light dinner, call my family and watch an episode of a documentary or read a book before going to bed early."
       },
       {
-        "q": "Tell me about your hometown.",
-        "s": "I come from Ha Long, a city in the north east of Vietnam. It is best known for Ha Long Bay, which has thousands of limestone islands and is a World Heritage Site. Many tourists visit every year to take boat trips and explore the caves. My hometown is also famous for its seafood, especially squid cakes."
+        "q": "What is one thing you like about your job or studies?",
+        "s": "What I like most is that I get to solve practical problems and work with friendly people. Every week brings something slightly different, so it rarely feels boring."
       }
     ],
     "p2": {
@@ -1805,10 +1974,12 @@ window.FA_SPEAKING = [
     },
     "p4": {
       "questions": [
-        "Talk about a time you met a new friend."
+        "Talk about a time you met a new friend.",
+        "What helped the two of you become close?",
+        "Is it harder to make new friends as an adult?"
       ],
-      "time": 90,
-      "s": "I would like to talk about how I met Linh, who is now one of my closest friends. We met about three years ago at an English club in my city. On my first evening there, I was very nervous because I did not know anyone and my speaking was not very good. The organiser put us in the same group for a discussion about travel, and Linh was really friendly and helped me when I could not find the right words. After the meeting, we found out that we both loved hiking and Japanese food, so we went for dinner together the following week. Since then, we have been on many trips together, including a hiking trip to Sa Pa, and we often practise English with each other. What I like most about her is that she is honest and always positive, even when things go wrong. Meeting Linh taught me that it is worth stepping out of my comfort zone, because if I had not joined the club that evening, I would never have met such a great friend. Now I always encourage shy people to try new activities."
+      "time": 120,
+      "s": "I would like to talk about how I met Linh, who is now one of my closest friends. We met about three years ago at an English club in my city. On my first evening there, I was very nervous because I did not know anyone and my speaking was not very good. The organiser put us in the same group for a discussion about travel, and Linh was really friendly and helped me when I could not find the right words. After the meeting, we found out that we both loved hiking and Japanese food, so we went for dinner together the following week. Since then, we have been on many trips together, including a hiking trip to Sa Pa, and we often practise English with each other. What I like most about her is that she is honest and always positive, even when things go wrong. Meeting Linh taught me that it is worth stepping out of my comfort zone, because if I had not joined the club that evening, I would never have met such a great friend. Now I always encourage shy people to try new activities.\nMaking new friends as an adult can feel harder because work and family duties leave less free time than school did. Joining local clubs, sports groups or volunteer activities is one of the best ways to meet like-minded people."
     }
   },
   {
@@ -2032,5 +2203,5 @@ window.FA_SPEAKING = [
       "time": 120,
       "s": "Last summer, I spent a whole afternoon with my grandfather, who is in his late seventies, helping him organise his old photo albums at his house. While we sorted the black-and-white pictures, he told me stories about how he repaired bicycles as a young man and how our town looked fifty years ago. In return, I showed him how to scan his favourite photos onto his tablet so he could share them with my cousins. I felt deeply moved and realised how much family history I would have missed if I had not slowed down to listen.\nI believe younger people can gain patience, practical life perspective and a stronger sense of gratitude from older generations. Sometimes different age groups struggle to understand one another because they grew up with very different technology, values and communication styles. Unfortunately, modern society does not encourage enough intergenerational contact, as work, schools and leisure spaces tend to separate people by age. Community workshops, mentoring programmes and shared neighbourhood events could help bridge that gap."
     }
-  },
+  }
 ];

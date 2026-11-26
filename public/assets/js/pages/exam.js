@@ -18,7 +18,7 @@
       desc: "• Đủ 4 part: 13 câu ngắn, 4 người nói, hội thoại, 2 bài độc thoại<br> • Mỗi đoạn nghe tối đa 2 lần, có transcript tô đậm câu chủ chốt" },
     grammar: { name: "Grammar & Vocabulary", short: "Grammar", icon: "🧩", data: window.FA_GRAMMAR, time: 25, meta: "50 câu trắc nghiệm · 25 phút",
       desc: "• Format: 25 câu ngữ pháp + 25 câu từ vựng<br>• Có lời giải cho các câu sai và chưa làm" },
-    reading: { name: "Reading", icon: "📖", data: window.FA_READING, time: 35, meta: "4–5 part · 35 phút",
+    reading: { name: "Reading", icon: "📖", data: window.FA_READING, time: 35, meta: "4 part · 35 phút",
       desc: "• Điền từ, sắp xếp câu, ghép ý kiến, chọn tiêu đề đoạn văn <br> • Có lời giải cho các câu sai và chưa làm" },
     writing: { name: "Writing", icon: "✍️", data: window.FA_WRITING, time: 50, meta: "4 part · 50 phút",
       desc: "• Đủ 4 part như thi thật, đếm từ tự động <br>• Có thể xem bài mẫu và điểm ước lượng sau khi nộp bài" },
@@ -573,6 +573,7 @@
     const avg = bests.length ? Math.round(bests.reduce((x, y) => x + y, 0) / bests.length) : null;
     const next = rows.find((r) => r.state === "doing" && !r.locked) || rows.find((r) => r.state === "new" && !r.locked);
     let filter = "all";
+    let query = "";
     try { filter = localStorage.getItem(listFilterKey(skill)) || "all"; } catch (e) {}
     if (!LIST_FILTERS.some(([k]) => k === filter)) filter = "all";
 
@@ -595,8 +596,16 @@
       </a>`;
     };
 
+    const matchQ = (r, q) => !q || r.t.title.toLowerCase().includes(q) || r.t.id.toLowerCase().includes(q);
+    const renderCards = () => {
+      const q = query.trim().toLowerCase();
+      const shown = rows.filter((r) => (filter === "all" || r.state === filter) && matchQ(r, q));
+      return shown.length
+        ? `<div class="grid grid-3">${shown.map(card).join("")}</div>`
+        : `<div class="card empty"><div class="big">${q ? "🔍" : filter === "doing" ? "⏸" : filter === "done" ? "🏁" : "🎉"}</div><p>${q ? `Không tìm thấy đề nào khớp “${esc(query)}”.` : filter === "doing" ? "Không có đề nào đang làm dở." : filter === "done" ? "Bạn chưa hoàn thành đề nào — bắt đầu một đề nhé!" : "Bạn đã làm hết các đề!"}</p></div>`;
+    };
+
     const draw = () => {
-      const shown = rows.filter((r) => filter === "all" || r.state === filter);
       app.innerHTML = `
       <div class="page"><div class="container">
         <div class="crumbs"><a href="#/">← Kỹ năng</a> / ${esc(S.name)}</div>
@@ -611,9 +620,11 @@
           </div>
           ${next ? `<a class="btn btn-primary" href="#/${skill}/${next.t.id}">${next.state === "doing" ? "▶ Làm tiếp" : "▶ Làm đề tiếp theo"}: ${esc(next.t.title.split(" — ")[0])}</a>` : ""}
         </div>
-        <div class="tabs mt-3" role="tablist">${LIST_FILTERS.map(([k, label]) => `<button class="tab ${filter === k ? "active" : ""}" data-f="${k}" role="tab" aria-selected="${filter === k}">${label} <span class="tab-n">${count(k)}</span></button>`).join("")}</div>
-        ${shown.length ? `<div class="grid grid-3">${shown.map(card).join("")}</div>`
-          : `<div class="card empty"><div class="big">${filter === "doing" ? "⏸" : filter === "done" ? "🏁" : "🎉"}</div><p>${filter === "doing" ? "Không có đề nào đang làm dở." : filter === "done" ? "Bạn chưa hoàn thành đề nào — bắt đầu một đề nhé!" : "Bạn đã làm hết các đề!"}</p></div>`}
+        <div class="list-tools mt-3">
+          <div class="tabs mb-0" role="tablist">${LIST_FILTERS.map(([k, label]) => `<button class="tab ${filter === k ? "active" : ""}" data-f="${k}" role="tab" aria-selected="${filter === k}">${label} <span class="tab-n">${count(k)}</span></button>`).join("")}</div>
+          <input class="inp list-search" id="listSearch" type="search" value="${esc(query)}" placeholder="🔍 Tìm đề theo tên hoặc chủ đề…" aria-label="Tìm đề">
+        </div>
+        <div id="listGrid" class="mt-2">${renderCards()}</div>
       </div></div>`;
       app.querySelectorAll("[data-login]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); FA.cloud.signIn(a.dataset.login); }));
       app.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => {
@@ -621,6 +632,8 @@
         try { localStorage.setItem(listFilterKey(skill), filter); } catch (e) {}
         draw();
       }));
+      const searchEl = app.querySelector("#listSearch"), gridEl = app.querySelector("#listGrid");
+      if (searchEl && gridEl) searchEl.oninput = () => { query = searchEl.value; gridEl.innerHTML = renderCards(); };
     };
     draw();
   }
@@ -669,6 +682,7 @@
         <div class="crumbs"><a href="#/${skill}">← Chọn đề</a> / ${esc(test.title)}</div>
         <h1 class="page-title">${esc(test.title)} — ${esc(S.name)}</h1>
         <div class="card intro-box mt-2"><ul>${INTRO[skill].map((x) => `<li>${x}</li>`).join("")}</ul></div>
+        ${skill === "speaking" ? `<div class="card mt-2" style="padding:14px 18px"><div class="row" style="gap:10px"><span>🎙️ <b>Kiểm tra thiết bị trước khi nói</b></span><div class="spacer"></div><button type="button" class="btn btn-outline btn-sm" id="testMicBtn">Thử micro</button></div><div class="muted mt-1" id="testMicSt" style="font-size:.86rem">${FA.speakAI && FA.speakAI.supported() ? "✓ Trình duyệt hỗ trợ nhận dạng giọng nói để AI chấm Speaking." : "ℹ️ Trình duyệt này không hỗ trợ nhận dạng giọng nói (nên dùng Chrome/Edge để AI chấm; vẫn có thể ghi âm & tự chấm)."}</div></div>` : ""}
         ${ttsWarn ? `<div class="explain">⚠️ Trình duyệt của bạn không hỗ trợ giọng đọc. Hãy dùng Chrome, Edge hoặc Safari bản mới.</div>` : ""}
         ${draft ? `<div class="explain">💾 Có bản nháp lưu lúc <b>${FA.fmtDate(draft.savedAt)}</b> (còn <b>${FA.fmtTime(draft.leftSec || 0)}</b>). Bạn có thể làm tiếp ngay.</div>` : ""}
         <div class="row mt-3">
@@ -686,6 +700,24 @@
       clearDraft(skill, test.id);
       RUNNERS[skill](test);
     };
+    const testMicBtn = app.querySelector("#testMicBtn");
+    if (testMicBtn) {
+      testMicBtn.onclick = async () => {
+        const stEl = app.querySelector("#testMicSt");
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          stEl.textContent = "✗ Trình duyệt không hỗ trợ thu âm micro.";
+          return;
+        }
+        stEl.textContent = "⏳ Đang xin quyền micro…";
+        try {
+          const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+          s.getTracks().forEach((t) => t.stop());
+          stEl.innerHTML = `<span class="txt-ok">✓ Micro hoạt động tốt! ${FA.speakAI && FA.speakAI.supported() ? "Sẵn sàng để AI chấm Speaking." : "Bạn có thể ghi âm và tự chấm."}</span>`;
+        } catch (e) {
+          stEl.textContent = "✗ Chưa cấp quyền micro — bấm biểu tượng 🔒 trên thanh địa chỉ trình duyệt để cho phép rồi thử lại.";
+        }
+      };
+    }
     app.querySelectorAll("[data-replay]").forEach((b) => (b.onclick = () => RUNNERS[skill](test, hist[+b.dataset.replay])));
   }
 
@@ -878,21 +910,29 @@
       const q = Q[st.i];
       const done = st.ans.filter((x) => x != null).length;
       const flagged = st.flags.has(st.i);
+      if (sh.box) sh.box.className = "container wide-exam";
       sh.stage.innerHTML = `
         <div class="progress"><i style="width:${((st.i + 1) / Q.length) * 100}%"></i></div>
         <div class="progress-meta"><span>Câu ${st.i + 1}/${Q.length}</span><span>Đã trả lời ${done}${st.flags.size ? ` · 🚩 ${st.flags.size} câu đánh dấu` : ""}</span></div>
-        <div class="q-card">
-          <div class="row mb-1"><div class="q-part mb-0">${q.sec === "grammar" ? "Grammar" : "Vocabulary"}</div><div class="spacer"></div>
-            <button type="button" class="flag-btn ${flagged ? "on" : ""}" id="flagBtn" title="Phím tắt: F">${flagged ? "🚩 Đã đánh dấu" : "🏳️ Đánh dấu xem lại"}</button></div>
-          ${q.instr ? `<div class="q-instr">${esc(q.instr)}</div>` : ""}
-          <div class="q-text" ${q.sec === "vocab" && q.q.split(" ").length < 4 ? 'style="font-size:1.5rem"' : ""}>${esc(q.q).replace(/_{3,}/g, '<span style="letter-spacing:2px">______</span>')}</div>
-          ${q.o.map((o, k) => `<button class="opt ${st.ans[st.i] === k ? "selected" : ""}" data-k="${k}"><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
-        </div>
-        <div class="exam-nav">
-          <button class="btn btn-outline" id="prev" ${st.i === 0 ? "disabled" : ""}>← Trước</button>
-          ${st.i < Q.length - 1 ? `<button class="btn btn-primary" id="next">Tiếp →</button>` : `<button class="btn btn-primary" id="fin">Nộp bài</button>`}
-        </div>
-        <div class="qgrid">${Q.map((_, k) => `<button data-j="${k}" class="${k === st.i ? "current" : ""} ${st.ans[k] != null ? "done" : ""} ${st.flags.has(k) ? "flagged" : ""}">${k + 1}</button>`).join("")}</div>`;
+        <div class="grammar-layout">
+          <div>
+            <div class="q-card">
+              <div class="row mb-1"><div class="q-part mb-0">${q.sec === "grammar" ? "Grammar" : "Vocabulary"}</div><div class="spacer"></div>
+                <button type="button" class="flag-btn ${flagged ? "on" : ""}" id="flagBtn" title="Phím tắt: F">${flagged ? "🚩 Đã đánh dấu" : "🏳️ Đánh dấu xem lại"}</button></div>
+              ${q.instr ? `<div class="q-instr">${esc(q.instr)}</div>` : ""}
+              <div class="q-text" ${q.sec === "vocab" && q.q.split(" ").length < 4 ? 'style="font-size:1.5rem"' : ""}>${esc(q.q).replace(/_{3,}/g, '<span style="letter-spacing:2px">______</span>')}</div>
+              ${q.o.map((o, k) => `<button class="opt ${st.ans[st.i] === k ? "selected" : ""}" data-k="${k}"><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
+            </div>
+            <div class="exam-nav">
+              <button class="btn btn-outline" id="prev" ${st.i === 0 ? "disabled" : ""}>← Trước</button>
+              ${st.i < Q.length - 1 ? `<button class="btn btn-primary" id="next">Tiếp →</button>` : `<button class="btn btn-primary" id="fin">Nộp bài</button>`}
+            </div>
+          </div>
+          <aside class="qgrid-side card">
+            <div class="qgrid-head"><span>Bảng câu hỏi</span><span class="muted">${done}/${Q.length}</span></div>
+            <div class="qgrid">${Q.map((_, k) => `<button data-j="${k}" class="${k === st.i ? "current" : ""} ${st.ans[k] != null ? "done" : ""} ${st.flags.has(k) ? "flagged" : ""}">${k + 1}</button>`).join("")}</div>
+          </aside>
+        </div>`;
       sh.stage.querySelector("#flagBtn").onclick = toggleFlag;
       sh.stage.querySelectorAll(".opt").forEach((b) => (b.onclick = () => { st.ans[st.i] = +b.dataset.k; auto.flush(); render(); }));
       sh.stage.querySelectorAll(".qgrid button").forEach((b) => (b.onclick = () => { st.i = +b.dataset.j; auto.flush(); render(); }));
@@ -2070,18 +2110,19 @@
   function viewGym(wrongMode, notice) {
     view = "gym";
     const wrong = FA.getWrongbook();
-    const len = [10, 20].includes(FA.store.get("gym-len", 10)) ? FA.store.get("gym-len", 10) : 10;
+    const len = [5, 10, 20].includes(FA.store.get("gym-len", 10)) ? FA.store.get("gym-len", 10) : 10;
+    const speedMode = !!FA.store.get("gym-speed", false);
     const today = FA.daily ? FA.daily.today() : 0, goal = FA.daily ? FA.daily.goal() : 0, streak = FA.daily ? FA.daily.streak() : 0;
     const roadmap = FA.store.get("roadmap", {}) || {};
     const suggestLv = { B1: "A2", B2: "B1", C1: "B2" }[roadmap.target || "B2"] || "B1";
     app.innerHTML = `
-      <div class="page"><div class="container narrow">
+      <div class="page"><div class="container">
         <div class="crumbs"><a href="#/">← Luyện đề</a> / Ôn tập</div>
-        <section class="gym-hero">
+        <section class="card gym-hero">
           <div style="flex:1;min-width:230px">
             <span class="eyebrow">Ôn tập nhanh</span>
             <h1 class="page-title">⚡ Mỗi ngày một hiệp ngắn</h1>
-            <p class="page-sub mb-0">Không bấm giờ — chọn xong biết ngay đúng sai và vì sao. Câu sai tự vào <b>Sổ câu sai</b>; ôn lại đúng thì tự gỡ ra.</p>
+            <p class="page-sub mb-0">Chọn chế độ thư thả hoặc phản xạ 15s/câu — làm xong biết ngay giải thích. Câu sai tự vào <b>Sổ câu sai</b>; ôn lại đúng sẽ tự gỡ.</p>
           </div>
           ${FA.daily ? `<div class="gym-goal">
             <div class="ring" style="--p:${goal ? Math.min(100, Math.round((today / goal) * 100)) : 0}" data-label="${today}"></div>
@@ -2095,24 +2136,40 @@
     const body = app.querySelector("#gymBody");
     if (!wrongMode) {
       body.innerHTML = `
-        <div class="row mb-2" style="gap:8px"><span class="muted" style="font-size:.9rem">Số câu mỗi hiệp:</span>
-          ${[10, 20].map((n) => `<button type="button" class="chip ${n === len ? "active" : ""}" data-len="${n}">${n} câu</button>`).join("")}</div>
+        <div class="card gym-prefs mb-3">
+          <div class="row" style="gap:8px">
+            <span class="muted" style="font-size:.88rem;font-weight:600">Số câu:</span>
+            ${[5, 10, 20].map((n) => `<button type="button" class="chip ${n === len ? "active" : ""}" data-len="${n}">${n} câu</button>`).join("")}
+          </div>
+          <div class="row" style="gap:8px">
+            <span class="muted" style="font-size:.88rem;font-weight:600">Chế độ:</span>
+            <button type="button" class="chip ${!speedMode ? "active" : ""}" data-speed="0">🧘 Thư thả</button>
+            <button type="button" class="chip ${speedMode ? "active" : ""}" data-speed="1">⚡ Phản xạ (15s/câu)</button>
+          </div>
+        </div>
         <h3 class="gym-h">Câu hỏi từ đề thi</h3>
-        <div class="gym-srcs">${GYM_SRC.map(([k, ic, n, d]) => `<button type="button" class="card gym-src" data-src="${k}"><span class="gym-src-ic">${ic}</span><div><b>${n}</b><span>${d}</span><span class="gym-n">${gymPool(k).length.toLocaleString("vi-VN")} câu</span></div></button>`).join("")}</div>
+        <div class="gym-srcs">${GYM_SRC.map(([k, ic, n, d]) => `<button type="button" class="card gym-src" data-src="${k}" data-sk="${k === "mix" ? "grammar" : k}"><span class="gym-src-ic">${ic}</span><div><b>${n}</b><span>${d}</span><span class="gym-n">${gymPool(k).length.toLocaleString("vi-VN")} câu</span></div></button>`).join("")}</div>
         ${VOCAB_LV.length ? `<h3 class="gym-h">Từ vựng theo cấp độ CEFR <span class="muted" style="font-weight:400;font-size:.88rem">· chọn nghĩa đúng của từ</span></h3>
         <div class="gym-lvs">${VOCAB_LV.map((d) => `<button type="button" class="gym-lv ${d.en === suggestLv ? "sug" : ""}" data-deck="${d.id}"><b>${d.emoji} ${esc(d.en)}</b><span>${d.n.toLocaleString("vi-VN")} từ</span>${d.en === suggestLv ? `<em>Gợi ý</em>` : ""}</button>`).join("")}</div>` : ""}
         <div class="gym-links">
           <a href="grammar.html">📘 Chưa chắc lý thuyết? Học ngữ pháp A1–C2 →</a>
           <a href="flashcards.html">🃏 Học thẻ từ vựng & ôn từ khó →</a>
-          <a href="#/">⚡ Sẵn sàng làm cả đề? Vào Luyện đề →</a>
+          <a href="tips.html">💡 Xem 20 mẹo thi thực chiến →</a>
         </div>`;
       body.querySelectorAll("[data-len]").forEach((b) => (b.onclick = () => { FA.store.set("gym-len", +b.dataset.len); viewGym(false); }));
-      body.querySelectorAll("[data-src]").forEach((b) => (b.onclick = () => gymSession(FA.shuffle(gymPool(b.dataset.src)).slice(0, len), false, body)));
+      body.querySelectorAll("[data-speed]").forEach((b) => (b.onclick = () => { FA.store.set("gym-speed", b.dataset.speed === "1"); viewGym(false); }));
+      body.querySelectorAll("[data-src]").forEach((b) => (b.onclick = () => {
+        const src = b.dataset.src;
+        gymSession(FA.shuffle(gymPool(src)).slice(0, len), false, body, { speed: speedMode, replayFn: () => gymSession(FA.shuffle(gymPool(src)).slice(0, len), false, body, { speed: speedMode }) });
+      }));
       body.querySelectorAll("[data-deck]").forEach((b) => (b.onclick = async () => {
         b.disabled = true;
         const old = b.innerHTML;
         b.innerHTML = "<b>⏳ Đang tải…</b>";
-        try { const deck = await loadVocabDeck(b.dataset.deck); if (view === "gym") gymSession(vocabItems(deck, len), false, body); }
+        try {
+          const deck = await loadVocabDeck(b.dataset.deck);
+          if (view === "gym") gymSession(vocabItems(deck, len), false, body, { speed: speedMode, replayFn: () => gymSession(vocabItems(deck, len), false, body, { speed: speedMode }) });
+        }
         catch (e) { FA.toast("Không tải được bộ từ — kiểm tra mạng rồi thử lại."); b.disabled = false; b.innerHTML = old; }
       }));
     } else {
@@ -2129,7 +2186,7 @@
           <div class="row mb-2"><button class="btn btn-primary" id="reviewAll">Ôn lại ${Math.min(len, list.length)} câu${kind ? " " + esc(kind) : ""}</button><div class="spacer"></div><button class="btn btn-ghost btn-sm" id="clearAll">Xóa hết</button></div>
           ${list.map(wrongCard).join("")}`;
         body.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => { kind = gymKind = b.dataset.kind; draw(); }));
-        body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(list.slice()).slice(0, len), true, body);
+        body.querySelector("#reviewAll").onclick = () => gymSession(FA.shuffle(list.slice()).slice(0, len), true, body, { speed: speedMode });
         body.querySelector("#clearAll").onclick = async () => { if (await FA.confirm("Xóa toàn bộ Sổ câu sai?", { title: "Xóa Sổ câu sai", okText: "Xóa hết", danger: true })) { FA.store.set("wrongbook", []); viewGym(true); } };
         body.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { FA.removeWrong(b.dataset.del); viewGym(true); }));
       };
@@ -2146,14 +2203,67 @@
     if ((m = id.match(/-p(\d+)-i(\d+)$/))) return `Câu ${+m[2] + 1}: ${q}`;
     return q;
   }
-  function gymSession(items, fromWrong, body) {
+  function gymSession(items, fromWrong, body, opts) {
+    opts = opts || {};
     view = "";
-    let i = 0, correct = 0, chosen = null;
+    let i = 0, correct = 0, chosen = null, combo = 0, maxCombo = 0, timedOut = false;
+    let qTimer = null;
+    const stopQTimer = () => { if (qTimer) { clearInterval(qTimer); qTimer = null; } };
+    const endSession = () => { stopQTimer(); document.removeEventListener("keydown", onKey); FA.stopSpeak(); };
+    cleanup.push(endSession);
+
+    const pickAnswer = (k, isTimeout) => {
+      if (chosen != null) return;
+      stopQTimer();
+      const it = items[i];
+      chosen = k;
+      timedOut = !!isTimeout;
+      FA.daily.add(FA.daily.PTS.item);
+      if (chosen === it.a) {
+        correct++;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        if (fromWrong) FA.removeWrong(it.id);
+      } else {
+        combo = 0;
+        FA.addWrong(it);
+      }
+      draw();
+    };
+    const nextQ = () => { stopQTimer(); FA.stopSpeak(); i++; chosen = null; timedOut = false; draw(); };
+    const onKey = (e) => {
+      if (e.target && e.target.matches && e.target.matches("input,textarea,select")) return;
+      if (i >= items.length) return;
+      if (chosen == null) {
+        const map = { 1: 0, 2: 1, 3: 2, 4: 3, a: 0, b: 1, c: 2, d: 3 };
+        const idx = map[e.key.toLowerCase()];
+        if (idx != null && idx < items[i].o.length) pickAnswer(idx, false);
+      } else if (e.key === "Enter" || e.key === "ArrowRight") {
+        e.preventDefault();
+        nextQ();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+
     const draw = () => {
+      stopQTimer();
       if (i >= items.length) {
-        body.innerHTML = `<div class="card center"><div class="ring-lg" style="--p:${Math.round((correct / items.length) * 100)};margin:0 auto"><div><b>${correct}</b><span>/${items.length}</span></div></div>
-          <h2 class="mt-2">${correct === items.length ? "Hoàn hảo! 🎉" : "Xong một hiệp! 💪"}</h2><p class="muted">${fromWrong ? "Câu đúng đã được gỡ khỏi Sổ câu sai." : "Câu sai đã được lưu vào Sổ câu sai."}</p>
-          <div class="row" style="justify-content:center"><a class="btn btn-primary" href="${fromWrong ? "#/gym/wrong" : "#/gym"}" id="again">Tập tiếp</a></div></div>`;
+        endSession();
+        const pct = items.length ? Math.round((correct / items.length) * 100) : 0;
+        body.innerHTML = `<div class="card center"><div class="ring-lg" style="--p:${pct};margin:0 auto"><div><b>${correct}</b><span>/${items.length}</span></div></div>
+          <h2 class="mt-2">${correct === items.length ? "Hoàn hảo! 🎉" : pct >= 80 ? "Rất tốt! 🔥" : "Xong một hiệp! 💪"}</h2>
+          <div class="row mt-1 mb-2" style="justify-content:center;gap:8px">
+            <span class="pill green">Độ chính xác ${pct}%</span>
+            ${maxCombo >= 2 ? `<span class="pill hot">🔥 Combo cao nhất ×${maxCombo}</span>` : ""}
+            ${opts.speed ? `<span class="pill">⚡ Chế độ phản xạ</span>` : ""}
+          </div>
+          <p class="muted">${fromWrong ? "Câu đúng đã được gỡ khỏi Sổ câu sai." : "Câu sai đã được lưu vào Sổ câu sai để ôn lại."}</p>
+          <div class="row" style="justify-content:center;gap:10px">
+            ${opts.replayFn ? `<button type="button" class="btn btn-primary" id="replaySame">⚡ Làm hiệp mới ngay</button>` : ""}
+            <a class="btn ${opts.replayFn ? "btn-outline" : "btn-primary"}" href="${fromWrong ? "#/gym/wrong" : "#/gym"}" id="again">Về trang Ôn tập</a>
+          </div></div>`;
+        const rep = body.querySelector("#replaySame");
+        if (rep && opts.replayFn) rep.onclick = () => opts.replayFn();
         body.querySelector("#again").onclick = (e) => { e.preventDefault(); viewGym(fromWrong); };
         if (items.length >= 5 && correct / items.length >= 0.9 && FA.celebrate) FA.celebrate({ icon: "🎆", title: `Xuất sắc! Đúng ${correct}/${items.length} câu`, sub: correct === items.length ? "Không sai câu nào — hoàn hảo!" : "Đạt từ 90% trở lên — tiếp tục nhé!", confetti: true });
         return;
@@ -2161,8 +2271,14 @@
       const it = items[i];
       const ans = chosen != null;
       body.innerHTML = `
+        <div class="row mb-1" style="gap:8px">
+          <button type="button" class="btn btn-ghost btn-sm" id="gExit">← Đổi nguồn</button>
+          <div class="spacer"></div>
+          ${combo >= 2 ? `<span class="pill hot">🔥 Combo ×${combo}</span>` : ""}
+          ${opts.speed && !ans ? `<span class="timer" id="gSec" style="padding:4px 10px;min-width:58px;font-size:.9rem">15s</span>` : ""}
+        </div>
         <div class="progress"><i style="width:${(i / items.length) * 100}%"></i></div>
-        <div class="progress-meta"><span>Câu ${i + 1}/${items.length}</span><span>Đúng ${correct}</span></div>
+        <div class="progress-meta"><span>Câu ${i + 1}/${items.length}</span><span>Đúng ${correct} · Phím 1–4 chọn, Enter đi tiếp</span></div>
         <div class="q-card">
           <div class="q-part">${esc(it.src)}</div>
           ${it.instr ? `<div class="q-instr">${esc(it.instr)}</div>` : ""}
@@ -2170,21 +2286,25 @@
           ${it.script ? `<div class="audio-box"><button class="play-btn" id="gplay">▶</button><div class="info"><b>Nghe đoạn hội thoại</b><br>Ôn tập: nghe không giới hạn</div></div>` : ""}
           <div class="q-text">${esc(it.q)}</div>
           ${it.o.map((o, k) => `<button class="opt ${ans ? (k === it.a ? "correct" : k === chosen ? "wrong" : "") : ""}" data-k="${k}" ${ans ? "disabled" : ""}><span class="key">${"ABCD"[k]}</span>${esc(o)}</button>`).join("")}
-          ${ans ? `<div class="explain"><b>${chosen === it.a ? "✅ Chính xác!" : "❌ Chưa đúng."}</b> ${esc(it.e)}</div>${it.script ? `<div class="transcript">${transcriptHTML(it.script)}</div>` : ""}
+          ${ans ? `<div class="explain"><b>${timedOut ? "⏰ Hết giờ!" : chosen === it.a ? "✅ Chính xác!" : "❌ Chưa đúng."}</b> ${esc(it.e)}</div>${it.script ? `<div class="transcript">${transcriptHTML(it.script)}</div>` : ""}
           <div class="row mt-1"><div class="spacer"></div>${FA.reportBtn({ skill: (it.src.split("·")[0] || "").trim().toLowerCase(), testId: String(it.id).split("-")[0], testTitle: it.src, ref: gymRef(it) }, "Báo lỗi câu này")}</div>` : ""}
         </div>
         ${ans ? `<div class="exam-nav"><span></span><button class="btn btn-primary" id="gnext">${i < items.length - 1 ? "Câu tiếp →" : "Xem kết quả"}</button></div>` : ""}`;
+      body.querySelector("#gExit").onclick = () => { endSession(); viewGym(fromWrong); };
       const gp = body.querySelector("#gplay");
       if (gp) gp.onclick = () => FA.speak(it.script).catch(() => FA.toast("Trình duyệt không hỗ trợ giọng đọc."));
-      body.querySelectorAll(".opt[data-k]").forEach((b) => (b.onclick = () => {
-        chosen = +b.dataset.k;
-        FA.daily.add(FA.daily.PTS.item);
-        if (chosen === it.a) { correct++; if (fromWrong) FA.removeWrong(it.id); }
-        else FA.addWrong(it);
-        draw();
-      }));
+      body.querySelectorAll(".opt[data-k]").forEach((b) => (b.onclick = () => pickAnswer(+b.dataset.k, false)));
       const gn = body.querySelector("#gnext");
-      if (gn) gn.onclick = () => { FA.stopSpeak(); i++; chosen = null; draw(); };
+      if (gn) gn.onclick = nextQ;
+      if (opts.speed && !ans) {
+        let left = 15;
+        const secEl = body.querySelector("#gSec");
+        qTimer = setInterval(() => {
+          left--;
+          if (secEl) { secEl.textContent = left + "s"; secEl.classList.toggle("warn", left <= 5); }
+          if (left <= 0) pickAnswer(-1, true);
+        }, 1000);
+      }
     };
     draw();
   }
