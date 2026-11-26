@@ -1647,8 +1647,9 @@ a.card:active, button.card:active {
   box-shadow: 6px 6px 0 #9a3412;
 }
 @media (min-width: 901px) {
-  .demo-card { transform: rotate(1.2deg); }
+  .demo-card { transform: rotate(1.2deg); padding-bottom: 34px; }
   .demo-card:hover { transform: rotate(0deg) translateY(-2px); box-shadow: 8px 8px 0 var(--orange-500); }
+  .demo-result { bottom: -46px; }
 }
 .demo-result {
   border: 2px solid var(--ink);
@@ -1849,8 +1850,8 @@ mark.rd-hl:hover { background: #fde047; }
 .speak-ring[data-phase="idle"] { --ring-c: var(--orange-500); }
 .speak-ring.warn { --ring-c: var(--red); }
 .speak-ring .big-timer {
-  width: 66px; height: 66px; border-radius: 50%; background: var(--surface);
-  display: grid; place-items: center; font-size: 1.2rem !important; margin: 0;
+  width: 66px; height: 66px; min-width: 0 !important; padding: 0; border-radius: 50%; background: var(--surface);
+  display: grid; place-items: center; font-size: 1.15rem !important; line-height: 1; margin: 0;
   border: 1.5px solid var(--line-2);
 }
 
@@ -1975,8 +1976,13 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 .tips-hero-side { display: flex; flex-direction: column; align-items: center; }
 .tips-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
 @media (max-width: 720px) {
-  .tips-hero { grid-template-columns: 1fr; }
-  .tips-bars { grid-template-columns: repeat(2, 1fr); }
+  .tips-hero { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
+  .tips-hero-side { flex-direction: row; justify-content: space-between; width: 100%; border-top: 1px dashed var(--line-2); padding-top: 12px; }
+  .tips-hero-side .ring-lg { width: 76px; height: 76px; }
+  .tips-hero-side .ring-lg > div { width: 60px; height: 60px; }
+  .tips-hero-side .ring-lg b { font-size: 1.2rem; }
+  .tips-hero-side .ring-lg span { font-size: .68rem; }
+  .tips-bars { grid-template-columns: repeat(2, 1fr); gap: 6px; }
 }
 .tip-mini-bar {
   background: var(--surface); border: 1px solid var(--sk-bd, var(--line)); border-radius: 10px;
@@ -2051,20 +2057,20 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 .tree-row.left .tip-card.done { border-color: var(--green); border-right-width: 5px; }
 .tip-card .tip-mission { margin-top: auto; }
 
-/* Mobile & Tablet hẹp: thân cây dịch sang trái, mọi nhánh mọc sang phải gọn gàng */
+/* Mobile & Tablet hẹp: thân cây dịch sang trái, nút tròn neo thẳng hàng với đầu thẻ cho gọn đẹp */
 @media (max-width: 860px) {
-  .tips-tree::before { left: 20px; transform: none; }
-  .tree-stage { justify-content: flex-start; padding-left: 44px; }
-  .tree-row { grid-template-columns: 42px 1fr; }
-  .tree-node { grid-column: 1; width: 34px; height: 34px; font-size: .84rem; }
+  .tips-tree::before { left: 17px; transform: none; }
+  .tree-stage { justify-content: flex-start; padding-left: 42px; }
+  .tree-row { grid-template-columns: 36px 1fr; align-items: start; }
+  .tree-node { grid-column: 1; width: 32px; height: 32px; font-size: .82rem; margin-top: 16px; }
   .tree-row.left .tip-card,
   .tree-row.right .tip-card {
-    grid-column: 2; margin: 0 0 0 12px;
-    border-right-width: 1.5px; border-left: 5px solid var(--sk, var(--orange-500));
+    grid-column: 2; margin: 0 0 0 10px; padding: 14px 14px;
+    border-right-width: 1.5px; border-left: 4px solid var(--sk, var(--orange-500));
   }
-  .tree-row.left .tip-card.done { border-right-width: 1.5px; border-left: 5px solid var(--green); }
+  .tree-row.left .tip-card.done { border-right-width: 1.5px; border-left: 4px solid var(--green); }
   .tree-row.left .tip-card::after,
-  .tree-row.right .tip-card::after { left: -14px; right: auto; width: 14px; }
+  .tree-row.right .tip-card::after { left: -12px; right: auto; top: 31px; transform: none; width: 12px; }
 }
 .tip-card.done { border-color: var(--green); border-left-width: 5px; }
 .tip-num { font-family: var(--font-head); font-weight: 800; font-size: .88rem; color: var(--sk); }

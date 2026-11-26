@@ -469,13 +469,29 @@
         u.onboundary = (ev) => {
           if (gen === speakGen && typeof ev.charIndex === "number") report(((doneChars + ev.charIndex) / totalChars) * 100);
         };
+        let settled = false, startTimer = null, endTimer = null;
         const advance = (delay) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(startTimer);
+          clearTimeout(endTimer);
           doneChars += ln.t ? ln.t.length : 0;
           report((doneChars / totalChars) * 100);
           setTimeout(next, delay);
         };
+        // Bảo vệ chống treo trên iOS Safari / Chrome mobile: nếu trình duyệt im lặng chặn TTS (không bắn onstart/onend) thì tự chuyển tiếp
+        const maxMs = Math.max(8000, Math.min(45000, (ln.t ? ln.t.length : 40) * 150));
+        u.onstart = () => {
+          clearTimeout(startTimer);
+          endTimer = setTimeout(() => advance(50), maxMs);
+        };
         u.onend = () => advance(350);
         u.onerror = () => advance(50);
+        startTimer = setTimeout(() => {
+          if (!settled && !speechSynthesis.speaking) advance(50);
+          else if (!settled) endTimer = setTimeout(() => advance(50), maxMs);
+        }, 2500);
+        try { speechSynthesis.resume(); } catch (e) {}
         speechSynthesis.speak(u);
       };
       next();
