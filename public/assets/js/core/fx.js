@@ -28,21 +28,50 @@
     return u.pathname !== location.pathname || u.search !== location.search;
   }
 
-  // Trình duyệt không có hiệu ứng gốc: mờ ra rồi mới chuyển
-  if (!nativeVT && !lite) {
-    window.addEventListener("click", function (e) {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest && e.target.closest("a[href]");
-      if (!internal(a)) return;
+  // Overlay loading con ếch FlashAptis khi chuyển trang (tránh cảm giác đứng hình / thời gian chết)
+  var loaderEl = null, loaderTimer = null;
+  function ensureLoader() {
+    if (loaderEl || !document.body) return loaderEl;
+    var el = document.createElement("div");
+    el.id = "faLoader";
+    el.className = "fa-loader";
+    el.setAttribute("aria-live", "polite");
+    el.innerHTML = '<div class="fa-loader-box"><div class="fa-loader-ring"><img src="assets/img/brand/mascot-192.webp" width="64" height="64" alt=""></div><div class="fa-loader-txt">Đang tải…</div></div>';
+    document.body.appendChild(el);
+    loaderEl = el;
+    return el;
+  }
+  function showLoader(msg) {
+    var el = ensureLoader();
+    if (!el) return;
+    var t = el.querySelector(".fa-loader-txt");
+    if (t) t.textContent = msg || "Đang tải…";
+    el.classList.add("show");
+    clearTimeout(loaderTimer);
+    loaderTimer = setTimeout(hideLoader, 6000); // tự ẩn nếu người dùng hủy điều hướng
+  }
+  function hideLoader() {
+    clearTimeout(loaderTimer);
+    if (loaderEl) loaderEl.classList.remove("show");
+  }
+  window.FA_LOADER = { show: showLoader, hide: hideLoader };
+
+  // Bấm link nội bộ sang trang khác → hiện ngay loading con ếch (kể cả khi trình duyệt có View Transitions)
+  window.addEventListener("click", function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (!internal(a)) return;
+    showLoader("Đang mở trang…");
+    if (!nativeVT && !lite) {
       e.preventDefault();
       d.classList.add("fx-leaving");
-      setTimeout(function () { location.href = a.href; }, 120);
-      // bị hủy (vd. hộp "Bạn đang làm bài, vẫn thoát?") → hiện lại trang
-      setTimeout(function () { d.classList.remove("fx-leaving"); }, 900);
-    });
-  }
-  // quay lại bằng nút Back (trang lấy từ bộ nhớ đệm) → không để trang bị mờ
-  window.addEventListener("pageshow", function () { d.classList.remove("fx-leaving"); });
+      setTimeout(function () { location.href = a.href; }, 90);
+      setTimeout(function () { d.classList.remove("fx-leaving"); hideLoader(); }, 900);
+    }
+  });
+  // quay lại bằng nút Back (trang lấy từ bộ nhớ đệm) hoặc tải xong → ẩn loading ngay
+  window.addEventListener("pageshow", function () { d.classList.remove("fx-leaving"); hideLoader(); });
+  window.addEventListener("DOMContentLoaded", hideLoader);
 
   // Tải trước trang khi rê chuột / chạm vào link (bỏ qua khi tiết kiệm dữ liệu)
   if (!c.saveData) {
