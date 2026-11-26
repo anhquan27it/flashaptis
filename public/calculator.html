@@ -34,7 +34,7 @@
         <div>
           <span class="eyebrow">Overall (ước lượng)</span>
           <div class="row"><span class="cefr-badge" id="ovLv">A0</span><span class="muted" id="ovNext"></span></div>
-          <p class="muted mt-1 mb-0" style="font-size:.88rem">Overall = Listening + Reading + Speaking + Writing (tối đa 200). Điểm Grammar & Vocabulary <b>không cộng vào tổng</b>, chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc. Kết quả ở đây chỉ mang tính tham khảo.</p>
+          <p class="muted mt-1 mb-0" style="font-size:.88rem">Overall = Listening + Reading + Speaking + Writing (tối đa 200). Điểm Grammar & Vocabulary <b>không cộng vào tổng</b>, chỉ được xét khi điểm một kỹ năng nằm sát ngưỡng giữa hai bậc. Lưu ý: Overall CEFR chính thức của British Council không suy ra trực tiếp từ tổng 0–200 mà xét kết hợp từng kỹ năng; kết quả ở đây chỉ là ước lượng tham khảo.</p>
         </div>
       </div>
     </div>
@@ -55,32 +55,89 @@
   <script>
     FA.renderShell("calculator");
     const SK = [["listening", "🎧 Listening"], ["reading", "📖 Reading"], ["speaking", "🎙️ Speaking"], ["writing", "✍️ Writing"]];
-    let saved = FA.store.get("calc", { listening: 30, reading: 34, speaking: 28, writing: 30 });
+    const clampInt = (v, fb) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.max(0, Math.min(50, n)) : fb; };
+    const def = { listening: 30, reading: 34, speaking: 28, writing: 30 };
+    let saved = Object.assign({}, def, FA.store.get("calc", def));
+    SK.forEach(([k]) => { saved[k] = clampInt(saved[k], def[k]); });
+    const invalid = new Set();
     const calc = document.getElementById("calc");
-    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" value="${saved[k]}" data-k="${k}"><input class="inp" type="number" min="0" max="50" value="${saved[k]}" data-n="${k}"><span class="lv" data-lv="${k}"></span></div>`).join("");
+    calc.innerHTML = SK.map(([k, n]) => `<div class="calc-row"><b>${n}</b><input type="range" min="0" max="50" step="1" value="${saved[k]}" data-k="${k}" aria-label="${n} (thanh trượt)"><input class="inp" type="number" min="0" max="50" step="1" inputmode="numeric" value="${saved[k]}" data-n="${k}" aria-label="${n} (ô nhập)"><span class="lv" data-lv="${k}"></span><div class="calc-err" data-err="${k}" role="alert"></div></div>`).join("");
     function nextGap(skill, score) {
       const t = FA.CEFR[skill].slice().reverse(); // tăng dần
       const nx = t.find(([min]) => score < min);
       return nx ? `còn ${nx[0] - score} điểm lên ${nx[1]}` : "đã đạt bậc cao nhất";
     }
+    function parseScore(raw) {
+      const s = String(raw == null ? "" : raw).trim();
+      if (!s) return { ok: false, msg: "Chưa nhập điểm (nhập số nguyên 0–50)." };
+      if (!/^\d+$/.test(s)) return { ok: false, msg: "Chỉ nhập số nguyên từ 0 đến 50." };
+      const v = Number(s);
+      if (v < 0 || v > 50) return { ok: false, msg: "Điểm phải nằm trong khoảng 0–50." };
+      return { ok: true, v };
+    }
+    function setFieldErr(k, msg) {
+      const inp = calc.querySelector(`[data-n="${k}"]`);
+      const err = calc.querySelector(`[data-err="${k}"]`);
+      if (msg) {
+        invalid.add(k);
+        inp.classList.add("inp-err");
+        inp.setAttribute("aria-invalid", "true");
+        err.textContent = msg;
+      } else {
+        invalid.delete(k);
+        inp.classList.remove("inp-err");
+        inp.removeAttribute("aria-invalid");
+        err.textContent = "";
+      }
+    }
     function update() {
       let total = 0;
       SK.forEach(([k]) => {
-        const v = Math.max(0, Math.min(50, +calc.querySelector(`[data-k="${k}"]`).value || 0));
-        saved[k] = v; total += v;
-        const lv = FA.toCEFR(k, v);
         const el = calc.querySelector(`[data-lv="${k}"]`);
-        el.textContent = lv;
+        if (invalid.has(k)) {
+          el.textContent = "—";
+          el.title = "";
+          return;
+        }
+        const v = saved[k];
+        total += v;
+        el.textContent = FA.toCEFR(k, v);
         el.title = nextGap(k, v);
       });
+      if (invalid.size > 0) {
+        document.getElementById("ovScore").textContent = "—";
+        document.getElementById("ovRing").style.setProperty("--p", 0);
+        document.getElementById("ovLv").textContent = "—";
+        document.getElementById("ovNext").textContent = "· Nhập số nguyên hợp lệ (0–50) cho cả 4 kỹ năng để tính Overall.";
+        return;
+      }
       FA.store.set("calc", saved);
       document.getElementById("ovScore").textContent = total;
       document.getElementById("ovRing").style.setProperty("--p", Math.round((total / 200) * 100));
       document.getElementById("ovLv").textContent = FA.toCEFR("overall", total);
       document.getElementById("ovNext").textContent = "· " + nextGap("overall", total) + " · " + SK.map(([k, n]) => `${n.split(" ")[1]}: ${nextGap(k, saved[k])}`).join(" · ");
     }
-    calc.querySelectorAll("[data-k]").forEach((r) => (r.oninput = () => { calc.querySelector(`[data-n="${r.dataset.k}"]`).value = r.value; update(); }));
-    calc.querySelectorAll("[data-n]").forEach((n) => (n.oninput = () => { calc.querySelector(`[data-k="${n.dataset.n}"]`).value = n.value; update(); }));
+    calc.querySelectorAll("[data-k]").forEach((r) => (r.oninput = () => {
+      const k = r.dataset.k;
+      const v = clampInt(r.value, 0);
+      saved[k] = v;
+      calc.querySelector(`[data-n="${k}"]`).value = v;
+      setFieldErr(k, "");
+      update();
+    }));
+    calc.querySelectorAll("[data-n]").forEach((n) => (n.oninput = () => {
+      const k = n.dataset.n;
+      const parsed = parseScore(n.value);
+      if (!parsed.ok) {
+        setFieldErr(k, parsed.msg);
+        update();
+        return;
+      }
+      saved[k] = parsed.v;
+      calc.querySelector(`[data-k="${k}"]`).value = parsed.v;
+      setFieldErr(k, "");
+      update();
+    }));
     document.getElementById("fromHist").onclick = () => {
       const all = FA.store.get("attempts", {});
       let filled = 0;
@@ -92,9 +149,11 @@
           if (rec && (!best || rec.at > best.at)) best = rec;
         });
         if (best) {
-          saved[k] = best.score;
-          calc.querySelector(`[data-k="${k}"]`).value = best.score;
-          calc.querySelector(`[data-n="${k}"]`).value = best.score;
+          const v = clampInt(best.score, 0);
+          saved[k] = v;
+          calc.querySelector(`[data-k="${k}"]`).value = v;
+          calc.querySelector(`[data-n="${k}"]`).value = v;
+          setFieldErr(k, "");
           filled++;
         }
       });
@@ -103,8 +162,13 @@
       FA.toast(`Đã nạp điểm gần nhất của ${filled}/4 kỹ năng.`);
     };
     window.addEventListener("fa:synced", () => {
-      saved = FA.store.get("calc", saved);
-      SK.forEach(([k]) => { calc.querySelector(`[data-k="${k}"]`).value = saved[k]; calc.querySelector(`[data-n="${k}"]`).value = saved[k]; });
+      const next = FA.store.get("calc", saved);
+      SK.forEach(([k]) => {
+        saved[k] = clampInt(next[k], saved[k]);
+        calc.querySelector(`[data-k="${k}"]`).value = saved[k];
+        calc.querySelector(`[data-n="${k}"]`).value = saved[k];
+        setFieldErr(k, "");
+      });
       update();
     });
     update();

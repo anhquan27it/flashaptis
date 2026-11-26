@@ -415,6 +415,22 @@ test("Speaking chế độ tự chấm (không AI) hiển thị đúng giao di�
   assert.match(reviewEl.innerHTML, /<b>AI chấm: 4\.5\/5<\/b> — Trả lời tốt\./);
   assert.match(reviewEl.innerHTML, /0\/5.*Chưa hoàn thành/);
   assert.match(reviewEl.innerHTML, /AI chưa chấm được/);
+  assert.match(reviewEl.innerHTML, /Tự chấm Speaking/, "AI chấm dở vẫn hiện phần tự chấm bù");
+
+  // Lượt AI đã chấm xong toàn bộ câu trả lời → ẩn hẳn phần tự chấm Speaking
+  s2.FA.saveAttempt("speaking", "s1", 35, {
+    cefr: "B2",
+    ans: {
+      rates: [4.5, 0, 0, 0],
+      responses: [true, false, false, false, false, false, false, false, false, false],
+      trans: ["Hello everyone, my family has four people."],
+      ai: { items: { 0: { score: 4.5, comment: "Trả lời tốt." } }, model: "test-model" },
+    },
+  });
+  loadScripts(s2, ["public/assets/js/pages/exam.js"]);
+  replayBtn.onclick();
+  assert.match(reviewEl.innerHTML, /<b>AI chấm: 4\.5\/5<\/b> — Trả lời tốt\./);
+  assert.ok(!reviewEl.innerHTML.includes("Tự chấm Speaking"), "AI đã chấm xong thì bỏ phần tự chấm Speaking");
 });
 
 test("Speaking thêm dấu câu và thay nhận xét AI bị mất dấu tiếng Việt", () => {
@@ -684,6 +700,24 @@ test("FA.roadmap: có dữ liệu Học ngữ pháp + Full Test thì thêm việ
   assert.equal(r.grammarN, 2);
   const r2 = FA.roadmap.compute(Object.assign({}, base, { grammarIndex: GI, grammarDone: {}, mockAvail: 2, mockDone: 1 }));
   assert.equal(r2.stages[3].tasks.find((x) => x.id === "mock").done, true);
+});
+
+test("FA.spell: nhận diện địa danh Việt Nam (Da Nang…) và hỗ trợ bỏ qua / hoàn tác", () => {
+  const s2 = createSandbox();
+  loadScripts(s2, ["public/assets/js/core/common.js", "public/assets/js/grading/spellcheck.js"]);
+  const sp = s2.FA.spell;
+  assert.equal(sp.isProperNoun("Da Nang", { kind: "Spelling", start: 0, end: 2, problem: "Da" }), true, "Da trong Da Nang đầu câu không bị báo lỗi");
+  assert.equal(sp.isProperNoun("Da Nang is a coastal city.", { kind: "Spelling", start: 0, end: 2, problem: "Da" }), true);
+  assert.equal(sp.isProperNoun("Ho Chi Minh City", { kind: "Spelling", start: 0, end: 2, problem: "Ho" }), true);
+  assert.equal(sp.isProperNoun("Helo world", { kind: "Spelling", start: 0, end: 4, problem: "Helo" }), false, "lỗi chính tả thật đầu câu vẫn bị bắt");
+  const issues = [{ kind: "Spelling", problem: "Bana" }];
+  sp.addIgnored("Bana");
+  assert.equal(sp.filterIgnored(issues).length, 0, "bỏ qua lọc lỗi ra khỏi danh sách");
+  sp.removeIgnored("Bana");
+  assert.equal(sp.filterIgnored(issues).length, 1, "hoàn tác khôi phục lại lỗi");
+  for (const r of FA_READING) {
+    assert.ok(r.parts.every((p) => !/^Part 5\b/.test(p.title)), `${r.id}: không được ghi Part 5 (Reading Aptis chỉ có 4 part)`);
+  }
 });
 
 if (process.exitCode) {

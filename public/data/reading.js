@@ -22,7 +22,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 2 · Text cohesion",
+        title: "Part 2 – Bài 1 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự để tạo thành đoạn văn hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         topic: "How to join the city library",
         first: "Joining the city library is quick and completely free.",
@@ -37,7 +37,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 3 · Text cohesion",
+        title: "Part 2 – Bài 2 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự để tạo thành câu chuyện hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         topic: "A lost wallet",
         first: "Last Saturday, Tom went to the market to buy some vegetables.",
@@ -52,7 +52,7 @@ window.FA_READING = [
       },
       {
         type: "opinion",
-        title: "Part 4 · Opinion matching",
+        title: "Part 3 · Opinion matching",
         instr: "Đọc ý kiến của 4 người về việc làm việc tại nhà. Ai có ý kiến nào? Chọn người phù hợp (một người có thể được chọn nhiều lần).",
         topic: "Working from home",
         people: [
@@ -73,7 +73,7 @@ window.FA_READING = [
       },
       {
         type: "heading",
-        title: "Part 5 · Long text comprehension",
+        title: "Part 4 · Long text comprehension",
         instr: "Đọc bài viết và chọn tiêu đề phù hợp nhất cho mỗi đoạn. Có 1 tiêu đề thừa.",
         topic: "Community gardens",
         headings: [
@@ -118,7 +118,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 2 · Text cohesion",
+        title: "Part 2 – Bài 1 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự. Câu đầu tiên đã cho sẵn.",
         topic: "Making a cup of tea",
         first: "Making a good cup of tea is easier than many people think.",
@@ -133,7 +133,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 3 · Text cohesion",
+        title: "Part 2 – Bài 2 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự. Câu đầu tiên đã cho sẵn.",
         topic: "Maria's language course",
         first: "Maria had always dreamed of studying English abroad.",
@@ -148,7 +148,7 @@ window.FA_READING = [
       },
       {
         type: "opinion",
-        title: "Part 4 · Opinion matching",
+        title: "Part 3 · Opinion matching",
         instr: "Đọc ý kiến của 4 người về mạng xã hội. Ai có ý kiến nào?",
         topic: "Social media",
         people: [
@@ -169,7 +169,7 @@ window.FA_READING = [
       },
       {
         type: "heading",
-        title: "Part 5 · Long text comprehension",
+        title: "Part 4 · Long text comprehension",
         instr: "Chọn tiêu đề phù hợp nhất cho mỗi đoạn. Có 1 tiêu đề thừa.",
         topic: "The four-day working week",
         headings: [
@@ -214,7 +214,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 2 · Text cohesion",
+        title: "Part 2 – Bài 1 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự để tạo thành đoạn văn hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         topic: "Using a public bike-sharing app",
         first: "Many large cities now offer shared bicycles for short journeys.",
@@ -229,7 +229,7 @@ window.FA_READING = [
       },
       {
         type: "order",
-        title: "Part 3 · Text cohesion",
+        title: "Part 2 – Bài 2 · Text cohesion",
         instr: "Sắp xếp các câu theo đúng thứ tự để tạo thành câu chuyện hoàn chỉnh. Câu đầu tiên đã cho sẵn.",
         topic: "A power cut during dinner",
         first: "Last Friday evening, our family sat down for dinner when all the lights suddenly went out.",
@@ -244,7 +244,7 @@ window.FA_READING = [
       },
       {
         type: "opinion",
-        title: "Part 4 · Opinion matching",
+        title: "Part 3 · Opinion matching",
         instr: "Đọc ý kiến của 4 người về việc không dùng tiền mặt. Ai có ý kiến nào? Chọn người phù hợp.",
         topic: "Cashless payments",
         people: [
@@ -265,7 +265,7 @@ window.FA_READING = [
       },
       {
         type: "heading",
-        title: "Part 5 · Long text comprehension",
+        title: "Part 4 · Long text comprehension",
         instr: "Đọc bài viết về mái nhà xanh ở đô thị và chọn tiêu đề phù hợp nhất cho mỗi đoạn. Có 1 tiêu đề thừa.",
         topic: "Green roofs in cities",
         headings: [

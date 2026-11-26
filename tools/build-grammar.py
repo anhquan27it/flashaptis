@@ -130,7 +130,101 @@ def build_level(lv):
         if t["n"] != i + 1:
             raise SystemExit(f"{lv}: thứ tự chủ điểm lệch ở #{i + 1} ({t['title']})")
         t["id"] = f"{lv.lower()}-{t['n']:02d}"
+    apply_patches(topics)
     return topics
+
+
+# Hiệu đính các câu diễn đạt quá tuyệt đối / mâu thuẫn trong PDF gốc (được bảo toàn khi chạy lại build:grammar)
+CONTENT_PATCHES = {
+    "a1-02": [
+        (
+            "Đứng sau giới từ: Mọi giới từ đều đòi hỏi dạng tân ngữ ở phía sau, không có ngoại lệ. (This letter is for you. / Come with us.)",
+            "Đứng sau giới từ: Khi đại từ nhân xưng làm bổ ngữ của giới từ, luôn dùng dạng tân ngữ (me, you, him, her, it, us, them); ngoài ra giới từ cũng có thể đi với danh từ hoặc V-ing. (This letter is for you. / Come with us.)",
+        ),
+    ],
+    "a1-07": [
+        (
+            "Nói về nghề nghiệp: Sau to be, nghề nghiệp của một người luôn cần a/an. (She is an engineer.)",
+            "Nói về nghề nghiệp: Sau to be, danh từ đếm được số ít chỉ nghề nghiệp thông thường cần a/an (She is an engineer. / He is a teacher.). Lưu ý: một số chức danh hoặc vai trò duy nhất đôi khi không cần mạo từ (She is president of the club.).",
+        ),
+        (
+            "Nghề nghiệp của một người luôn đi với a/an, khác với tiếng Việt.",
+            "Danh từ đếm được số ít chỉ nghề nghiệp thông thường đi với a/an, khác với tiếng Việt.",
+        ),
+        (
+            "Chưa đúng: She is engineer. → Đã sửa: She is an engineer. — Nghề nghiệp số ít sau to be bắt buộc có mạo từ.",
+            "Chưa đúng: She is engineer. → Đã sửa: She is an engineer. — Danh từ đếm được số ít chỉ nghề nghiệp thông thường sau to be cần mạo từ a/an (chỉ một số chức danh duy nhất như president of the club đôi khi lược mạo từ).",
+        ),
+    ],
+    "a2-05": [
+        (
+            "Lời hứa, lời đề nghị, lời mời: Những sắc thái này chỉ dùng will, không dùng be going to. (I'll help you. /Shall I carry that?)",
+            "Lời hứa, lời đề nghị, lời mời: Thường dùng will cho lời hứa và đề nghị giúp đỡ (I'll help you.), dùng Shall I…? để đề nghị giúp (Shall I carry that?) và Shall we…? để gợi ý; không dùng be going to cho các sắc thái này.",
+        ),
+    ],
+    "a2-11": [
+        (
+            "Ghi nhớ: Tính từ ngắn thêm -est, tính từ dài dùng the most và luôn có mạo từ the.",
+            "Ghi nhớ: Tính từ ngắn thêm -est, tính từ dài dùng most và thường có mạo từ the trước danh từ.",
+        ),
+        (
+            "02. Thêm mạo từ the trước dạng so sánh nhất: Mạo từ the là thành phần bắt buộc, trừ khi đã có tính từ sở hữu đứng trước. (the biggest / my biggest mistake)",
+            "02. Thêm mạo từ the trước dạng so sánh nhất: Thường dùng the trước tính từ so sánh nhất bổ nghĩa cho danh từ (the tallest student); không dùng the khi đã có từ sở hữu (my biggest mistake) và có thể lược the ở một số cách dùng vị ngữ/trạng ngữ không có danh từ theo sau (Which is best? / Who runs fastest?).",
+        ),
+        (
+            "Chưa đúng: She is best student in our class. → Đã sửa: She is the best student in our class. — So sánh nhất luôn cần mạo từ the.",
+            "Chưa đúng: She is best student in our class. → Đã sửa: She is the best student in our class. — Tính từ so sánh nhất bổ nghĩa cho danh từ thường cần mạo từ the (trừ khi có từ sở hữu đứng trước).",
+        ),
+    ],
+    "b1-03": [
+        (
+            "Ago bắt buộc đi với quá khứ đơn; since then đi với hiện tại hoàn thành.",
+            "Ago xác định mốc quá khứ nên không dùng với hiện tại hoàn thành (thường đi với quá khứ đơn, hoặc quá khứ tiếp diễn); since then đi với hiện tại hoàn thành.",
+        ),
+        (
+            "Chưa đúng: She has left the office ten minutes ago. → Đã sửa: She left the office ten minutes ago. — Ago luôn đi với quá khứ đơn.",
+            "Chưa đúng: She has left the office ten minutes ago. → Đã sửa: She left the office ten minutes ago. — Ago xác định thời điểm trước hiện tại nên không dùng với hiện tại hoàn thành; thường đi với quá khứ đơn (và có thể đi với quá khứ tiếp diễn, vd: I was working here two years ago).",
+        ),
+    ],
+    "b1-10": [
+        (
+            "Sau giới từ: Mọi giới từ đều đòi hỏi V-ing ở phía sau, kể cả giới từ to. (I look forward to meeting you.)",
+            "Sau giới từ: Khi bổ ngữ của giới từ là động từ, thường dùng dạng V-ing, kể cả khi to là giới từ (phân biệt với to trong to-V như I want to meet you). Giới từ cũng có thể đi với danh từ hoặc đại từ (after class, with her). (I look forward to meeting you. / after studying)",
+        ),
+        (
+            "02. Kiểm tra có giới từ hay không: Nếu trước vị trí cần điền là một giới từ thì bắt buộc dùng V-ing. (interested in learning)",
+            "02. Kiểm tra có giới từ hay không: Nếu vị trí cần điền là động từ đứng ngay sau giới từ thì dùng dạng V-ing (giới từ cũng có thể đi với danh từ hoặc đại từ). (interested in learning)",
+        ),
+    ],
+    "c1-03": [
+        (
+            "Đo thời lượng tính đến mốc tương lai: Luôn đi với for cộng khoảng thời gian. (By May I will have been working here for five years.)",
+            "Đo thời lượng tính đến mốc tương lai: Thường đi với for + khoảng thời gian, nhưng cũng có thể dùng cách biểu đạt thời lượng khác như since + mốc bắt đầu, all day hoặc câu hỏi How long…?. (By May I will have been working here for five years. / By June, I will have been working here since January.)",
+        ),
+    ],
+}
+
+
+def apply_patches(topics):
+    for t in topics:
+        rules = CONTENT_PATCHES.get(t["id"])
+        if not rules:
+            continue
+        for old, new in rules:
+            hits = 0
+            for sec in t["sections"]:
+                for it in sec["items"]:
+                    if "p" in it and old in it["p"]:
+                        it["p"] = it["p"].replace(old, new)
+                        hits += 1
+                    if "table" in it:
+                        for row in it["table"]:
+                            for ci, cell in enumerate(row):
+                                if old in cell:
+                                    row[ci] = cell.replace(old, new)
+                                    hits += 1
+            if hits == 0:
+                raise SystemExit(f"Patch không khớp trong {t['id']}: {old[:60]}...")
 
 
 def main():
@@ -152,6 +246,47 @@ def main():
                 "window.FA_GRAMMAR_INDEX = " + json.dumps(index, ensure_ascii=False, indent=1) + ";\n")
 
 
+def patch_existing():
+    for lv in LEVELS:
+        p = os.path.join(OUT, lv.lower() + ".js")
+        if not os.path.exists(p):
+            continue
+        raw = open(p, encoding="utf-8").read()
+        idx = raw.index("] = ")
+        head, tail = raw[:idx + 4], raw[idx + 4:].strip().rstrip(";")
+        topics = json.loads(tail)
+        changed = 0
+        for t in topics:
+            rules = CONTENT_PATCHES.get(t["id"])
+            if not rules:
+                continue
+            for old, new in rules:
+                if any((new in it.get("p", "")) or any(new in c for r in it.get("table", []) for c in r) for s in t["sections"] for it in s["items"]):
+                    continue
+                hits = 0
+                for s in t["sections"]:
+                    for it in s["items"]:
+                        if "p" in it and old in it["p"]:
+                            it["p"] = it["p"].replace(old, new)
+                            hits += 1
+                        if "table" in it:
+                            for r in it["table"]:
+                                for ci, c in enumerate(r):
+                                    if old in c:
+                                        r[ci] = c.replace(old, new)
+                                        hits += 1
+                if hits == 0:
+                    raise SystemExit(f"Patch không khớp trong {t['id']}: {old[:60]}...")
+                changed += hits
+        if changed:
+            with open(p, "w", encoding="utf-8") as f:
+                f.write(head + json.dumps(topics, ensure_ascii=False, separators=(",", ":")) + ";\n")
+            print(f"{lv}: đã áp dụng {changed} bản hiệu đính vào {os.path.basename(p)}")
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
-    main()
+    if "--patch-only" in sys.argv:
+        patch_existing()
+    else:
+        main()

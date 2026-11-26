@@ -47,6 +47,63 @@
     const w = String(word).toLowerCase();
     if (!list.includes(w)) FA.store.set(IGNORE_KEY, list.concat(w).slice(-500));
   }
+  function removeIgnored(word) {
+    if (!FA.store) return;
+    const w = String(word).toLowerCase();
+    const list = FA.store.get(IGNORE_KEY, []).filter((x) => String(x).toLowerCase() !== w);
+    FA.store.set(IGNORE_KEY, list);
+  }
+
+  /* Địa danh Việt Nam (1 từ hoặc nhiều từ, không dấu) thường bị Harper báo nhầm chính tả khi đứng đầu câu / Part 1 */
+  const VN_PLACES_1 = new Set([
+    "vietnam", "vietnamese", "hanoi", "danang", "saigon", "halong", "hue", "nhatrang", "dalat",
+    "vungtau", "haiphong", "cantho", "hoian", "phuquoc", "sapa", "vinh", "danang", "mekong",
+  ]);
+  const VN_PLACES_MULTI = [
+    "da nang", "ha noi", "ho chi minh", "sai gon", "ha long", "nha trang", "da lat", "vung tau",
+    "hai phong", "can tho", "hoi an", "phu quoc", "sa pa", "phan thiet", "quy nhon", "ninh binh",
+    "quang ninh", "quang nam", "quang ngai", "quang binh", "quang tri", "binh duong", "dong nai",
+    "nghe an", "thanh hoa", "thai nguyen", "bac ninh", "vinh phuc", "nam dinh", "hai duong",
+    "thai binh", "khanh hoa", "lam dong", "dak lak", "gia lai", "kien giang", "an giang",
+    "long an", "tien giang", "ben tre", "tra vinh", "soc trang", "ca mau", "bac lieu",
+    "vinh long", "dong thap", "tay ninh", "binh thuan", "ninh thuan", "phu yen", "binh dinh",
+    "ha tinh", "lang son", "cao bang", "lao cai", "dien bien", "son la", "hoa binh", "yen bai",
+    "tuyen quang", "ha giang", "phu tho", "bac giang", "hung yen", "ha nam", "viet nam",
+  ];
+  function isKnownPlaceToken(text, start, end) {
+    const tok = text.slice(start, end).toLowerCase();
+    if (VN_PLACES_1.has(tok)) return true;
+    const winStart = Math.max(0, start - 20);
+    const winEnd = Math.min(text.length, end + 20);
+    const win = text.slice(winStart, winEnd).toLowerCase();
+    const relStart = start - winStart, relEnd = end - winStart;
+    for (const p of VN_PLACES_MULTI) {
+      let idx = win.indexOf(p);
+      while (idx >= 0) {
+        const pEnd = idx + p.length;
+        const leftOk = idx === 0 || !/[a-z]/.test(win[idx - 1]);
+        const rightOk = pEnd === win.length || !/[a-z]/.test(win[pEnd]);
+        if (leftOk && rightOk && relStart >= idx && relEnd <= pEnd) return true;
+        idx = win.indexOf(p, idx + 1);
+      }
+    }
+    return false;
+  }
+  function isProperNoun(text, item) {
+    if (!item || item.kind !== "Spelling") return false;
+    if (isKnownPlaceToken(text, item.start, item.end)) return true;
+    if (!/^[A-Z][A-Za-z'’-]*$/.test(item.problem)) return false;
+    // tên riêng giữa câu (Minh, Hanoi…) hay bị báo sai chính tả
+    if (!/(^|[.!?]\s*|\n\s*)$/.test(text.slice(0, item.start))) return true;
+    // tên trong lời chào ("Hi Lan,") hoặc dòng chữ ký ("Nguyen Van Minh") của email
+    const lineStart = text.lastIndexOf("\n", item.start - 1) + 1;
+    const lineEnd = text.indexOf("\n", item.end) < 0 ? text.length : text.indexOf("\n", item.end);
+    const lineToks = text.slice(lineStart, lineEnd).trim().split(/\s+/);
+    const signature = lineStart > 0 && lineToks.length <= 4 && lineToks.every((w) => /^[A-Z][A-Za-z'’-]*[,.!]?$/.test(w));
+    const greeted = /\b(?:[Hh]i|[Hh]ello|[Hh]ey|[Dd]ear)\s+(?:[A-Z][A-Za-z'’-]*\s+)*$/.test(text.slice(lineStart, item.start));
+    if (signature || greeted) return true;
+    return false;
+  }
 
   /* Loại lỗi ngữ pháp bị trừ điểm — chọn theo kết quả chạy thật trên toàn bộ bài mẫu (không có lỗi nào bị báo nhầm):
      Agreement (he don't), Grammar (their/there), Miscellaneous (a/an, then/than, since…), Repetition (the the),
@@ -77,17 +134,7 @@
       if (opts.spellingOnly && !SPELLING_KINDS.has(item.kind)) continue;
       if (NON_ENGLISH.test(item.problem)) continue; // từ tiếng Việt chen vào bài → bỏ qua
       if (SPELLING_KINDS.has(item.kind) && ignored.has(item.problem.toLowerCase())) continue; // người dùng đã bỏ qua từ này
-      // tên riêng giữa câu (Minh, Hanoi…) hay bị báo sai chính tả
-      if (item.kind === "Spelling" && /^[A-Z][A-Za-z'’-]*$/.test(item.problem) && !/(^|[.!?]\s*|\n\s*)$/.test(text.slice(0, item.start))) continue;
-      // tên trong lời chào ("Hi Lan,") hoặc dòng chữ ký ("Nguyen Van Minh") của email
-      if (item.kind === "Spelling" && /^[A-Z][A-Za-z'’-]*$/.test(item.problem)) {
-        const lineStart = text.lastIndexOf("\n", item.start - 1) + 1;
-        const lineEnd = text.indexOf("\n", item.end) < 0 ? text.length : text.indexOf("\n", item.end);
-        const lineToks = text.slice(lineStart, lineEnd).trim().split(/\s+/);
-        const signature = lineStart > 0 && lineToks.length <= 4 && lineToks.every((w) => /^[A-Z][A-Za-z'’-]*[,.!]?$/.test(w));
-        const greeted = /\b(?:[Hh]i|[Hh]ello|[Hh]ey|[Dd]ear)\s+(?:[A-Z][A-Za-z'’-]*\s+)*$/.test(text.slice(lineStart, item.start));
-        if (signature || greeted) continue;
-      }
+      if (isProperNoun(text, item)) continue;
       // từ nằm ngay sau dấu nháy mở (vd: 'xin chào', "pho") là từ nước ngoài được trích dẫn
       if (item.kind === "Spelling" && /['"‘“]$/.test(text.slice(Math.max(0, item.start - 1), item.start))) continue;
       out.push(item);
@@ -127,17 +174,31 @@
   async function mount(el, text, opts) {
     opts = opts || {};
     if (opts.skip || !text || !text.trim()) { el.innerHTML = ""; return; }
+    el.__opts = opts;
+    el.__text = text;
     if (!el.dataset.spellBound) {
       el.dataset.spellBound = "1";
       el.addEventListener("click", (e) => {
+        const curOpts = el.__opts || {};
+        const undoBtn = e.target.closest("[data-undo-word],[data-undo-gi]");
+        if (undoBtn) {
+          if (undoBtn.dataset.undoWord != null) removeIgnored(undoBtn.dataset.undoWord);
+          else {
+            const it = (el.__allIssues || [])[+undoBtn.dataset.undoGi];
+            if (it) it.dismissed = false;
+          }
+          if (curOpts.onIgnore) curOpts.onIgnore();
+          else mount(el, el.__text, Object.assign({}, curOpts, { issues: el.__allIssues ? filterIgnored(el.__allIssues) : undefined }));
+          return;
+        }
         const b = e.target.closest("[data-ignore],[data-gi]");
         if (!b) return;
         if (b.dataset.gi != null) { const it = (el.__issues || [])[+b.dataset.gi]; if (it) it.dismissed = true; }
         else addIgnored(b.dataset.ignore);
         const prev = el.previousElementSibling;
         if (prev && prev.classList.contains("passage")) prev.style.display = "";
-        if (opts.onIgnore) opts.onIgnore();
-        else mount(el, text, Object.assign({}, opts, { issues: el.__issues ? filterIgnored(el.__issues) : opts.issues && filterIgnored(opts.issues) })); // vẽ lại, từ vừa bỏ qua sẽ biến mất
+        if (curOpts.onIgnore) curOpts.onIgnore();
+        else mount(el, el.__text, Object.assign({}, curOpts, { issues: el.__allIssues ? filterIgnored(el.__allIssues) : curOpts.issues && filterIgnored(curOpts.issues) })); // vẽ lại, từ vừa bỏ qua sẽ biến mất
       });
     }
     if (!opts.quiet && !opts.issues) el.innerHTML = `<div class="spell-note">⏳ Đang kiểm tra chính tả & ngữ pháp… (lần đầu cần tải bộ kiểm tra ~8 MB)</div>`;
@@ -150,24 +211,41 @@
       return;
     }
     if (!el.isConnected) return; // người dùng đã chuyển trang / làm lại
+    const allIssues = opts.allIssues || el.__allIssues || issues;
+    el.__allIssues = allIssues;
     el.__issues = issues;
+    const ig = getIgnored();
+    const undoItems = [];
+    const seenWords = new Set();
+    allIssues.forEach((it, idx) => {
+      if (isSpelling(it) && ig.has(it.problem.toLowerCase())) {
+        const w = it.problem.toLowerCase();
+        if (!seenWords.has(w)) {
+          seenWords.add(w);
+          undoItems.push(`<button type="button" class="spell-ignore" data-undo-word="${esc(it.problem)}" title="Khôi phục cảnh báo cho từ này">↩ Hoàn tác “${esc(it.problem)}”</button>`);
+        }
+      } else if (it.dismissed) {
+        undoItems.push(`<button type="button" class="spell-ignore" data-undo-gi="${idx}" title="Khôi phục cảnh báo ngữ pháp này">↩ Hoàn tác “${esc(it.problem)}”</button>`);
+      }
+    });
+    const undoHTML = undoItems.length ? `<div class="spell-note" style="margin-top:6px">Đã bỏ qua trong phiên này: ${undoItems.join(" ")}</div>` : "";
     if (!issues.length) {
-      el.innerHTML = opts.quiet ? "" : `<div class="spell-note ok">✅ Harper không phát hiện lỗi chính tả hay ngữ pháp rõ ràng.</div>`;
+      el.innerHTML = (opts.quiet ? "" : `<div class="spell-note ok">✅ Harper không phát hiện lỗi chính tả hay ngữ pháp rõ ràng.</div>`) + undoHTML;
       return;
     }
     if (!opts.quiet) { // bản có tô lỗi thay cho khung bài viết gốc ngay phía trên, tránh hiện hai lần
       const prev = el.previousElementSibling;
       if (prev && prev.classList.contains("passage")) prev.style.display = "none";
     }
-    el.innerHTML = opts.quiet
-      ?`<div class="spell-list quiet">${issues.map((it, n) => `<span class="spell-chip"><s>${esc(it.problem)}</s> ${suggestText(it).replace("Gợi ý: ", "→ ")}${ignoreBtn(it, n)}</span>`).join("")}</div>`
+    el.innerHTML = (opts.quiet
+      ? `<div class="spell-list quiet">${issues.map((it, n) => `<span class="spell-chip"><s>${esc(it.problem)}</s> ${suggestText(it).replace("Gợi ý: ", "→ ")}${ignoreBtn(it, n)}</span>`).join("")}</div>`
       : `<div class="spell-note bad">🔍 Harper phát hiện <b>${issues.length}</b> chỗ cần xem lại:</div>
          <div class="passage spell-text">${highlight(text, issues)}</div>
-         <ol class="spell-list">${issues.map((it, n) => `<li><b>${esc(it.problem)}</b> <span class="muted">(${kindLabel(it)}${penalized(it) ? " · bị trừ điểm" : ""})</span> — ${esc(it.message)} ${suggestText(it)}${ignoreBtn(it, n)}</li>`).join("")}</ol>`;
+         <ol class="spell-list">${issues.map((it, n) => `<li><b>${esc(it.problem)}</b> <span class="muted">(${kindLabel(it)}${penalized(it) ? " · bị trừ điểm" : ""})</span> — ${esc(it.message)} ${suggestText(it)}${ignoreBtn(it, n)}</li>`).join("")}</ol>`) + undoHTML;
   }
 
   /* Tải trước bộ kiểm tra trong lúc người dùng đang làm bài (im lặng nếu lỗi) */
   function warm() { getLinter().catch(() => {}); }
 
-  FA.spell = { check, mount, warm, isSpelling, isGrammar, filterIgnored };
+  FA.spell = { check, mount, warm, isSpelling, isGrammar, filterIgnored, isProperNoun, addIgnored, removeIgnored };
 })();
