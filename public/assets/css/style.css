@@ -2004,6 +2004,8 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
   background: linear-gradient(180deg, var(--sk-speaking), var(--sk-listening) 28%, var(--sk-grammar) 52%, var(--sk-reading) 76%, var(--sk-writing));
   opacity: .55;
 }
+.tips-tree:not(:has(.tree-row))::before { display: none; }
+.tips-tree > .empty { position: relative; z-index: 2; }
 .tree-stage {
   position: relative; z-index: 2; display: flex; justify-content: center; margin: 10px 0 2px;
 }
