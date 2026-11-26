@@ -313,7 +313,7 @@ button { font-family: inherit; }
 /* ---------- Hero ---------- */
 .hero { position: relative; overflow: hidden; padding: 32px 0 56px; }
 .hero::before, .hero::after {
-  content: ""; position: absolute; border-radius: 50%; filter: blur(70px); z-index: -1; opacity: .7;
+  content: ""; position: absolute; border-radius: 50%; z-index: -1; opacity: .65; pointer-events: none;
 }
 .hero::before { width: 520px; height: 520px; right: -140px; top: -120px; background: radial-gradient(circle, #ffd7b0, transparent 70%); }
 .hero::after { width: 420px; height: 420px; left: 20%; bottom: -260px; background: radial-gradient(circle, #ffe9c9, transparent 70%); }
@@ -1597,7 +1597,7 @@ body {
   background: radial-gradient(circle, rgba(45, 212, 191, .16), transparent 70%);
 }
 
-/* 2) Floating Pill Header nổi trên desktop (giữ nguyên gọn trên mobile) */
+/* 2) Floating Pill Header nổi trên desktop (bỏ backdrop-filter blur để cuộn & chuyển trang 60fps mượt) */
 @media (min-width: 900px) {
   .site-header {
     top: 10px;
@@ -1606,32 +1606,30 @@ body {
     max-width: 1420px;
     border: 1.5px solid var(--line-2);
     border-radius: 22px;
-    background: rgba(255, 252, 248, .88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 0 var(--tactile-line), 0 14px 32px -18px rgba(31, 26, 23, .22);
+    background: #fffcf8;
+    box-shadow: 0 4px 0 var(--tactile-line);
   }
   .site-header.scrolled {
-    background: rgba(255, 252, 248, .96);
-    box-shadow: 0 4px 0 var(--tactile-line), 0 18px 36px -16px rgba(31, 26, 23, .28);
+    background: #fffcf8;
+    box-shadow: 0 4px 0 var(--tactile-line);
   }
   :root[data-theme="dark"] .site-header,
   :root[data-theme="dark"] .site-header.scrolled {
-    background: rgba(26, 22, 20, .9);
-    box-shadow: 0 4px 0 #090706, 0 16px 34px -16px rgba(0, 0, 0, .65);
+    background: #1d1815;
+    box-shadow: 0 4px 0 #090706;
   }
   .site-header .container { height: 70px; }
 }
 
-/* 3) Thẻ & nút bấm Neo-Tactile đậm nét (kiểu vật lý có chiều sâu 4px) */
+/* 3) Thẻ & nút bấm Neo-Tactile đậm nét (chỉ dùng 1 lớp bóng cứng blur=0 để GPU vẽ cực nhanh) */
 :where(.card, .q-card, .stat, details.faq) {
   border-width: 1.5px;
   border-color: var(--line-2);
-  box-shadow: 0 4px 0 var(--tactile-line), 0 12px 24px -18px rgba(31, 26, 23, .2);
+  box-shadow: 0 4px 0 var(--tactile-line);
 }
 a.card:hover, button.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 0 var(--tactile-line), 0 16px 28px -18px rgba(31, 26, 23, .28);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--tactile-line);
 }
 a.card:active, button.card:active {
   transform: translateY(2px);
@@ -1661,15 +1659,15 @@ a.card:active, button.card:active {
   box-shadow: 4px 4px 0 #115e59;
 }
 
-/* Nút bấm 3D tactile bấm lún đã tay */
+/* Nút bấm 3D tactile bấm lún đã tay (bóng cứng blur=0 nhẹ GPU) */
 .btn { border-width: 1.5px; }
 .btn-primary {
   border-color: #9a3412;
-  box-shadow: 0 4px 0 #9a3412, 0 10px 20px -10px rgba(194, 65, 12, .55), inset 0 1px 0 rgba(255, 255, 255, .3);
+  box-shadow: 0 4px 0 #9a3412;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 5px 0 #9a3412, 0 12px 22px -10px rgba(194, 65, 12, .65), inset 0 1px 0 rgba(255, 255, 255, .3);
+  box-shadow: 0 5px 0 #9a3412;
 }
 .btn-primary:active {
   transform: translateY(3px);
@@ -2219,4 +2217,58 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 :root[data-theme="dark"] .pay-box img {
   border-color: var(--orange-400);
   box-shadow: 4px 4px 0 #9a3412;
+}
+
+/* ===========================================================
+   Loading Overlay con ếch FlashAptis khi chuyển trang
+   =========================================================== */
+.fa-loader {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  background: rgba(248, 243, 236, .78);
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s ease-out;
+}
+.fa-loader.show { opacity: 1; pointer-events: auto; }
+:root[data-theme="dark"] .fa-loader { background: rgba(20, 17, 15, .82); }
+.fa-loader-box {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 22px 28px; border-radius: 22px;
+  background: var(--surface); border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--orange-500);
+}
+:root[data-theme="dark"] .fa-loader-box {
+  border-color: var(--orange-400);
+  box-shadow: 5px 5px 0 #9a3412;
+}
+.fa-loader-ring {
+  position: relative; width: 82px; height: 82px; border-radius: 50%;
+  display: grid; place-items: center; perspective: 420px;
+  background: radial-gradient(circle, #fff7ed 40%, #ffedd5 100%);
+}
+:root[data-theme="dark"] .fa-loader-ring { background: radial-gradient(circle, #3a2012 40%, #24150d 100%); }
+.fa-loader-ring::before {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 3.5px solid var(--orange-200);
+  border-top-color: var(--orange-500);
+  border-right-color: var(--ink-accent, #0f766e);
+  animation: fa-spin .75s linear infinite;
+}
+.fa-loader-ring img {
+  width: 62px; height: 62px; object-fit: contain;
+  transform-style: preserve-3d;
+  animation: fa-frog-coin .9s linear infinite;
+}
+.fa-loader-txt {
+  font-family: var(--font-head); font-weight: 700; font-size: .95rem;
+  color: var(--ink); letter-spacing: -.01em;
+}
+@keyframes fa-spin { to { transform: rotate(360deg); } }
+@keyframes fa-frog-coin {
+  0%   { transform: rotateY(0deg); }
+  50%  { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fa-loader-ring::before, .fa-loader-ring img { animation: none; }
 }
