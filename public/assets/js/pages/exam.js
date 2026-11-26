@@ -1734,7 +1734,7 @@
             aiNote = st.sttErr === "not-allowed" ? "Trình duyệt không cho dùng nhận dạng giọng nói (hãy cho phép micro) nên AI chưa chấm được." : st.sttErr === "network" ? "Nhận dạng giọng nói bị lỗi kết nối nên AI chưa chấm được (kiểm tra mạng; trình duyệt như Brave, Opera, Cốc Cốc thường không hỗ trợ dịch vụ này — hãy dùng Chrome hoặc Edge)." : st.sttErr === "service-not-allowed" || st.sttErr === "language-not-supported" ? `Trình duyệt chặn dịch vụ nhận dạng giọng nói (mã lỗi: ${st.sttErr}) nên AI chưa chấm được — với Edge, bật Windows Settings → Privacy & security → Speech → Online speech recognition, hoặc dùng Chrome.`
               : "Không nhận dạng được lời nói nào nên AI chưa chấm được" + (st.sttErr ? ` (mã lỗi: ${st.sttErr})` : " — hãy nói rõ, to và gần micro hơn") + ".";
           } else {
-            app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>Đang chấm Speaking…<br>AI (${esc(FA.ai.model("speaking"))}) đang đọc bản nhận dạng giọng nói của bạn — có thể mất 30–90 giây.</p></div></div></div>`;
+            app.innerHTML = `<div class="page"><div class="container narrow"><div class="card empty"><div class="big">⏳</div><p>AI đang chấm điểm Speaking…<br>Bạn đã làm rất tốt! Điểm của bạn sẽ có ngay sau đây!</p></div></div></div>`;
             let ok = true;
             if (FA.plan) {
               const q = await FA.plan.useAI();

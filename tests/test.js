@@ -417,6 +417,19 @@ test("Speaking chế độ tự chấm (không AI) hiển thị đúng giao di�
   assert.match(reviewEl.innerHTML, /AI chưa chấm được/);
 });
 
+test("Speaking thêm dấu câu và thay nhận xét AI bị mất dấu tiếng Việt", () => {
+  const steps = [{ part: 1 }, { part: 1 }, { part: 1 }];
+  const { questions } = FA.speakAI.summarize(steps, [true, true, true], {
+    0: { score: 2, comment: "Banjowi tra loi hoi qua ngan va thieu chi tiet de phat trien y." },
+    1: { score: 3, comment: "  bạn   đã trả lời được ý chính  " },
+    2: { score: 4, comment: "Bạn đã phát triển ý rõ ràng." },
+  });
+  assert.match(questions[0].comment, /^Bạn có thể .*\.$/u);
+  assert.equal(questions[0].score, 2);
+  assert.equal(questions[1].comment, "Bạn đã trả lời được ý chính.");
+  assert.equal(questions[2].comment, "Bạn đã phát triển ý rõ ràng.");
+});
+
 test("exam.js hiển thị Hub và Bảng tiến độ (#/progress) tính đúng Overall CEFR", () => {
   const s2 = createSandbox();
   const appEl = {

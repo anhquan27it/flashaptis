@@ -60,7 +60,7 @@ Caps (these are about missing content, not style):
 - Do not give 5 to an answer that is short or generic, and do not give more than 1 to an answer that does not deliver what the question asks.
 
 "missing": short Vietnamese phrases naming each required point the student did not cover (empty array if nothing is missing).
-"comment": at most 2 short Vietnamese sentences explaining the score to the student (content, ideas, grammar/vocabulary). Do not mention pronunciation.
+"comment": at most two short, natural Vietnamese sentences explaining the score (content, ideas, grammar/vocabulary). Use standard Vietnamese spelling with all diacritics, start each sentence with a capital letter, and end it with appropriate punctuation. Do not mention pronunciation.
 
 Reply with ONLY a JSON object, no markdown:
 {"results":{"1":{"score":0,"missing":["..."],"comment":"..."},"2":{...},"3":{...},"4":{...}}}

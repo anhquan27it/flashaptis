@@ -34,7 +34,7 @@ Rules:
 - Judge DEPTH against the time given: a developed answer is roughly 1 word per second of "seconds" or more (e.g. about 30 words for 30 seconds, 120 words for 120 seconds). Do not penalise an answer that reaches this. If "words" is under 25% of "seconds" the score is at most 2; under 50% at most 3. Part 4 has three questions: answering only some of them caps the score at 3.
 - Off-topic speech scores at most 1 even if it is fluent and grammatical.
 - Do not reward repeating the question back.
-- "comment": ONE short Vietnamese sentence explaining the score to the student (mention what was missing or what to improve).
+- "comment": Write one short, natural Vietnamese sentence (up to 180 characters) explaining the score or suggesting a specific improvement. Use standard Vietnamese spelling with all diacritics, start with a capital letter, and end with appropriate punctuation. Keep the feedback in Vietnamese even when the transcript is in English; do not copy recognition errors into the feedback.
 
 Reply with ONLY a JSON object, no markdown:
 {"results":{"<id>":{"score":0-5,"comment":"..."}}}
@@ -42,7 +42,18 @@ Include every id you were given.`;
 
   const words = (t) => (String(t || "").trim().match(/[A-Za-z']+/g) || []).length;
   const clamp5 = (x) => (typeof x === "number" && isFinite(x) ? Math.max(0, Math.min(5, Math.round(x * 2) / 2)) : null);
-  const str = (x, n) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n);
+  function formatComment(value, score) {
+    const comment = typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim() : "";
+    // Không đoán dấu cho câu AI viết không dấu vì có thể làm đổi nghĩa nhận xét.
+    if (!comment || comment.length > 220 || !/[đĐ]|\p{M}/u.test(comment.normalize("NFD"))) {
+      if (score === 0) return "Hãy trả lời trực tiếp câu hỏi và nói rõ ý chính của bạn.";
+      if (score < 2.5) return "Bạn có thể mở rộng câu trả lời bằng cách thêm một chi tiết hoặc ví dụ cụ thể.";
+      if (score < 4) return "Bạn có thể phát triển ý chính bằng lý do hoặc ví dụ cụ thể và liên kết các ý rõ hơn.";
+      return "Bạn đã trả lời khá tốt. Hãy tiếp tục luyện cách triển khai và liên kết các ý.";
+    }
+    const formatted = comment.replace(/^\p{Ll}/u, (letter) => letter.toLocaleUpperCase("vi"));
+    return /[.!?…][”"’)\]]*$/u.test(formatted) ? formatted : formatted + ".";
+  }
 
   /* Chỉ gửi câu có lời nói nhận dạng được. items chỉ chứa điểm thực sự do AI trả về. */
   async function grade(steps, trans) {
@@ -64,7 +75,7 @@ Include every id you were given.`;
           if (!r) return;
           const score = clamp5(typeof r.score === "string" && r.score.trim() ? Number(r.score) : r.score);
           if (score == null) return;
-          out[+it.id.slice(1)] = { score, comment: str(r.comment, 220) };
+          out[+it.id.slice(1)] = { score, comment: formatComment(r.comment, score) };
         });
       }));
       if (!items.some((it) => out[+it.id.slice(1)])) {
@@ -79,7 +90,7 @@ Include every id you were given.`;
     const questions = steps.map((_, i) => {
       if (responses[i] === false) return { status: "blank", score: 0 };
       const item = items[i];
-      if (item && Number.isFinite(item.score)) return { status: "graded", score: item.score, comment: item.comment };
+      if (item && Number.isFinite(item.score)) return { status: "graded", score: item.score, comment: formatComment(item.comment, item.score) };
       return { status: responses[i] === true ? "ungraded" : "unknown", score: null };
     });
     const rates = [1, 2, 3, 4].map((part) => {
