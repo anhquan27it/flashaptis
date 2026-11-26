@@ -2278,3 +2278,8 @@ a.card.bento-mini small { color: var(--muted); font-size: .8rem; }
 @media (prefers-reduced-motion: reduce) {
   .fa-loader-ring::before, .fa-loader-ring img { animation: none; }
 }
+@media (max-width: 480px) {
+  .exam-bar { flex-wrap: wrap; gap: 6px; }
+  .fc-face, .plan-card.best, .demo-card { box-shadow: 4px 4px 0 var(--orange-500); }
+  .fc-back { box-shadow: 4px 4px 0 var(--ink-accent, #0f766e); }
+}
