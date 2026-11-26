@@ -1,5 +1,5 @@
 /* Ngân hàng đề Speaking — nội dung do FlashAptis tự biên soạn.
-   Ảnh được minh họa bằng biểu tượng + mô tả để luyện mô tả tranh. */
+   Ảnh minh họa thật được lưu trong public/assets/img/speaking/. */
 window.FA_SPEAKING = [
   {
     id: "s1",
@@ -11,7 +11,7 @@ window.FA_SPEAKING = [
       { q: "Describe the weather in your country.", s: "Vietnam has a tropical climate. In the north there are four seasons, and winter can be quite cold. In the south it is hot all year, with a rainy season from May to October." },
     ],
     p2: {
-      photo: { emo: "👨‍👩‍👧 🍽️ 🏡", cap: "A family having dinner together at home" },
+      photo: { img: "assets/img/speaking/s1-1.jpg", cap: "A family having dinner together at home" },
       questions: [
         { q: "Describe this picture.", s: "In this picture I can see a family having dinner at home. There are probably three people: parents and a little girl. They are sitting around a table with lots of food. They look happy and relaxed, so maybe it is a weekend evening." },
         { q: "How often do you eat with your family?", s: "I eat with my family almost every evening. During the week we are all busy, so dinner is the only time we can sit together. My mother usually cooks traditional dishes like rice, fish and vegetable soup." },
@@ -19,7 +19,7 @@ window.FA_SPEAKING = [
       ],
     },
     p3: {
-      photos: [{ emo: "🚌 🏙️", cap: "People travelling by bus in a city" }, { emo: "🚲 🌳", cap: "A person cycling in the countryside" }],
+      photos: [{ img: "assets/img/speaking/s1-2.jpg", cap: "People travelling by bus in a city" }, { img: "assets/img/speaking/s1-3.jpg", cap: "A person cycling in the countryside" }],
       questions: [
         { q: "Tell me what you see in the two pictures.", s: "The first picture shows a crowded bus in a big city, while the second shows a person cycling alone on a quiet country road. The first one looks busy and noisy, but the second looks peaceful and healthy." },
         { q: "Which type of transport do you prefer and why?", s: "I prefer cycling because it is good for my health and it doesn't cause pollution. However, for long distances, the bus is more convenient and cheaper than a taxi." },
@@ -27,7 +27,7 @@ window.FA_SPEAKING = [
       ],
     },
     p4: {
-      photo: { emo: "🏆 🎤 😊", cap: "Someone receiving a prize on stage" },
+      photo: { img: "assets/img/speaking/s1-4.jpg", cap: "Someone receiving a prize on stage" },
       questions: [
         "Tell me about a time when you achieved something important.",
         "How did you feel at that time?",
@@ -45,7 +45,7 @@ window.FA_SPEAKING = [
       { q: "What did you do last weekend?", s: "Last weekend I visited my grandparents in the countryside. We cooked lunch together and in the afternoon I helped my grandfather in his garden. It was very peaceful." },
     ],
     p2: {
-      photo: { emo: "👩‍💻 ☕ 🪴", cap: "A woman working on a laptop in a café" },
+      photo: { img: "assets/img/speaking/s2-1.jpg", cap: "A woman working on a laptop in a café" },
       questions: [
         { q: "Describe this picture.", s: "This picture shows a young woman working on her laptop in a café. There is a cup of coffee and a small plant on the table. She looks focused, so maybe she is a student or someone who works remotely." },
         { q: "Do you like studying or working in cafés?", s: "Yes, sometimes. I like the atmosphere and the smell of coffee. However, when it is too noisy I cannot concentrate, so for important work I prefer the library." },
@@ -53,7 +53,7 @@ window.FA_SPEAKING = [
       ],
     },
     p3: {
-      photos: [{ emo: "🏫 👩‍🏫 📚", cap: "Students in a traditional classroom" }, { emo: "💻 🎧 🏠", cap: "A student taking an online class at home" }],
+      photos: [{ img: "assets/img/speaking/s2-2.jpg", cap: "Students in a traditional classroom" }, { img: "assets/img/speaking/s2-3.jpg", cap: "A student taking an online class at home" }],
       questions: [
         { q: "Tell me what you see in the two pictures.", s: "The first picture shows students learning in a classroom with a teacher, while the second shows a student studying online at home. In the first one, students can interact directly, but in the second one the student is alone in front of a computer." },
         { q: "Which way of learning do you think is more effective?", s: "I think classroom learning is more effective because students can ask questions immediately and work in groups. Online learning is convenient, but it is easy to lose concentration at home." },
@@ -61,7 +61,7 @@ window.FA_SPEAKING = [
       ],
     },
     p4: {
-      photo: { emo: "🧳 🌏 ✈️", cap: "A young person at an airport with a suitcase" },
+      photo: { img: "assets/img/speaking/s2-4.jpg", cap: "A young person at an airport with a suitcase" },
       questions: [
         "Tell me about a time you had to learn something new quickly.",
         "How did you feel about it?",
@@ -79,7 +79,7 @@ window.FA_SPEAKING = [
       { q: "Do you like cooking? Why or why not?", s: "Yes, I enjoy cooking simple meals at weekends. It is much healthier and cheaper than eating out, and I feel happy when my family enjoys the dishes I make." },
     ],
     p2: {
-      photo: { emo: "🧑‍🌾 🌱 🏙️", cap: "People planting young trees in a city park" },
+      photo: { img: "assets/img/speaking/s3-1.jpg", cap: "People planting young trees in a city park" },
       questions: [
         { q: "Describe this picture.", s: "In this picture I can see a group of volunteers planting young trees in a park. Some people are digging holes while others are watering the plants. They are wearing casual clothes and smiling, so it looks like a community weekend activity." },
         { q: "Are there many green spaces where you live?", s: "There are a few small parks in my neighbourhood, and a large lake about ten minutes away. However, because the city is growing fast, many trees have been cut down to build apartments." },
@@ -87,7 +87,7 @@ window.FA_SPEAKING = [
       ],
     },
     p3: {
-      photos: [{ emo: "🛍️ 🏬 💳", cap: "A shopper paying at a busy store counter" }, { emo: "📦 📱 🛋️", cap: "Someone ordering products online from a sofa" }],
+      photos: [{ img: "assets/img/speaking/s3-2.jpg", cap: "A shopper paying at a busy store counter" }, { img: "assets/img/speaking/s3-3.jpg", cap: "Someone ordering products online from a sofa" }],
       questions: [
         { q: "Tell me what you see in the two pictures.", s: "The first picture shows a customer shopping inside a busy store and paying at the counter, while the second shows someone ordering items on a phone at home. In the shop you can touch the products, whereas online shopping looks much more relaxed." },
         { q: "Which way of shopping do you prefer and why?", s: "I prefer online shopping for books and electronics because it saves time and it is easy to compare prices. However, for clothes and shoes, I still go to shops so I can try them on first." },
@@ -95,7 +95,7 @@ window.FA_SPEAKING = [
       ],
     },
     p4: {
-      photo: { emo: "📵 🌲 ⛺", cap: "Friends camping in nature without looking at phones" },
+      photo: { img: "assets/img/speaking/s3-4.jpg", cap: "Friends camping in nature without looking at phones" },
       questions: [
         "Tell me about a time when you had to live without the internet or your phone.",
         "How did that experience affect you?",
