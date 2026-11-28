@@ -38,7 +38,7 @@
     if (v) k[deck + "|" + w] = Date.now(); else delete k[deck + "|" + w];
     FA.store.set("fc-known", k);
   };
-  /* thẻ trong bộ "Từ khó của tôi" mang theo _d = bộ gốc → trạng thái thuộc/sao luôn gắn với bộ gốc */
+  /* thẻ trong bộ "Từ đã lưu" mang theo _d = bộ gốc → trạng thái thuộc/sao luôn gắn với bộ gốc */
   const did = (deck, c) => c._d || deck.id;
   // K: bảng fc-known đọc sẵn một lần (4.600+ thẻ → không parse localStorage cho từng thẻ)
   const deckKnown = (d, K) => { K = K || known(); return d.cards.filter((c) => K[did(d, c) + "|" + c.w]).length; };
@@ -50,7 +50,7 @@
     const st = starred(), k = deck + "|" + w;
     if (st[k]) delete st[k]; else st[k] = Date.now();
     FA.store.set("fc-starred", st);
-    FA.toast(st[k] ? "⭐ Đã lưu vào “Từ khó của tôi”" : "Đã bỏ khỏi “Từ khó của tôi”");
+    FA.toast(st[k] ? "⭐ Đã lưu " : "Đã bỏ lưu");
     return !!st[k];
   };
   const STAR_ID = "starred";
@@ -61,7 +61,7 @@
       const c = d && d.cards.find((x) => x.w === k.slice(i + 1));
       if (c) cards.push(Object.assign({ _d: d.id, _dn: d.name }, c));
     });
-    return { id: STAR_ID, name: "Từ khó của tôi", emoji: "⭐", cards, virtual: true };
+    return { id: STAR_ID, name: "Từ đã lưu", emoji: "⭐", cards, virtual: true };
   }
   const starBtn = (deck, c) => { const on = isStar(did(deck, c), c.w); return `<button type="button" class="star-btn${on ? " on" : ""}" aria-pressed="${on}" title="${on ? "Bỏ khỏi" : "Lưu vào"} Từ khó (phím S)">${on ? "★" : "☆"}</button>`; };
   let keyHandler = null;
@@ -115,6 +115,10 @@
     const ALL = BASIC.concat(INDEX);
     const total = ALL.reduce((n, d) => n + deckSize(d), 0);
     const k = ALL.reduce((n, d) => n + kOf(d), 0);
+    const percent = total ? Math.round((k / total) * 100) : 0;
+    const starKeys = Object.keys(starred());
+    const starCount = starKeys.length;
+    const starKnown = starKeys.filter((key) => K[key]).length;
     const deckCard = (d) => {
       const n = kOf(d), size = deckSize(d);
       return `<div class="card deck-card">
@@ -130,24 +134,23 @@
       <div class="page"><div class="container">
         <span class="eyebrow">Flashcard</span>
         <h1 class="page-title">⚡ Học từ vựng nhanh như chớp</h1>
-        <p class="page-sub">Lật thẻ để xem nghĩa, nghe phát âm, đánh dấu từ đã thuộc. Từ chưa nhớ sẽ quay lại cuối bộ để bạn ôn thêm.</p>
-        <div class="card mb-2" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-          <div class="ring" style="--p:${Math.round((k / total) * 100)}" data-label="${Math.round((k / total) * 100)}%"></div>
-          <div><b style="font-family:var(--font-head);font-size:1.2rem">${k}/${total} từ đã thuộc</b><div class="muted">Đăng nhập thì tiến độ được đồng bộ theo tài khoản giữa các thiết bị; chưa đăng nhập thì chỉ lưu trên trình duyệt này.</div></div>
+        <p class="page-sub fc-intro">Lật thẻ để xem nghĩa, nghe phát âm, đánh dấu từ đã thuộc. Từ chưa nhớ sẽ quay lại cuối bộ để bạn ôn thêm.</p>
+        <div class="fc-summary mb-2">
+          <div class="card fc-summary-card">
+            <div class="ring" style="--p:${percent}" data-label="${percent}%"></div>
+            <b class="fc-summary-title">${k}/${total} từ đã thuộc</b>
+          </div>
+          <div class="card star-deck fc-summary-card">
+            <div class="emoji" aria-hidden="true">⭐</div>
+            <div>
+              <h3 class="fc-summary-title mb-0">Từ đã lưu</h3>
+              <div class="muted fc-summary-detail">${starCount ? `${starCount} từ đã gắn sao · đã thuộc ${starKnown}` : "Bấm ☆ trên thẻ để lưu từ khó."}</div>
+            </div>
+            ${starCount ? `<div class="row fc-summary-actions"><a class="btn btn-primary btn-sm" href="#${STAR_ID}">Xem lại</a><a class="btn btn-outline btn-sm" href="#${STAR_ID}/quiz">Kiểm tra</a></div>` : ""}
+          </div>
         </div>
         <input class="inp mb-2" id="allSearch" value="${esc(deckSearch)}" placeholder="🔍 Tra nhanh trong ${total.toLocaleString("vi-VN")} từ (tiếng Anh hoặc nghĩa tiếng Việt)…">
         <div id="allRes"></div>
-        ${(() => {
-          const sk = Object.keys(starred()), n = sk.length, kn = sk.filter((x) => K[x]).length;
-          return `<div class="card star-deck mb-2">
-            <div class="emoji">⭐</div>
-            <div style="flex:1;min-width:200px">
-              <h3 class="mb-0">Từ khó của tôi</h3>
-              <div class="muted" style="font-size:.9rem">${n ? `${n} từ đã gắn sao · đã thuộc ${kn}` : "Bấm ☆ trên thẻ (hoặc phím S) khi học để gom các từ khó vào đây và ôn riêng."}</div>
-            </div>
-            ${n ? `<div class="row"><a class="btn btn-primary btn-sm" href="#${STAR_ID}">Ôn từ khó</a><a class="btn btn-outline btn-sm" href="#${STAR_ID}/quiz">Kiểm tra</a></div>` : ""}
-          </div>`;
-        })()}
         <h2 class="mt-3 mb-1">Từ vựng cơ bản</h2>
         <p class="muted mb-2" style="font-size:.92rem">Từ vựng nền tảng, có phiên âm — học trước nếu bạn mới bắt đầu.</p>
         <div class="grid grid-4">${BASIC.map(deckCard).join("")}</div>
@@ -302,7 +305,7 @@
           <button class="btn btn-outline" id="flip">🔄 Lật <kbd>Space</kbd></button>
           <button class="btn btn-green" id="got">✅ Đã thuộc <kbd>2</kbd></button>
         </div>
-        <p class="muted center" style="font-size:.85rem">Từ này khó? Bấm <b>☆</b> trên thẻ hoặc phím <kbd>S</kbd> để lưu vào bộ “⭐ Từ khó của tôi”.</p>`);
+        <p class="fc-save-tip center mt-2"><strong class="fc-save-tip-label">Note:</strong> Nếu bạn cảm thấy từ này <strong>khó</strong> hoặc <strong class="fc-save-tip-useful">hữu ích</strong>?<br><b>Bấm ngay</b> <kbd>☆</kbd> trên thẻ hoặc phím <kbd>S</kbd> để lưu ngay.</p>`);
       slide = false;
       const fc = app.querySelector("#fc");
       const flip = () => { flipped = !flipped; fc.classList.toggle("flipped", flipped); };
@@ -366,9 +369,9 @@
 
   function viewStarEmpty() {
     app.innerHTML = `<div class="page"><div class="container narrow">
-      <div class="crumbs"><a href="#">← Bộ thẻ</a> / Từ khó của tôi</div>
-      <div class="card empty"><div class="big">⭐</div><h2>Chưa có từ khó nào</h2>
-        <p>Khi học thẻ, gặp từ khó thì bấm <b>☆</b> ở góc thẻ (hoặc phím <kbd>S</kbd>) — từ đó sẽ được gom vào đây để bạn ôn riêng.</p>
+      <div class="crumbs"><a href="#">← Bộ thẻ</a> / Từ đã lưu</div>
+      <div class="card empty"><div class="big">⭐</div><h2>Chưa lưu từ nào</h2>
+        <p>Khi học thẻ, gặp từ khó hoặc từ hữu ích thì bấm <b>☆</b> ở góc thẻ (hoặc phím <kbd>S</kbd>) — từ đó sẽ được gom vào đây để bạn ôn riêng.</p>
         <a class="btn btn-primary" href="#">Chọn bộ thẻ để học</a></div>
     </div></div>`;
   }

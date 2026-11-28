@@ -56,7 +56,7 @@
       tile("exam.html#/mock", "🏁", "Full Test", mDone.length ? `${Math.max(...mDone.map((x) => x.overall))}<small>/200</small>` : `<small>Chưa thử</small>`, mDone.length ? `Overall cao nhất · ${mDone.length} lượt` : "Thi trọn 5 phần như thật", null),
       r.grammarTotal ? tile(r.grammarNext || "grammar.html", "📘", "Ngữ pháp", `${r.grammarN}<small>/${r.grammarTotal} chủ điểm</small>`, r.grammarBelow ? `Nên ôn chắc cấp ${r.grammarBelow}` : "A1 → C2", (r.grammarN / r.grammarTotal) * 100) : "",
       tile("flashcards.html", "🃏", "Từ vựng", `${r.fcN.toLocaleString("vi-VN")}<small>/${vocabAll.toLocaleString("vi-VN")} từ</small>`, "Bộ CEFR A1–C2 + 23 chủ đề", (r.fcN / vocabAll) * 100),
-      tile(starN ? "flashcards.html#starred" : "flashcards.html", "⭐", "Từ khó của tôi", `${starN}<small> từ</small>`, starN ? "Ôn riêng các từ đã gắn sao" : "Bấm ☆ khi học thẻ để gom vào", null),
+      tile(starN ? "flashcards.html#starred" : "flashcards.html", "⭐", "Từ đã lưu", `${starN}<small> từ</small>`, starN ? "Ôn riêng các từ đã gắn sao" : "Bấm ☆ khi học thẻ để gom vào", null),
       tile(wrongN ? "exam.html#/gym/wrong" : "exam.html#/gym", "📒", "Sổ câu sai", `${wrongN}<small> câu</small>`, wrongN ? "Ôn lại đến khi làm đúng" : "Câu làm sai sẽ tự lưu vào đây", null),
       tile("tips.html", "💡", "Lộ trình mẹo", `${r.tipN}<small>/${TIPS_TOTAL} mẹo</small>`, "Mẹo làm bài từng kỹ năng", (r.tipN / TIPS_TOTAL) * 100),
     ].join("");
